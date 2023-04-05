@@ -6,9 +6,9 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/MXCzkEVM/mxc-client/cmd/logger"
+	"github.com/MXCzkEVM/mxc-client/metrics"
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/taikoxyz/taiko-client/cmd/logger"
-	"github.com/taikoxyz/taiko-client/metrics"
 	"github.com/urfave/cli/v2"
 )
 
@@ -30,7 +30,7 @@ func SubcommandAction(app SubcommandApplication) cli.ActionFunc {
 			return err
 		}
 
-		log.Info("Starting Taiko client application", "name", app.Name())
+		log.Info("Starting MXC client application", "name", app.Name())
 
 		if err := app.Start(); err != nil {
 			log.Error("Starting application error", "name", app.Name(), "error", err)

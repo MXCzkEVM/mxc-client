@@ -2,7 +2,7 @@ name: "Push docker image to GCR"
 
 on:
   push:
-    branches: [main, askja]
+    branches: [main, wannsee]
     tags:
       - "v*"
 
@@ -33,7 +33,7 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: |
-            gcr.io/evmchain/taiko-client
+            gcr.io/mxcchain/mxc-client
           tags: |
             type=ref,event=branch
             type=ref,event=pr

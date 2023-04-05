@@ -7,22 +7,22 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/MXCzkEVM/mxc-client/bindings"
+	"github.com/MXCzkEVM/mxc-client/bindings/encoding"
+	"github.com/MXCzkEVM/mxc-client/metrics"
+	"github.com/MXCzkEVM/mxc-client/pkg/rpc"
+	anchorTxValidator "github.com/MXCzkEVM/mxc-client/prover/anchor_tx_validator"
+	proofProducer "github.com/MXCzkEVM/mxc-client/prover/proof_producer"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/taikoxyz/taiko-client/bindings"
-	"github.com/taikoxyz/taiko-client/bindings/encoding"
-	"github.com/taikoxyz/taiko-client/metrics"
-	"github.com/taikoxyz/taiko-client/pkg/rpc"
-	anchorTxValidator "github.com/taikoxyz/taiko-client/prover/anchor_tx_validator"
-	proofProducer "github.com/taikoxyz/taiko-client/prover/proof_producer"
 )
 
 var _ ProofSubmitter = (*ValidProofSubmitter)(nil)
 
 // ValidProofSubmitter is responsible requesting zk proofs for the given valid L2
-// blocks, and submitting the generated proofs to the TaikoL1 smart contract.
+// blocks, and submitting the generated proofs to the MXCL1 smart contract.
 type ValidProofSubmitter struct {
 	rpc               *rpc.Client
 	proofProducer     proofProducer.ProofProducer
@@ -39,7 +39,7 @@ func NewValidProofSubmitter(
 	rpc *rpc.Client,
 	proofProducer proofProducer.ProofProducer,
 	reusltCh chan *proofProducer.ProofWithHeader,
-	taikoL2Address common.Address,
+	mxcL2Address common.Address,
 	proverPrivKey *ecdsa.PrivateKey,
 	submittorPrivKey *ecdsa.PrivateKey,
 	mutex *sync.Mutex,
@@ -48,7 +48,7 @@ func NewValidProofSubmitter(
 		rpc:               rpc,
 		proofProducer:     proofProducer,
 		reusltCh:          reusltCh,
-		anchorTxValidator: anchorTxValidator.New(taikoL2Address, rpc.L2ChainID, rpc),
+		anchorTxValidator: anchorTxValidator.New(mxcL2Address, rpc.L2ChainID, rpc),
 		proverPrivKey:     proverPrivKey,
 		proverAddress:     crypto.PubkeyToAddress(proverPrivKey.PublicKey),
 		submittorPrivKey:  submittorPrivKey,
@@ -57,7 +57,7 @@ func NewValidProofSubmitter(
 }
 
 // RequestProof implements the ProofSubmitter interface.
-func (s *ValidProofSubmitter) RequestProof(ctx context.Context, event *bindings.TaikoL1ClientBlockProposed) error {
+func (s *ValidProofSubmitter) RequestProof(ctx context.Context, event *bindings.MXCL1ClientBlockProposed) error {
 	l1Origin, err := s.rpc.WaitL1Origin(ctx, event.Id)
 	if err != nil {
 		return fmt.Errorf("failed to fetch l1Origin, blockID: %d, err: %w", event.Id, err)
@@ -131,7 +131,7 @@ func (s *ValidProofSubmitter) SubmitProof(
 		return fmt.Errorf("invalid block without anchor transaction, blockID %s", blockID)
 	}
 
-	// Validate TaikoL2.anchor transaction inside the L2 block.
+	// Validate MXCL2.anchor transaction inside the L2 block.
 	anchorTx := block.Transactions()[0]
 	if err := s.anchorTxValidator.ValidateAnchorTx(ctx, anchorTx); err != nil {
 		return fmt.Errorf("invalid anchor transaction: %w", err)
@@ -172,7 +172,7 @@ func (s *ValidProofSubmitter) SubmitProof(
 		return err
 	}
 
-	evidence := &encoding.TaikoL1Evidence{
+	evidence := &encoding.MXCL1Evidence{
 		Meta:     *proofWithHeader.Meta,
 		Header:   *encoding.FromGethHeader(header),
 		Prover:   s.proverAddress,
@@ -182,20 +182,19 @@ func (s *ValidProofSubmitter) SubmitProof(
 
 	input, err := encoding.EncodeProveBlockInput(evidence, anchorTx, anchorTxReceipt)
 	if err != nil {
-		return fmt.Errorf("failed to encode TaikoL1.proveBlock inputs: %w", err)
+		return fmt.Errorf("failed to encode MXCL1.proveBlock inputs: %w", err)
 	}
 
-	// Send the TaikoL1.proveBlock transaction.
+	// Send the MXCL1.proveBlock transaction.
 	txOpts, err := getProveBlocksTxOpts(ctx, s.rpc.L1, s.rpc.L1ChainID, s.submittorPrivKey)
 	if err != nil {
 		return err
 	}
-
 	sendTx := func() (*types.Transaction, error) {
 		s.mutex.Lock()
 		defer s.mutex.Unlock()
 
-		return s.rpc.TaikoL1.ProveBlock(txOpts, blockID, input)
+		return s.rpc.MXCL1.ProveBlock(txOpts, blockID, input)
 	}
 
 	if err := sendTxWithBackoff(ctx, s.rpc, blockID, sendTx); err != nil {

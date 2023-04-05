@@ -5,9 +5,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/MXCzkEVM/mxc-client/testutils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
-	"github.com/taikoxyz/taiko-client/testutils"
 )
 
 type testJsonError struct{}

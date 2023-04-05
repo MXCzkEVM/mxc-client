@@ -5,13 +5,13 @@ import (
 	"sync"
 	"time"
 
+	chainSyncer "github.com/MXCzkEVM/mxc-client/driver/chain_syncer"
+	"github.com/MXCzkEVM/mxc-client/driver/state"
+	"github.com/MXCzkEVM/mxc-client/pkg/rpc"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/log"
-	chainSyncer "github.com/taikoxyz/taiko-client/driver/chain_syncer"
-	"github.com/taikoxyz/taiko-client/driver/state"
-	"github.com/taikoxyz/taiko-client/pkg/rpc"
 	"github.com/urfave/cli/v2"
 )
 
@@ -20,7 +20,7 @@ const (
 	RetryDelay = 10 * time.Second
 )
 
-// Driver keeps the L2 execution engine's local block chain in sync with the TaikoL1
+// Driver keeps the L2 execution engine's local block chain in sync with the MXCL1
 // contract.
 type Driver struct {
 	rpc           *rpc.Client
@@ -55,8 +55,8 @@ func InitFromConfig(ctx context.Context, d *Driver, cfg *Config) (err error) {
 	if d.rpc, err = rpc.NewClient(d.ctx, &rpc.ClientConfig{
 		L1Endpoint:       cfg.L1Endpoint,
 		L2Endpoint:       cfg.L2Endpoint,
-		TaikoL1Address:   cfg.TaikoL1Address,
-		TaikoL2Address:   cfg.TaikoL2Address,
+		MXCL1Address:     cfg.MXCL1Address,
+		MXCL2Address:     cfg.MXCL2Address,
 		L2EngineEndpoint: cfg.L2EngineEndpoint,
 		JwtSecret:        cfg.JwtSecret,
 	}); err != nil {
@@ -111,6 +111,7 @@ func (d *Driver) Close() {
 func (d *Driver) eventLoop() {
 	defer d.wg.Done()
 	exponentialBackoff := backoff.NewExponentialBackOff()
+	exponentialBackoff.InitialInterval = 200 * time.Millisecond
 
 	// reqSync requests performing a synchronising operation, won't block
 	// if we are already synchronising.
@@ -179,7 +180,7 @@ func (d *Driver) reportProtocolStatus() {
 	var maxNumBlocks uint64
 	if err := backoff.Retry(
 		func() error {
-			configs, err := d.rpc.TaikoL1.GetConfig(nil)
+			configs, err := d.rpc.MXCL1.GetConfig(nil)
 			if err != nil {
 				return err
 			}

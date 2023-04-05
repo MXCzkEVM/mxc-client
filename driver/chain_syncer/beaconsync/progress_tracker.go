@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	syncProgressCheckInterval = 10 * time.Second
+	syncProgressCheckInterval = 1 * time.Second
 )
 
 // SyncProgressTracker is responsible for tracking the L2 execution engine's sync progress, after

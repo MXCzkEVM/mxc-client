@@ -7,17 +7,17 @@ import (
 	"testing"
 	"time"
 
+	"github.com/MXCzkEVM/mxc-client/bindings"
+	"github.com/MXCzkEVM/mxc-client/driver/chain_syncer/beaconsync"
+	"github.com/MXCzkEVM/mxc-client/driver/chain_syncer/calldata"
+	"github.com/MXCzkEVM/mxc-client/driver/state"
+	"github.com/MXCzkEVM/mxc-client/proposer"
+	proofProducer "github.com/MXCzkEVM/mxc-client/prover/proof_producer"
+	"github.com/MXCzkEVM/mxc-client/testutils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/suite"
-	"github.com/taikoxyz/taiko-client/bindings"
-	"github.com/taikoxyz/taiko-client/driver/chain_syncer/beaconsync"
-	"github.com/taikoxyz/taiko-client/driver/chain_syncer/calldata"
-	"github.com/taikoxyz/taiko-client/driver/state"
-	"github.com/taikoxyz/taiko-client/proposer"
-	proofProducer "github.com/taikoxyz/taiko-client/prover/proof_producer"
-	"github.com/taikoxyz/taiko-client/testutils"
 )
 
 type ProofSubmitterTestSuite struct {
@@ -43,7 +43,7 @@ func (s *ProofSubmitterTestSuite) SetupTest() {
 		s.RpcClient,
 		&proofProducer.DummyProofProducer{},
 		s.validProofCh,
-		common.HexToAddress(os.Getenv("TAIKO_L2_ADDRESS")),
+		common.HexToAddress(os.Getenv("MXC_L2_ADDRESS")),
 		l1ProverPrivKey,
 		l1ProverPrivKey,
 		&sync.Mutex{},
@@ -84,8 +84,8 @@ func (s *ProofSubmitterTestSuite) SetupTest() {
 	s.Nil(proposer.InitFromConfig(context.Background(), prop, (&proposer.Config{
 		L1Endpoint:              os.Getenv("L1_NODE_WS_ENDPOINT"),
 		L2Endpoint:              os.Getenv("L2_EXECUTION_ENGINE_WS_ENDPOINT"),
-		TaikoL1Address:          common.HexToAddress(os.Getenv("TAIKO_L1_ADDRESS")),
-		TaikoL2Address:          common.HexToAddress(os.Getenv("TAIKO_L2_ADDRESS")),
+		MXCL1Address:            common.HexToAddress(os.Getenv("MXC_L1_ADDRESS")),
+		MXCL2Address:            common.HexToAddress(os.Getenv("MXC_L2_ADDRESS")),
 		L1ProposerPrivKey:       l1ProposerPrivKey,
 		L2SuggestedFeeRecipient: common.HexToAddress(os.Getenv("L2_SUGGESTED_FEE_RECIPIENT")),
 		ProposeInterval:         &proposeInterval, // No need to periodically propose transactions list in unit tests
@@ -100,7 +100,7 @@ func (s *ProofSubmitterTestSuite) TestValidProofSubmitterRequestProofDeadlineExc
 
 	s.ErrorContains(
 		s.validProofSubmitter.RequestProof(
-			ctx, &bindings.TaikoL1ClientBlockProposed{Id: common.Big256}), "context deadline exceeded",
+			ctx, &bindings.MXCL1ClientBlockProposed{Id: common.Big256}), "context deadline exceeded",
 	)
 }
 
@@ -109,7 +109,7 @@ func (s *ProofSubmitterTestSuite) TestValidProofSubmitterSubmitProofMetadataNotF
 		s.validProofSubmitter.SubmitProof(
 			context.Background(), &proofProducer.ProofWithHeader{
 				BlockID: common.Big256,
-				Meta:    &bindings.TaikoDataBlockMetadata{},
+				Meta:    &bindings.MXCDataBlockMetadata{},
 				Header:  &types.Header{},
 				ZkProof: []byte{0xff},
 			},

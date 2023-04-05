@@ -7,15 +7,15 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/MXCzkEVM/mxc-client/bindings"
+	"github.com/MXCzkEVM/mxc-client/bindings/encoding"
+	"github.com/MXCzkEVM/mxc-client/driver/state"
+	eventIterator "github.com/MXCzkEVM/mxc-client/pkg/chain_iterator/event_iterator"
+	"github.com/MXCzkEVM/mxc-client/pkg/rpc"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/beacon"
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/taikoxyz/taiko-client/bindings"
-	"github.com/taikoxyz/taiko-client/bindings/encoding"
-	"github.com/taikoxyz/taiko-client/driver/state"
-	eventIterator "github.com/taikoxyz/taiko-client/pkg/chain_iterator/event_iterator"
-	"github.com/taikoxyz/taiko-client/pkg/rpc"
 )
 
 // Syncer responsible for letting the L2 execution engine catching up with protocol's latest
@@ -123,14 +123,14 @@ func (s *Syncer) getVerifiedBlockPayload(ctx context.Context) (*big.Int, *beacon
 	// Get the latest verified block's corresponding BlockProven event.
 	iter, err := eventIterator.NewBlockProvenIterator(s.ctx, &eventIterator.BlockProvenIteratorConfig{
 		Client:      s.rpc.L1,
-		TaikoL1:     s.rpc.TaikoL1,
+		MXCL1:       s.rpc.MXCL1,
 		StartHeight: s.state.GenesisL1Height,
 		EndHeight:   new(big.Int).SetUint64(endHeight),
 		FilterQuery: []*big.Int{latestVerifiedBlock.ID},
 		Reverse:     true,
 		OnBlockProvenEvent: func(
 			ctx context.Context,
-			e *bindings.TaikoL1ClientBlockProven,
+			e *bindings.MXCL1ClientBlockProven,
 			endIter eventIterator.EndBlockProvenEventIterFunc,
 		) error {
 			if bytes.Equal(e.BlockHash[:], latestVerifiedBlock.Hash.Bytes()) {

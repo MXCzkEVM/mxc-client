@@ -7,14 +7,14 @@ import (
 	"math/big"
 	"sync/atomic"
 
+	"github.com/MXCzkEVM/mxc-client/bindings"
+	"github.com/MXCzkEVM/mxc-client/metrics"
+	"github.com/MXCzkEVM/mxc-client/pkg/rpc"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/taikoxyz/taiko-client/bindings"
-	"github.com/taikoxyz/taiko-client/metrics"
-	"github.com/taikoxyz/taiko-client/pkg/rpc"
 )
 
 // HeightOrID contains a block height or a block ID.
@@ -33,17 +33,17 @@ type State struct {
 	// Subscriptions, will automatically resubscribe on errors
 	l1HeadSub          event.Subscription // L1 new heads
 	l2HeadSub          event.Subscription // L2 new heads
-	l2BlockProvenSub   event.Subscription // TaikoL1.BlockProven events
-	l2BlockVerifiedSub event.Subscription // TaikoL1.BlockVerified events
-	l2BlockProposedSub event.Subscription // TaikoL1.BlockProposed events
-	l2HeaderSyncedSub  event.Subscription // TaikoL1.HeaderSynced events
+	l2BlockProvenSub   event.Subscription // MXCL1.BlockProven events
+	l2BlockVerifiedSub event.Subscription // MXCL1.BlockVerified events
+	l2BlockProposedSub event.Subscription // MXCL1.BlockProposed events
+	l2HeaderSyncedSub  event.Subscription // MXCL1.HeaderSynced events
 
 	l1HeadCh        chan *types.Header
 	l2HeadCh        chan *types.Header
-	blockProposedCh chan *bindings.TaikoL1ClientBlockProposed
-	blockProvenCh   chan *bindings.TaikoL1ClientBlockProven
-	blockVerifiedCh chan *bindings.TaikoL1ClientBlockVerified
-	headerSyncedCh  chan *bindings.TaikoL1ClientHeaderSynced
+	blockProposedCh chan *bindings.MXCL1ClientBlockProposed
+	blockProvenCh   chan *bindings.MXCL1ClientBlockProven
+	blockVerifiedCh chan *bindings.MXCL1ClientBlockVerified
+	headerSyncedCh  chan *bindings.MXCL1ClientHeaderSynced
 
 	// Feeds
 	l1HeadsFeed event.Feed // L1 new heads notification feed
@@ -73,10 +73,10 @@ func New(ctx context.Context, rpc *rpc.Client) (*State, error) {
 		l1Current:        new(atomic.Value),
 		l1HeadCh:         make(chan *types.Header, 10),
 		l2HeadCh:         make(chan *types.Header, 10),
-		blockProposedCh:  make(chan *bindings.TaikoL1ClientBlockProposed, 10),
-		blockProvenCh:    make(chan *bindings.TaikoL1ClientBlockProven, 10),
-		blockVerifiedCh:  make(chan *bindings.TaikoL1ClientBlockVerified, 10),
-		headerSyncedCh:   make(chan *bindings.TaikoL1ClientHeaderSynced, 10),
+		blockProposedCh:  make(chan *bindings.MXCL1ClientBlockProposed, 10),
+		blockProvenCh:    make(chan *bindings.MXCL1ClientBlockProven, 10),
+		blockVerifiedCh:  make(chan *bindings.MXCL1ClientBlockVerified, 10),
+		headerSyncedCh:   make(chan *bindings.MXCL1ClientHeaderSynced, 10),
 		BlockDeadendHash: common.BigToHash(common.Big1),
 	}
 
@@ -132,7 +132,7 @@ func (s *State) init(ctx context.Context) error {
 	log.Info("L2 execution engine head", "height", l2Head.Number, "hash", l2Head.Hash())
 	s.setL2Head(l2Head)
 
-	latestVerifiedBlockHash, err := s.rpc.TaikoL1.GetSyncedHeader(
+	latestVerifiedBlockHash, err := s.rpc.MXCL1.GetSyncedHeader(
 		nil,
 		new(big.Int).SetUint64(stateVars.LatestVerifiedHeight),
 	)
@@ -154,10 +154,10 @@ func (s *State) init(ctx context.Context) error {
 func (s *State) startSubscriptions(ctx context.Context) {
 	s.l1HeadSub = rpc.SubscribeChainHead(s.rpc.L1, s.l1HeadCh)
 	s.l2HeadSub = rpc.SubscribeChainHead(s.rpc.L2, s.l2HeadCh)
-	s.l2HeaderSyncedSub = rpc.SubscribeHeaderSynced(s.rpc.TaikoL1, s.headerSyncedCh)
-	s.l2BlockVerifiedSub = rpc.SubscribeBlockVerified(s.rpc.TaikoL1, s.blockVerifiedCh)
-	s.l2BlockProposedSub = rpc.SubscribeBlockProposed(s.rpc.TaikoL1, s.blockProposedCh)
-	s.l2BlockProvenSub = rpc.SubscribeBlockProven(s.rpc.TaikoL1, s.blockProvenCh)
+	s.l2HeaderSyncedSub = rpc.SubscribeHeaderSynced(s.rpc.MXCL1, s.headerSyncedCh)
+	s.l2BlockVerifiedSub = rpc.SubscribeBlockVerified(s.rpc.MXCL1, s.blockVerifiedCh)
+	s.l2BlockProposedSub = rpc.SubscribeBlockProposed(s.rpc.MXCL1, s.blockProposedCh)
+	s.l2BlockProvenSub = rpc.SubscribeBlockProven(s.rpc.MXCL1, s.blockProvenCh)
 
 	go func() {
 		for {
@@ -300,7 +300,7 @@ func (s *State) VerifyL2Block(ctx context.Context, height *big.Int, hash common.
 
 // getSyncedHeaderID fetches the block ID of the synced L2 header.
 func (s *State) getSyncedHeaderID(l1Height uint64, hash common.Hash) (*big.Int, error) {
-	iter, err := s.rpc.TaikoL1.FilterBlockVerified(&bind.FilterOpts{
+	iter, err := s.rpc.MXCL1.FilterBlockVerified(&bind.FilterOpts{
 		Start: l1Height,
 		End:   &l1Height,
 	}, nil)

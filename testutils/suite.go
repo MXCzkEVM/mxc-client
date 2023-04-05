@@ -5,13 +5,13 @@ import (
 	"crypto/ecdsa"
 	"os"
 
+	"github.com/MXCzkEVM/mxc-client/pkg/jwt"
+	"github.com/MXCzkEVM/mxc-client/pkg/rpc"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/stretchr/testify/suite"
-	"github.com/taikoxyz/taiko-client/pkg/jwt"
-	"github.com/taikoxyz/taiko-client/pkg/rpc"
 )
 
 type ClientTestSuite struct {
@@ -53,8 +53,8 @@ func (s *ClientTestSuite) SetupTest() {
 	rpcCli, err := rpc.NewClient(context.Background(), &rpc.ClientConfig{
 		L1Endpoint:       os.Getenv("L1_NODE_WS_ENDPOINT"),
 		L2Endpoint:       os.Getenv("L2_EXECUTION_ENGINE_WS_ENDPOINT"),
-		TaikoL1Address:   common.HexToAddress(os.Getenv("TAIKO_L1_ADDRESS")),
-		TaikoL2Address:   common.HexToAddress(os.Getenv("TAIKO_L2_ADDRESS")),
+		MXCL1Address:     common.HexToAddress(os.Getenv("MXC_L1_ADDRESS")),
+		MXCL2Address:     common.HexToAddress(os.Getenv("MXC_L2_ADDRESS")),
 		L2EngineEndpoint: os.Getenv("L2_EXECUTION_ENGINE_AUTH_ENDPOINT"),
 		JwtSecret:        string(jwtSecret),
 	})

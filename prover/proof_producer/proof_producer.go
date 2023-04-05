@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/MXCzkEVM/mxc-client/bindings"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/taikoxyz/taiko-client/bindings"
 )
 
 const (
@@ -27,7 +27,7 @@ type ProofRequestOptions struct {
 
 type ProofWithHeader struct {
 	BlockID *big.Int
-	Meta    *bindings.TaikoDataBlockMetadata
+	Meta    *bindings.MXCDataBlockMetadata
 	Header  *types.Header
 	ZkProof []byte
 	Degree  uint64
@@ -38,7 +38,7 @@ type ProofProducer interface {
 		ctx context.Context,
 		opts *ProofRequestOptions,
 		blockID *big.Int,
-		meta *bindings.TaikoDataBlockMetadata,
+		meta *bindings.MXCDataBlockMetadata,
 		header *types.Header,
 		resultCh chan *ProofWithHeader,
 	) error

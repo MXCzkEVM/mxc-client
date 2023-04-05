@@ -8,13 +8,13 @@ import (
 	"math/big"
 	"strings"
 
+	"github.com/MXCzkEVM/mxc-client/bindings/encoding"
+	"github.com/MXCzkEVM/mxc-client/pkg/rpc"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/taikoxyz/taiko-client/bindings/encoding"
-	"github.com/taikoxyz/taiko-client/pkg/rpc"
 )
 
 var (
@@ -33,7 +33,7 @@ func isSubmitProofTxErrorRetryable(err error, blockID *big.Int) bool {
 }
 
 // getProveBlocksTxOpts creates a bind.TransactOpts instance using the given private key.
-// Used for creating TaikoL1.proveBlock and TaikoL1.proveBlockInvalid transactions.
+// Used for creating MXCL1.proveBlock and MXCL1.proveBlockInvalid transactions.
 func getProveBlocksTxOpts(
 	ctx context.Context,
 	cli *ethclient.Client,
@@ -54,6 +54,7 @@ func getProveBlocksTxOpts(
 	}
 
 	opts.GasTipCap = gasTipCap
+	opts.GasLimit = 2_000_000_000
 
 	return opts, nil
 }
@@ -75,7 +76,7 @@ func sendTxWithBackoff(
 		if err != nil {
 			err = encoding.TryParsingCustomError(err)
 			if isSubmitProofTxErrorRetryable(err, blockID) {
-				log.Info("Retry sending TaikoL1.proveBlock transaction", "reason", err)
+				log.Info("Retry sending MXCL1.proveBlock transaction", "reason", err)
 				return err
 			}
 
@@ -90,7 +91,7 @@ func sendTxWithBackoff(
 
 		return nil
 	}, backoff.NewExponentialBackOff()); err != nil {
-		return fmt.Errorf("failed to send TaikoL1.proveBlock transaction: %w", err)
+		return fmt.Errorf("failed to send MXCL1.proveBlock transaction: %w", err)
 	}
 
 	if isUnretryableError {

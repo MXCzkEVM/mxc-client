@@ -10,7 +10,7 @@ import (
 var (
 	L1ProposerPrivKey = &cli.StringFlag{
 		Name:     "l1.proposerPrivKey",
-		Usage:    "Private key of the L1 proposer, who will send TaikoL1.proposeBlock transactions",
+		Usage:    "Private key of the L1 proposer, who will send MXCL1.proposeBlock transactions",
 		Required: true,
 		Category: proposerCategory,
 	}
@@ -40,6 +40,11 @@ var (
 		Usage:    "Comma separated accounts to treat as locals (priority inclusion)",
 		Category: proposerCategory,
 	}
+	TxMinGasPrice = &cli.StringFlag{
+		Name:     "txMinGasPrice",
+		Usage:    "Set the minimum gas price for the transaction pool",
+		Category: proposerCategory,
+	}
 	ProposeEmptyBlocksInterval = &cli.StringFlag{
 		Name:     "proposeEmptyBlockInterval",
 		Usage:    "Time interval to propose empty blocks",
@@ -60,6 +65,7 @@ var ProposerFlags = MergeFlags(CommonFlags, []cli.Flag{
 	ProposeInterval,
 	CommitSlot,
 	TxPoolLocals,
+	TxMinGasPrice,
 	ProposeEmptyBlocksInterval,
 	MaxProposedTxListsPerEpoch,
 })

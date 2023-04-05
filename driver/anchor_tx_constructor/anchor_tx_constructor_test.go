@@ -5,12 +5,12 @@ import (
 	"math/rand"
 	"testing"
 
+	"github.com/MXCzkEVM/mxc-client/bindings"
+	"github.com/MXCzkEVM/mxc-client/testutils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/suite"
-	"github.com/taikoxyz/taiko-client/bindings"
-	"github.com/taikoxyz/taiko-client/testutils"
 )
 
 type AnchorTxConstructorTestSuite struct {
@@ -20,7 +20,7 @@ type AnchorTxConstructorTestSuite struct {
 
 func (s *AnchorTxConstructorTestSuite) SetupTest() {
 	s.ClientTestSuite.SetupTest()
-	protocolConfigs, err := s.RpcClient.TaikoL1.GetConfig(nil)
+	protocolConfigs, err := s.RpcClient.MXCL1.GetConfig(nil)
 	s.Nil(err)
 	c, err := New(
 		s.RpcClient,

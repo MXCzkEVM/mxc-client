@@ -5,12 +5,12 @@ import (
 	"os"
 	"testing"
 
+	"github.com/MXCzkEVM/mxc-client/bindings"
+	"github.com/MXCzkEVM/mxc-client/testutils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/suite"
-	"github.com/taikoxyz/taiko-client/bindings"
-	"github.com/taikoxyz/taiko-client/testutils"
 )
 
 type AnchorTxValidatorTestSuite struct {
@@ -20,7 +20,7 @@ type AnchorTxValidatorTestSuite struct {
 
 func (s *AnchorTxValidatorTestSuite) SetupTest() {
 	s.ClientTestSuite.SetupTest()
-	s.v = New(common.HexToAddress(os.Getenv("TAIKO_L2_ADDRESS")), s.RpcClient.L2ChainID, s.RpcClient)
+	s.v = New(common.HexToAddress(os.Getenv("MXC_L2_ADDRESS")), s.RpcClient.L2ChainID, s.RpcClient)
 }
 
 func (s *AnchorTxValidatorTestSuite) TestValidateAnchorTx() {
@@ -36,7 +36,7 @@ func (s *AnchorTxValidatorTestSuite) TestValidateAnchorTx() {
 		0,
 		common.BytesToAddress(testutils.RandomBytes(1024)), common.Big0, 0, common.Big0, []byte{},
 	)
-	s.ErrorContains(s.v.ValidateAnchorTx(context.Background(), tx), "invalid TaikoL2.anchor transaction to")
+	s.ErrorContains(s.v.ValidateAnchorTx(context.Background(), tx), "invalid MXCL2.anchor transaction to")
 
 	// invalid sender
 	dynamicFeeTxTx := &types.DynamicFeeTx{
@@ -45,7 +45,7 @@ func (s *AnchorTxValidatorTestSuite) TestValidateAnchorTx() {
 		GasTipCap:  common.Big1,
 		GasFeeCap:  common.Big1,
 		Gas:        1,
-		To:         &s.v.taikoL2Address,
+		To:         &s.v.mxcL2Address,
 		Value:      common.Big0,
 		Data:       []byte{},
 		AccessList: types.AccessList{},
@@ -55,12 +55,12 @@ func (s *AnchorTxValidatorTestSuite) TestValidateAnchorTx() {
 	tx = types.MustSignNewTx(wrongPrivKey, signer, dynamicFeeTxTx)
 
 	s.ErrorContains(
-		s.v.ValidateAnchorTx(context.Background(), tx), "invalid TaikoL2.anchor transaction sender",
+		s.v.ValidateAnchorTx(context.Background(), tx), "invalid MXCL2.anchor transaction sender",
 	)
 
 	// invalid method selector
 	tx = types.MustSignNewTx(goldenTouchPriKey, signer, dynamicFeeTxTx)
-	s.ErrorContains(s.v.ValidateAnchorTx(context.Background(), tx), "invalid TaikoL2.anchor transaction selector")
+	s.ErrorContains(s.v.ValidateAnchorTx(context.Background(), tx), "invalid MXCL2.anchor transaction selector")
 }
 
 func (s *AnchorTxValidatorTestSuite) TestGetAndValidateAnchorTxReceipt() {

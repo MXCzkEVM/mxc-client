@@ -5,16 +5,16 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/MXCzkEVM/mxc-client/bindings"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/taikoxyz/taiko-client/bindings"
 )
 
 func ProposeInvalidTxListBytes(s *ClientTestSuite, proposer Proposer) {
-	configs, err := s.RpcClient.TaikoL1.GetConfig(nil)
+	configs, err := s.RpcClient.MXCL1.GetConfig(nil)
 	s.Nil(err)
 
 	invalidTxListBytes := RandomBytes(256)
@@ -33,15 +33,15 @@ func ProposeAndInsertEmptyBlocks(
 	s *ClientTestSuite,
 	proposer Proposer,
 	calldataSyncer CalldataSyncer,
-) []*bindings.TaikoL1ClientBlockProposed {
-	var events []*bindings.TaikoL1ClientBlockProposed
+) []*bindings.MXCL1ClientBlockProposed {
+	var events []*bindings.MXCL1ClientBlockProposed
 
 	l1Head, err := s.RpcClient.L1.HeaderByNumber(context.Background(), nil)
 	s.Nil(err)
 
-	sink := make(chan *bindings.TaikoL1ClientBlockProposed)
+	sink := make(chan *bindings.MXCL1ClientBlockProposed)
 
-	sub, err := s.RpcClient.TaikoL1.WatchBlockProposed(nil, sink, nil)
+	sub, err := s.RpcClient.MXCL1.WatchBlockProposed(nil, sink, nil)
 	s.Nil(err)
 	defer func() {
 		sub.Unsubscribe()
@@ -63,7 +63,7 @@ func ProposeAndInsertEmptyBlocks(
 
 	ProposeInvalidTxListBytes(s, proposer)
 
-	events = append(events, []*bindings.TaikoL1ClientBlockProposed{<-sink, <-sink}...)
+	events = append(events, []*bindings.MXCL1ClientBlockProposed{<-sink, <-sink}...)
 
 	_, isPending, err := s.RpcClient.L1.TransactionByHash(context.Background(), events[len(events)-1].Raw.TxHash)
 	s.Nil(err)
@@ -91,16 +91,16 @@ func ProposeAndInsertThrowawayBlock(
 	s *ClientTestSuite,
 	proposer Proposer,
 	calldataSyncer CalldataSyncer,
-) *bindings.TaikoL1ClientBlockProposed {
+) *bindings.MXCL1ClientBlockProposed {
 	l1Head, err := s.RpcClient.L1.HeaderByNumber(context.Background(), nil)
 	s.Nil(err)
 
 	l2Head, err := s.RpcClient.L2.HeaderByNumber(context.Background(), nil)
 	s.Nil(err)
 
-	sink := make(chan *bindings.TaikoL1ClientBlockProposed)
+	sink := make(chan *bindings.MXCL1ClientBlockProposed)
 
-	sub, err := s.RpcClient.TaikoL1.WatchBlockProposed(nil, sink, nil)
+	sub, err := s.RpcClient.MXCL1.WatchBlockProposed(nil, sink, nil)
 	s.Nil(err)
 	defer func() {
 		sub.Unsubscribe()
@@ -142,7 +142,7 @@ func ProposeAndInsertValidBlock(
 	s *ClientTestSuite,
 	proposer Proposer,
 	calldataSyncer CalldataSyncer,
-) *bindings.TaikoL1ClientBlockProposed {
+) *bindings.MXCL1ClientBlockProposed {
 	l1Head, err := s.RpcClient.L1.HeaderByNumber(context.Background(), nil)
 	s.Nil(err)
 
@@ -150,9 +150,9 @@ func ProposeAndInsertValidBlock(
 	s.Nil(err)
 
 	// Propose txs in L2 execution engine's mempool
-	sink := make(chan *bindings.TaikoL1ClientBlockProposed)
+	sink := make(chan *bindings.MXCL1ClientBlockProposed)
 
-	sub, err := s.RpcClient.TaikoL1.WatchBlockProposed(nil, sink, nil)
+	sub, err := s.RpcClient.MXCL1.WatchBlockProposed(nil, sink, nil)
 	s.Nil(err)
 	defer func() {
 		sub.Unsubscribe()

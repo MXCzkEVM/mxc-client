@@ -4,10 +4,10 @@ import (
 	"context"
 	"math/big"
 
+	"github.com/MXCzkEVM/mxc-client/bindings"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rpc"
-	"github.com/taikoxyz/taiko-client/bindings"
 )
 
 // Client contains all L1/L2 RPC clients that a driver needs.
@@ -21,8 +21,8 @@ type Client struct {
 	// Geth Engine API clients
 	L2Engine *EngineClient
 	// Protocol contracts clients
-	TaikoL1 *bindings.TaikoL1Client
-	TaikoL2 *bindings.TaikoL2Client
+	MXCL1 *bindings.MXCL1Client
+	MXCL2 *bindings.MXCL2Client
 	// Chain IDs
 	L1ChainID *big.Int
 	L2ChainID *big.Int
@@ -34,20 +34,20 @@ type Client struct {
 type ClientConfig struct {
 	L1Endpoint       string
 	L2Endpoint       string
-	TaikoL1Address   common.Address
-	TaikoL2Address   common.Address
+	MXCL1Address     common.Address
+	MXCL2Address     common.Address
 	L2EngineEndpoint string
 	JwtSecret        string
 }
 
-// NewClient initializes all RPC clients used by Taiko client softwares.
+// NewClient initializes all RPC clients used by MXC client softwares.
 func NewClient(ctx context.Context, cfg *ClientConfig) (*Client, error) {
 	l1RPC, err := DialClientWithBackoff(ctx, cfg.L1Endpoint)
 	if err != nil {
 		return nil, err
 	}
 
-	taikoL1, err := bindings.NewTaikoL1Client(cfg.TaikoL1Address, l1RPC)
+	mxcL1, err := bindings.NewMXCL1Client(cfg.MXCL1Address, l1RPC)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func NewClient(ctx context.Context, cfg *ClientConfig) (*Client, error) {
 		return nil, err
 	}
 
-	taikoL2, err := bindings.NewTaikoL2Client(cfg.TaikoL2Address, l2RPC)
+	mxcL2, err := bindings.NewMXCL2Client(cfg.MXCL2Address, l2RPC)
 	if err != nil {
 		return nil, err
 	}
@@ -98,8 +98,8 @@ func NewClient(ctx context.Context, cfg *ClientConfig) (*Client, error) {
 		L1RawRPC:  l1RawRPC,
 		L2RawRPC:  l2RawRPC,
 		L2Engine:  l2AuthRPC,
-		TaikoL1:   taikoL1,
-		TaikoL2:   taikoL2,
+		MXCL1:     mxcL1,
+		MXCL2:     mxcL2,
 		L1ChainID: l1ChainID,
 		L2ChainID: l2ChainID,
 	}

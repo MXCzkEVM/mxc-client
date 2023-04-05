@@ -8,33 +8,33 @@ set -eou pipefail
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null && pwd)"
 
 echo ""
-echo "TAIKO_MONO_DIR: ${TAIKO_MONO_DIR}"
-echo "TAIKO_GETH_DIR: ${TAIKO_GETH_DIR}"
+echo "MXC_MONO_DIR: ${MXC_MONO_DIR}"
+echo "MXC_GETH_DIR: ${MXC_GETH_DIR}"
 echo ""
 
-cd ${TAIKO_GETH_DIR} &&
+cd ${MXC_GETH_DIR} &&
   make all &&
   cd -
 
-cd ${TAIKO_MONO_DIR}/packages/protocol &&
+cd ${MXC_MONO_DIR}/packages/protocol &&
   pnpm clean &&
   pnpm compile &&
   cd -
 
-ABIGEN_BIN=$TAIKO_GETH_DIR/build/bin/abigen
+ABIGEN_BIN=$MXC_GETH_DIR/build/bin/abigen
 
 echo ""
 echo "Start generating go contract bindings..."
 echo ""
 
-cat ${TAIKO_MONO_DIR}/packages/protocol/artifacts/contracts/L1/TaikoL1.sol/TaikoL1.json |
+cat ${MXC_MONO_DIR}/packages/protocol/artifacts/contracts/L1/MXCL1.sol/MXCL1.json |
 	jq .abi |
-	${ABIGEN_BIN} --abi - --type TaikoL1Client --pkg bindings --out $DIR/../bindings/gen_taiko_l1.go
+	${ABIGEN_BIN} --abi - --type MXCL1Client --pkg bindings --out $DIR/../bindings/gen_mxc_l1.go
 
-cat ${TAIKO_MONO_DIR}/packages/protocol/artifacts/contracts/L2/TaikoL2.sol/TaikoL2.json |
+cat ${MXC_MONO_DIR}/packages/protocol/artifacts/contracts/L2/MXCL2.sol/MXCL2.json |
 	jq .abi |
-	${ABIGEN_BIN} --abi - --type TaikoL2Client --pkg bindings --out $DIR/../bindings/gen_taiko_l2.go
+	${ABIGEN_BIN} --abi - --type MXCL2Client --pkg bindings --out $DIR/../bindings/gen_mxc_l2.go
 
-git -C ${TAIKO_MONO_DIR} log --format="%H" -n 1 >./bindings/.githead
+git -C ${MXC_MONO_DIR} log --format="%H" -n 1 >./bindings/.githead
 
 echo "🍻 Go contract bindings generated!"

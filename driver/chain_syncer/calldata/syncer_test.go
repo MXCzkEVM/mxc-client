@@ -6,14 +6,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/MXCzkEVM/mxc-client/bindings"
+	"github.com/MXCzkEVM/mxc-client/driver/chain_syncer/beaconsync"
+	"github.com/MXCzkEVM/mxc-client/driver/state"
+	"github.com/MXCzkEVM/mxc-client/testutils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/rawdb"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/suite"
-	"github.com/taikoxyz/taiko-client/bindings"
-	"github.com/taikoxyz/taiko-client/driver/chain_syncer/beaconsync"
-	"github.com/taikoxyz/taiko-client/driver/state"
-	"github.com/taikoxyz/taiko-client/testutils"
 )
 
 type CalldataSyncerTestSuite struct {
@@ -55,8 +55,8 @@ func (s *CalldataSyncerTestSuite) TestProcessL1Blocks() {
 }
 
 func (s *CalldataSyncerTestSuite) TestOnBlockProposed() {
-	s.Nil(s.s.onBlockProposed(context.Background(), &bindings.TaikoL1ClientBlockProposed{Id: common.Big0}, func() {}))
-	s.NotNil(s.s.onBlockProposed(context.Background(), &bindings.TaikoL1ClientBlockProposed{Id: common.Big1}, func() {}))
+	s.Nil(s.s.onBlockProposed(context.Background(), &bindings.MXCL1ClientBlockProposed{Id: common.Big0}, func() {}))
+	s.NotNil(s.s.onBlockProposed(context.Background(), &bindings.MXCL1ClientBlockProposed{Id: common.Big1}, func() {}))
 }
 
 func (s *CalldataSyncerTestSuite) TestInsertNewHead() {
@@ -64,9 +64,9 @@ func (s *CalldataSyncerTestSuite) TestInsertNewHead() {
 	s.Nil(err)
 	_, rpcErr, payloadErr := s.s.insertNewHead(
 		context.Background(),
-		&bindings.TaikoL1ClientBlockProposed{
+		&bindings.MXCL1ClientBlockProposed{
 			Id: common.Big1,
-			Meta: bindings.TaikoDataBlockMetadata{
+			Meta: bindings.MXCDataBlockMetadata{
 				Id:          common.Big1,
 				L1Height:    common.Big1,
 				L1Hash:      testutils.RandomHash(),
@@ -98,9 +98,9 @@ func (s *CalldataSyncerTestSuite) TestInsertThrowAwayBlock() {
 
 	_, rpcErr, payloadErr := s.s.insertThrowAwayBlock(
 		context.Background(),
-		&bindings.TaikoL1ClientBlockProposed{
+		&bindings.MXCL1ClientBlockProposed{
 			Id: common.Big1,
-			Meta: bindings.TaikoDataBlockMetadata{
+			Meta: bindings.MXCDataBlockMetadata{
 				Id:          common.Big1,
 				L1Height:    common.Big1,
 				L1Hash:      testutils.RandomHash(),

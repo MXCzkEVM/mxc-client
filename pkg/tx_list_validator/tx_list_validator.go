@@ -3,11 +3,11 @@ package tx_list_validator
 import (
 	"math/big"
 
+	"github.com/MXCzkEVM/mxc-client/bindings/encoding"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/taikoxyz/taiko-client/bindings/encoding"
 )
 
 // InvalidTxListReason represents a reason why a transactions list is invalid, reasons defined in
@@ -53,7 +53,7 @@ func NewTxListValidator(
 	}
 }
 
-// ValidateTxList checks whether the transactions list in the TaikoL1.proposeBlock transaction's
+// ValidateTxList checks whether the transactions list in the MXCL1.proposeBlock transaction's
 // input data is valid.
 func (v *TxListValidator) ValidateTxList(
 	blockID *big.Int,
@@ -74,7 +74,7 @@ func (v *TxListValidator) ValidateTxList(
 
 // isTxListValid checks whether the transaction list is valid, must match
 // the validation rule defined in LibInvalidTxList.sol.
-// ref: https://github.com/taikoxyz/taiko-mono/blob/main/packages/bindings/contracts/libs/LibInvalidTxList.sol
+// ref: https://github.com/MXCzkEVM/mxc-mono/blob/main/packages/bindings/contracts/libs/LibInvalidTxList.sol
 func (v *TxListValidator) isTxListValid(blockID *big.Int, txListBytes []byte) (hint InvalidTxListReason, txIdx int) {
 	if len(txListBytes) > int(v.maxBytesPerTxList) {
 		log.Info("Transactions list binary too large", "length", len(txListBytes), "blockID", blockID)

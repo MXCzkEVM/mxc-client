@@ -5,16 +5,16 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/MXCzkEVM/mxc-client/driver/signer"
+	"github.com/MXCzkEVM/mxc-client/pkg/rpc"
 	"github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/taikoxyz/taiko-client/driver/signer"
-	"github.com/taikoxyz/taiko-client/pkg/rpc"
 )
 
-// AnchorTxConstructor is responsible for assembling the anchor transaction (TaikoL2.anchor) in
+// AnchorTxConstructor is responsible for assembling the anchor transaction (MXCL2.anchor) in
 // each L2 block, which is always the first transaction.
 type AnchorTxConstructor struct {
 	rpc                *rpc.Client
@@ -43,13 +43,13 @@ func New(
 	}, nil
 }
 
-// AssembleAnchorTx assembles a signed TaikoL2.anchor transaction.
+// AssembleAnchorTx assembles a signed MXCL2.anchor transaction.
 func (c *AnchorTxConstructor) AssembleAnchorTx(
 	ctx context.Context,
-	// Parameters of the TaikoL2.anchor transaction.
+	// Parameters of the MXCL2.anchor transaction.
 	l1Height *big.Int,
 	l1Hash common.Hash,
-	// Height of the L2 block which including the TaikoL2.anchor transaction.
+	// Height of the L2 block which including the MXCL2.anchor transaction.
 	l2Height *big.Int,
 ) (*types.Transaction, error) {
 	opts, err := c.transactOpts(ctx, l2Height)
@@ -57,7 +57,7 @@ func (c *AnchorTxConstructor) AssembleAnchorTx(
 		return nil, err
 	}
 
-	return c.rpc.TaikoL2.Anchor(opts, l1Height, l1Hash)
+	return c.rpc.MXCL2.Anchor(opts, l1Height, l1Hash)
 }
 
 // transactOpts is a utility method to create some transact options of the anchor transaction in given L2 block with
@@ -92,7 +92,7 @@ func (c *AnchorTxConstructor) transactOpts(ctx context.Context, l2Height *big.In
 }
 
 // signTxPayload calculates an ECDSA signature for an anchor transaction.
-// ref: https://github.com/taikoxyz/taiko-mono/blob/main/packages/protocol/contracts/libs/LibAnchorSignature.sol
+// ref: https://github.com/MXCzkEVM/mxc-mono/blob/main/packages/protocol/contracts/libs/LibAnchorSignature.sol
 func (c *AnchorTxConstructor) signTxPayload(hash []byte) ([]byte, error) {
 	if len(hash) != 32 {
 		return nil, fmt.Errorf("hash is required to be exactly 32 bytes (%d)", len(hash))
@@ -104,7 +104,7 @@ func (c *AnchorTxConstructor) signTxPayload(hash []byte) ([]byte, error) {
 		// Try k = 2.
 		sig, ok = c.signer.SignWithK(new(secp256k1.ModNScalar).SetInt(2))(hash)
 		if !ok {
-			log.Crit("Failed to sign TaikoL2.anchor transaction using K = 1 and K = 2")
+			log.Crit("Failed to sign MXCL2.anchor transaction using K = 1 and K = 2")
 		}
 	}
 

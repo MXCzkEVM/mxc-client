@@ -6,17 +6,17 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/MXCzkEVM/mxc-client/driver/chain_syncer/beaconsync"
+	"github.com/MXCzkEVM/mxc-client/driver/chain_syncer/calldata"
+	"github.com/MXCzkEVM/mxc-client/driver/state"
+	"github.com/MXCzkEVM/mxc-client/pkg/rpc"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/taikoxyz/taiko-client/driver/chain_syncer/beaconsync"
-	"github.com/taikoxyz/taiko-client/driver/chain_syncer/calldata"
-	"github.com/taikoxyz/taiko-client/driver/state"
-	"github.com/taikoxyz/taiko-client/pkg/rpc"
 )
 
 // L2ChainSyncer is responsible for keeping the L2 execution engine's local chain in sync with the one
-// in TaikoL1 contract.
+// in MXCL1 contract.
 type L2ChainSyncer struct {
 	ctx   context.Context
 	state *state.State // Driver's state
@@ -92,7 +92,7 @@ func (s *L2ChainSyncer) Sync(l1End *types.Header) error {
 		}
 
 		// Make sure the execution engine's chain head is recorded in protocol.
-		l2HeadHash, err := s.rpc.TaikoL1.GetSyncedHeader(nil, l2Head.Number)
+		l2HeadHash, err := s.rpc.MXCL1.GetSyncedHeader(nil, l2Head.Number)
 		if err != nil {
 			return err
 		}
@@ -109,7 +109,7 @@ func (s *L2ChainSyncer) Sync(l1End *types.Header) error {
 
 			heightOrID.ID = common.Big0
 			heightOrID.Height = common.Big0
-			if l2HeadHash, err = s.rpc.TaikoL1.GetSyncedHeader(nil, common.Big0); err != nil {
+			if l2HeadHash, err = s.rpc.MXCL1.GetSyncedHeader(nil, common.Big0); err != nil {
 				return err
 			}
 		}

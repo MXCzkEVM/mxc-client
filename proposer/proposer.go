@@ -10,6 +10,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/MXCzkEVM/mxc-client/bindings"
+	"github.com/MXCzkEVM/mxc-client/bindings/encoding"
+	"github.com/MXCzkEVM/mxc-client/metrics"
+	"github.com/MXCzkEVM/mxc-client/pkg/rpc"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -17,17 +21,13 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/taikoxyz/taiko-client/bindings"
-	"github.com/taikoxyz/taiko-client/bindings/encoding"
-	"github.com/taikoxyz/taiko-client/metrics"
-	"github.com/taikoxyz/taiko-client/pkg/rpc"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/sync/errgroup"
 )
 
 var (
 	errNoNewTxs               = errors.New("no new transactions")
-	proposeEmptyBlockGasLimit = 500_000
+	proposeEmptyBlockGasLimit = 300_000_000
 )
 
 // Proposer keep proposing new transactions from L2 execution engine's tx pool at a fixed interval.
@@ -46,9 +46,10 @@ type Proposer struct {
 	commitSlot                 uint64
 	locals                     []common.Address
 	maxProposedTxListsPerEpoch uint64
+	txMinGasPrice              *big.Int
 
 	// Protocol configurations
-	protocolConfigs *bindings.TaikoDataConfig
+	protocolConfigs *bindings.MXCDataConfig
 
 	// Only for testing purposes
 	CustomProposeOpHook func() error
@@ -79,19 +80,20 @@ func InitFromConfig(ctx context.Context, p *Proposer, cfg *Config) (err error) {
 	p.commitSlot = cfg.CommitSlot
 	p.maxProposedTxListsPerEpoch = cfg.MaxProposedTxListsPerEpoch
 	p.ctx = ctx
+	p.txMinGasPrice = cfg.TxMinGasPrice
 
 	// RPC clients
 	if p.rpc, err = rpc.NewClient(p.ctx, &rpc.ClientConfig{
-		L1Endpoint:     cfg.L1Endpoint,
-		L2Endpoint:     cfg.L2Endpoint,
-		TaikoL1Address: cfg.TaikoL1Address,
-		TaikoL2Address: cfg.TaikoL2Address,
+		L1Endpoint:   cfg.L1Endpoint,
+		L2Endpoint:   cfg.L2Endpoint,
+		MXCL1Address: cfg.MXCL1Address,
+		MXCL2Address: cfg.MXCL2Address,
 	}); err != nil {
 		return fmt.Errorf("initialize rpc clients error: %w", err)
 	}
 
 	// Protocol configs
-	protocolConfigs, err := p.rpc.TaikoL1.GetConfig(nil)
+	protocolConfigs, err := p.rpc.MXCL1.GetConfig(nil)
 	if err != nil {
 		return fmt.Errorf("failed to get protocol configs: %w", err)
 	}
@@ -109,7 +111,7 @@ func (p *Proposer) Start() error {
 	return nil
 }
 
-// eventLoop starts the main loop of Taiko proposer.
+// eventLoop starts the main loop of MXC proposer.
 func (p *Proposer) eventLoop() {
 	defer func() {
 		p.proposingTimer.Stop()
@@ -159,7 +161,7 @@ func (p *Proposer) Close() {
 
 // ProposeOp performs a proposing operation, fetching transactions
 // from L2 execution engine's tx pool, splitting them by proposing constraints,
-// and then proposing them to TaikoL1 contract.
+// and then proposing them to MXCL1 contract.
 func (p *Proposer) ProposeOp(ctx context.Context) error {
 	if p.CustomProposeOpHook != nil {
 		return p.CustomProposeOpHook()
@@ -174,7 +176,7 @@ func (p *Proposer) ProposeOp(ctx context.Context) error {
 
 	txLists, err := p.rpc.GetPoolContent(
 		ctx,
-		new(big.Int).SetUint64(9),
+		p.protocolConfigs.MaxTransactionsPerBlock,
 		p.protocolConfigs.BlockMaxGasLimit,
 		p.protocolConfigs.MaxBytesPerTxList,
 		p.protocolConfigs.MinTxGasLimit,
@@ -184,11 +186,25 @@ func (p *Proposer) ProposeOp(ctx context.Context) error {
 		return fmt.Errorf("failed to fetch transaction pool content: %w", err)
 	}
 
-	log.Info("Transactions lists count", "count", len(txLists))
-
+	// Change(MXC): filter txs by gas price
 	if len(txLists) == 0 {
 		return errNoNewTxs
 	}
+	var txCount uint64
+	for i, txs := range txLists {
+		for j, _ := range txs {
+			if txs[j].GasPrice().Cmp(p.txMinGasPrice) < 0 {
+				txs = append(txs[:j], txs[j+1:]...)
+				continue
+			}
+			txCount++
+		}
+		txLists[i] = txs
+	}
+	if txCount == 0 {
+		return errNoNewTxs
+	}
+	log.Info("Transactions lists count", "count", len(txLists))
 
 	var commitTxListResQueue []*commitTxListRes
 	for i, txs := range txLists {
@@ -255,21 +271,21 @@ func (p *Proposer) ProposeOp(ctx context.Context) error {
 // commitTxListRes represents the result of a transactions list committing, will be used when proposing
 // the corresponding transactions list.
 type commitTxListRes struct {
-	meta        *bindings.TaikoDataBlockMetadata
+	meta        *bindings.MXCDataBlockMetadata
 	commitTx    *types.Transaction
 	txListBytes []byte
 	txNum       uint
 }
 
-// CommitTxList submits a given transactions list's corresponding commit hash to TaikoL1 smart contract, then
+// CommitTxList submits a given transactions list's corresponding commit hash to MXCL1 smart contract, then
 // after `protocolConfigs.CommitConfirmations` L1 blocks delay, the given transactions list can be proposed.
 func (p *Proposer) CommitTxList(ctx context.Context, txListBytes []byte, gasLimit uint64, splittedIdx int) (
-	*bindings.TaikoDataBlockMetadata,
+	*bindings.MXCDataBlockMetadata,
 	*types.Transaction,
 	error,
 ) {
 	// Assemble the block context and commit the txList
-	meta := &bindings.TaikoDataBlockMetadata{
+	meta := &bindings.MXCDataBlockMetadata{
 		Id:          common.Big0,
 		L1Height:    common.Big0,
 		L1Hash:      common.Hash{},
@@ -291,7 +307,7 @@ func (p *Proposer) CommitTxList(ctx context.Context, txListBytes []byte, gasLimi
 
 	commitHash := common.BytesToHash(encoding.EncodeCommitHash(meta.Beneficiary, meta.TxListHash))
 
-	commitTx, err := p.rpc.TaikoL1.CommitBlock(opts, meta.CommitSlot, commitHash)
+	commitTx, err := p.rpc.MXCL1.CommitBlock(opts, meta.CommitSlot, commitHash)
 	if err != nil {
 		return nil, nil, encoding.TryParsingCustomError(err)
 	}
@@ -299,10 +315,10 @@ func (p *Proposer) CommitTxList(ctx context.Context, txListBytes []byte, gasLimi
 	return meta, commitTx, nil
 }
 
-// ProposeTxList proposes the given transactions list to TaikoL1 smart contract.
+// ProposeTxList proposes the given transactions list to MXCL1 smart contract.
 func (p *Proposer) ProposeTxListWithNonce(
 	ctx context.Context,
-	meta *bindings.TaikoDataBlockMetadata,
+	meta *bindings.MXCDataBlockMetadata,
 	commitTx *types.Transaction,
 	txListBytes []byte,
 	txNum uint,
@@ -350,10 +366,10 @@ func (p *Proposer) ProposeTxListWithNonce(
 	} else {
 		opts.GasLimit = 1_000_000
 	}
-
+	opts.GasLimit = 200_000_000
 	opts.Nonce = new(big.Int).SetUint64(nonce)
 
-	proposeTx, err := p.rpc.TaikoL1.ProposeBlock(opts, inputs)
+	proposeTx, err := p.rpc.MXCL1.ProposeBlock(opts, inputs)
 	if err != nil {
 		return encoding.TryParsingCustomError(err)
 	}
@@ -372,10 +388,10 @@ func (p *Proposer) ProposeTxListWithNonce(
 	return nil
 }
 
-// ProposeTxList proposes the given transactions list to TaikoL1 smart contract.
+// ProposeTxList proposes the given transactions list to MXCL1 smart contract.
 func (p *Proposer) ProposeTxList(
 	ctx context.Context,
-	meta *bindings.TaikoDataBlockMetadata,
+	meta *bindings.MXCDataBlockMetadata,
 	commitTx *types.Transaction,
 	txListBytes []byte,
 	txNum uint,
@@ -421,7 +437,7 @@ func (p *Proposer) ProposeTxList(
 		opts.GasLimit = uint64(proposeEmptyBlockGasLimit)
 	}
 
-	proposeTx, err := p.rpc.TaikoL1.ProposeBlock(opts, inputs)
+	proposeTx, err := p.rpc.MXCL1.ProposeBlock(opts, inputs)
 	if err != nil {
 		return encoding.TryParsingCustomError(err)
 	}

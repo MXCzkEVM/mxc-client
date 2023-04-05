@@ -7,22 +7,22 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/MXCzkEVM/mxc-client/bindings"
+	"github.com/MXCzkEVM/mxc-client/bindings/encoding"
+	"github.com/MXCzkEVM/mxc-client/metrics"
+	"github.com/MXCzkEVM/mxc-client/pkg/rpc"
+	proofProducer "github.com/MXCzkEVM/mxc-client/prover/proof_producer"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/taikoxyz/taiko-client/bindings"
-	"github.com/taikoxyz/taiko-client/bindings/encoding"
-	"github.com/taikoxyz/taiko-client/metrics"
-	"github.com/taikoxyz/taiko-client/pkg/rpc"
-	proofProducer "github.com/taikoxyz/taiko-client/prover/proof_producer"
 )
 
 var _ ProofSubmitter = (*InvalidProofSubmitter)(nil)
 
 // InvalidProofSubmitter is responsible requesting zk proofs for the given invalid L2
-// blocks, and submitting the generated proofs to the TaikoL1 smart contract.
+// blocks, and submitting the generated proofs to the MXCL1 smart contract.
 type InvalidProofSubmitter struct {
 	rpc              *rpc.Client
 	proofProducer    proofProducer.ProofProducer
@@ -54,7 +54,7 @@ func NewInvalidProofSubmitter(
 }
 
 // RequestProof implements the ProofSubmitter interface.
-func (s *InvalidProofSubmitter) RequestProof(ctx context.Context, event *bindings.TaikoL1ClientBlockProposed) error {
+func (s *InvalidProofSubmitter) RequestProof(ctx context.Context, event *bindings.MXCL1ClientBlockProposed) error {
 	// Get the throwaway block from L2 execution engine.
 	throwAwayBlock, err := s.getThrowAwayBlock(ctx, event)
 	if err != nil {
@@ -122,7 +122,7 @@ func (s *InvalidProofSubmitter) SubmitProof(
 
 	log.Debug("Throwaway block receipts fetched", "length", receipts.Len())
 
-	// Generate the merkel proof (whose root is block's receiptRoot) of the TaikoL2.invalidateBlock transaction's receipt.
+	// Generate the merkel proof (whose root is block's receiptRoot) of the MXCL2.invalidateBlock transaction's receipt.
 	receiptRoot, receiptProof, err := generateTrieProof(receipts, 0)
 	if err != nil {
 		return fmt.Errorf("failed to generate anchor receipt proof: %w", err)
@@ -131,7 +131,7 @@ func (s *InvalidProofSubmitter) SubmitProof(
 		return fmt.Errorf("receipt root mismatch, receiptRoot: %s, block.ReceiptHash: %s", receiptRoot, header.ReceiptHash)
 	}
 
-	// Assemble the TaikoL1.proveBlockInvalid transaction inputs.
+	// Assemble the MXCL1.proveBlockInvalid transaction inputs.
 	txListBytes, err := rlp.EncodeToBytes(block.Transactions())
 	if err != nil {
 		return fmt.Errorf("failed to encode throwaway block transactions: %w", err)
@@ -142,8 +142,8 @@ func (s *InvalidProofSubmitter) SubmitProof(
 		return err
 	}
 
-	evidence := &encoding.TaikoL1Evidence{
-		Meta: bindings.TaikoDataBlockMetadata{
+	evidence := &encoding.MXCL1Evidence{
+		Meta: bindings.MXCDataBlockMetadata{
 			Id:          meta.Id,
 			L1Height:    meta.L1Height,
 			L1Hash:      meta.L1Hash,
@@ -165,7 +165,7 @@ func (s *InvalidProofSubmitter) SubmitProof(
 		return err
 	}
 
-	// Send the TaikoL1.proveBlockInvalid transaction.
+	// Send the MXCL1.proveBlockInvalid transaction.
 	txOpts, err := getProveBlocksTxOpts(ctx, s.rpc.L1, s.rpc.L1ChainID, s.proverPrivKey)
 	if err != nil {
 		return err
@@ -175,7 +175,7 @@ func (s *InvalidProofSubmitter) SubmitProof(
 		s.mutex.Lock()
 		defer s.mutex.Unlock()
 
-		return s.rpc.TaikoL1.ProveBlockInvalid(txOpts, blockID, input)
+		return s.rpc.MXCL1.ProveBlockInvalid(txOpts, blockID, input)
 	}
 
 	if err := sendTxWithBackoff(ctx, s.rpc, blockID, sendTx); err != nil {
@@ -203,7 +203,7 @@ func (s *InvalidProofSubmitter) SubmitProof(
 // getThrowAwayBlock keeps waiting till the throwaway block inserted into the L2 chain.
 func (s *InvalidProofSubmitter) getThrowAwayBlock(
 	ctx context.Context,
-	event *bindings.TaikoL1ClientBlockProposed,
+	event *bindings.MXCL1ClientBlockProposed,
 ) (*types.Block, error) {
 	l1Origin, err := s.rpc.WaitL1Origin(ctx, event.Id)
 	if err != nil {

@@ -5,16 +5,16 @@ import (
 	"math/rand"
 	"testing"
 
+	"github.com/MXCzkEVM/mxc-client/bindings"
+	"github.com/MXCzkEVM/mxc-client/testutils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
-	"github.com/taikoxyz/taiko-client/bindings"
-	"github.com/taikoxyz/taiko-client/testutils"
 )
 
 func TestEncodeEvidence(t *testing.T) {
-	evidence := &TaikoL1Evidence{
+	evidence := &MXCL1Evidence{
 		Meta:   testMeta,
 		Header: *FromGethHeader(testHeader),
 		Prover: common.BytesToAddress(testutils.RandomHash().Bytes()),
@@ -40,7 +40,7 @@ func TestEncodeProposeBlockInput(t *testing.T) {
 
 func TestEncodeProveBlockInput(t *testing.T) {
 	encoded, err := EncodeProveBlockInput(
-		&TaikoL1Evidence{
+		&MXCL1Evidence{
 			Meta:   testMeta,
 			Header: *FromGethHeader(testHeader),
 			Prover: common.BytesToAddress(testutils.RandomHash().Bytes()),
@@ -62,7 +62,7 @@ func TestEncodeProveBlockInput(t *testing.T) {
 
 func TestEncodeProveBlockInvalidInput(t *testing.T) {
 	encoded, err := EncodeProveBlockInvalidInput(
-		&TaikoL1Evidence{
+		&MXCL1Evidence{
 			Meta:   testMeta,
 			Header: *FromGethHeader(testHeader),
 			Prover: common.BytesToAddress(testutils.RandomHash().Bytes()),
@@ -95,8 +95,8 @@ func TestDecodeEvidenceHeader(t *testing.T) {
 	_, err = decodeEvidenceHeader(testutils.RandomBytes(1024))
 	require.NotNil(t, err)
 
-	b, err := EncodeEvidence(&TaikoL1Evidence{
-		Meta: bindings.TaikoDataBlockMetadata{
+	b, err := EncodeEvidence(&MXCL1Evidence{
+		Meta: bindings.MXCDataBlockMetadata{
 			Id:           new(big.Int).SetUint64(rand.Uint64()),
 			L1Height:     new(big.Int).SetUint64(rand.Uint64()),
 			L1Hash:       testutils.RandomHash(),

@@ -6,9 +6,9 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/MXCzkEVM/mxc-client/bindings"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/taikoxyz/taiko-client/bindings"
 )
 
 // DummyProofProducer always returns a dummy proof.
@@ -22,7 +22,7 @@ func (d *DummyProofProducer) RequestProof(
 	ctx context.Context,
 	opts *ProofRequestOptions,
 	blockID *big.Int,
-	meta *bindings.TaikoDataBlockMetadata,
+	meta *bindings.MXCDataBlockMetadata,
 	header *types.Header,
 	resultCh chan *ProofWithHeader,
 ) error {

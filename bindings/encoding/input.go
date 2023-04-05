@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"fmt"
 
+	"github.com/MXCzkEVM/mxc-client/bindings"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/taikoxyz/taiko-client/bindings"
 )
 
 // ABI arguments marshaling components.
@@ -164,24 +164,24 @@ var (
 
 // Contract ABIs.
 var (
-	TaikoL1ABI *abi.ABI
-	TaikoL2ABI *abi.ABI
+	MXCL1ABI *abi.ABI
+	MXCL2ABI *abi.ABI
 )
 
 func init() {
 	var err error
 
-	if TaikoL1ABI, err = bindings.TaikoL1ClientMetaData.GetAbi(); err != nil {
-		log.Crit("Get TaikoL1 ABI error", "error", err)
+	if MXCL1ABI, err = bindings.MXCL1ClientMetaData.GetAbi(); err != nil {
+		log.Crit("Get MXCL1 ABI error", "error", err)
 	}
 
-	if TaikoL2ABI, err = bindings.TaikoL2ClientMetaData.GetAbi(); err != nil {
-		log.Crit("Get TaikoL2 ABI error", "error", err)
+	if MXCL2ABI, err = bindings.MXCL2ClientMetaData.GetAbi(); err != nil {
+		log.Crit("Get MXCL2 ABI error", "error", err)
 	}
 }
 
 // EncodeBlockMetadata performs the solidity `abi.encode` for the given blockMetadata.
-func EncodeBlockMetadata(meta *bindings.TaikoDataBlockMetadata) ([]byte, error) {
+func EncodeBlockMetadata(meta *bindings.MXCDataBlockMetadata) ([]byte, error) {
 	b, err := blockMetadataArgs.Pack(meta)
 	if err != nil {
 		return nil, fmt.Errorf("failed to abi.encode block metadata, %w", err)
@@ -190,7 +190,7 @@ func EncodeBlockMetadata(meta *bindings.TaikoDataBlockMetadata) ([]byte, error) 
 }
 
 // EncodeEvidence performs the solidity `abi.encode` for the given evidence.
-func EncodeEvidence(e *TaikoL1Evidence) ([]byte, error) {
+func EncodeEvidence(e *MXCL1Evidence) ([]byte, error) {
 	b, err := EvidenceArgs.Pack(e)
 	if err != nil {
 		return nil, fmt.Errorf("failed to abi.encode evidence, %w", err)
@@ -207,8 +207,8 @@ func EncodeCommitHash(beneficiary common.Address, txListHash [32]byte) []byte {
 	)
 }
 
-// EncodeProposeBlockInput encodes the input params for TaikoL1.proposeBlock.
-func EncodeProposeBlockInput(meta *bindings.TaikoDataBlockMetadata, txListBytes []byte) ([][]byte, error) {
+// EncodeProposeBlockInput encodes the input params for MXCL1.proposeBlock.
+func EncodeProposeBlockInput(meta *bindings.MXCDataBlockMetadata, txListBytes []byte) ([][]byte, error) {
 	metaBytes, err := EncodeBlockMetadata(meta)
 	if err != nil {
 		return nil, err
@@ -216,9 +216,9 @@ func EncodeProposeBlockInput(meta *bindings.TaikoDataBlockMetadata, txListBytes 
 	return [][]byte{metaBytes, txListBytes}, nil
 }
 
-// EncodeProveBlockInput encodes the input params for TaikoL1.proveBlock.
+// EncodeProveBlockInput encodes the input params for MXCL1.proveBlock.
 func EncodeProveBlockInput(
-	evidence *TaikoL1Evidence,
+	evidence *MXCL1Evidence,
 	anchorTx *types.Transaction,
 	anchorReceipt *types.Receipt,
 ) ([][]byte, error) {
@@ -240,10 +240,10 @@ func EncodeProveBlockInput(
 	return [][]byte{evidenceBytes, anchorTxBytes, anchorReceiptBytes}, nil
 }
 
-// EncodeProveBlockInvalidInput encodes the input params for TaikoL1.proveBlockInvalid.
+// EncodeProveBlockInvalidInput encodes the input params for MXCL1.proveBlockInvalid.
 func EncodeProveBlockInvalidInput(
-	evidence *TaikoL1Evidence,
-	target *bindings.TaikoDataBlockMetadata,
+	evidence *MXCL1Evidence,
+	target *bindings.MXCDataBlockMetadata,
 	receipt *types.Receipt,
 ) ([][]byte, error) {
 	evidenceBytes, err := EncodeEvidence(evidence)
@@ -264,9 +264,9 @@ func EncodeProveBlockInvalidInput(
 	return [][]byte{evidenceBytes, metaBytes, receiptBytes}, nil
 }
 
-// UnpackTxListBytes unpacks the input data of a TaikoL1.proposeBlock transaction, and returns the txList bytes.
+// UnpackTxListBytes unpacks the input data of a MXCL1.proposeBlock transaction, and returns the txList bytes.
 func UnpackTxListBytes(txData []byte) ([]byte, error) {
-	method, err := TaikoL1ABI.MethodById(txData)
+	method, err := MXCL1ABI.MethodById(txData)
 	if err != nil {
 		return nil, err
 	}
@@ -291,10 +291,10 @@ func UnpackTxListBytes(txData []byte) ([]byte, error) {
 	return inputs[1], nil
 }
 
-// UnpackEvidenceHeader unpacks the evidence data of a TaikoL1.proveBlock transaction, and returns
+// UnpackEvidenceHeader unpacks the evidence data of a MXCL1.proveBlock transaction, and returns
 // the block header inside.
 func UnpackEvidenceHeader(txData []byte) (*BlockHeader, error) {
-	method, err := TaikoL1ABI.MethodById(txData)
+	method, err := MXCL1ABI.MethodById(txData)
 	if err != nil {
 		return nil, err
 	}
@@ -326,7 +326,7 @@ func decodeEvidenceHeader(evidenceBytes []byte) (*BlockHeader, error) {
 		return nil, fmt.Errorf("failed to decode evidence meta")
 	}
 
-	evidence := new(TaikoL1Evidence)
+	evidence := new(MXCL1Evidence)
 	if err := EvidenceArgs.Copy(&evidence, unpacked); err != nil {
 		return nil, err
 	}

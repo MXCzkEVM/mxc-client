@@ -6,18 +6,18 @@ import (
 )
 
 // TryParsingCustomError tries to checks whether the given error is one of the
-// custom errors defined the TaikoL1 / TaikoL2's ABI, if so, it will return
+// custom errors defined the MXCL1 / MXCL2's ABI, if so, it will return
 // the matched custom error, otherwise, it simply returns the original error.
 func TryParsingCustomError(originalError error) error {
 	errData := getErrorData(originalError)
 
-	for _, l1CustomError := range TaikoL1ABI.Errors {
+	for _, l1CustomError := range MXCL1ABI.Errors {
 		if strings.HasPrefix(l1CustomError.ID.Hex(), errData) {
 			return errors.New(l1CustomError.Name)
 		}
 	}
 
-	for _, l2CustomError := range TaikoL2ABI.Errors {
+	for _, l2CustomError := range MXCL2ABI.Errors {
 		if strings.HasPrefix(l2CustomError.ID.Hex(), errData) {
 			return errors.New(l2CustomError.Name)
 		}

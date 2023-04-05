@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
+	"github.com/MXCzkEVM/mxc-client/bindings"
+	proofProducer "github.com/MXCzkEVM/mxc-client/prover/proof_producer"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/taikoxyz/taiko-client/bindings"
-	proofProducer "github.com/taikoxyz/taiko-client/prover/proof_producer"
 )
 
 func (s *ProofSubmitterTestSuite) TestProveBlockInvalidL1OriginTimeout() {
@@ -15,7 +15,7 @@ func (s *ProofSubmitterTestSuite) TestProveBlockInvalidL1OriginTimeout() {
 	defer cancel()
 
 	s.ErrorContains(
-		s.invalidProofSubmitter.RequestProof(ctx, &bindings.TaikoL1ClientBlockProposed{Id: common.Big256}),
+		s.invalidProofSubmitter.RequestProof(ctx, &bindings.MXCL1ClientBlockProposed{Id: common.Big256}),
 		"context deadline exceeded",
 	)
 }
@@ -25,7 +25,7 @@ func (s *ProofSubmitterTestSuite) TestSubmitInvalidBlockProofThrowawayBlockNotFo
 		s.invalidProofSubmitter.SubmitProof(
 			context.Background(), &proofProducer.ProofWithHeader{
 				BlockID: common.Big256,
-				Meta:    &bindings.TaikoDataBlockMetadata{},
+				Meta:    &bindings.MXCDataBlockMetadata{},
 				Header:  &types.Header{},
 				ZkProof: []byte{0xff},
 			},

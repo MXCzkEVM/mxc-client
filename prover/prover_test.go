@@ -6,16 +6,16 @@ import (
 	"testing"
 	"time"
 
+	"github.com/MXCzkEVM/mxc-client/bindings"
+	"github.com/MXCzkEVM/mxc-client/driver"
+	"github.com/MXCzkEVM/mxc-client/pkg/jwt"
+	"github.com/MXCzkEVM/mxc-client/proposer"
+	producer "github.com/MXCzkEVM/mxc-client/prover/proof_producer"
+	"github.com/MXCzkEVM/mxc-client/testutils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/suite"
-	"github.com/taikoxyz/taiko-client/bindings"
-	"github.com/taikoxyz/taiko-client/driver"
-	"github.com/taikoxyz/taiko-client/pkg/jwt"
-	"github.com/taikoxyz/taiko-client/proposer"
-	producer "github.com/taikoxyz/taiko-client/prover/proof_producer"
-	"github.com/taikoxyz/taiko-client/testutils"
 )
 
 type ProverTestSuite struct {
@@ -35,17 +35,17 @@ func (s *ProverTestSuite) SetupTest() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	p := new(Prover)
-	s.Nil(InitFromConfig(ctx, p, (&Config{
+	s.Nil(InitFromConfig(ctx, p, &Config{
 		L1WsEndpoint:             os.Getenv("L1_NODE_WS_ENDPOINT"),
 		L1HttpEndpoint:           os.Getenv("L1_NODE_HTTP_ENDPOINT"),
 		L2WsEndpoint:             os.Getenv("L2_EXECUTION_ENGINE_WS_ENDPOINT"),
 		L2HttpEndpoint:           os.Getenv("L2_EXECUTION_ENGINE_HTTP_ENDPOINT"),
-		TaikoL1Address:           common.HexToAddress(os.Getenv("TAIKO_L1_ADDRESS")),
-		TaikoL2Address:           common.HexToAddress(os.Getenv("TAIKO_L2_ADDRESS")),
+		MXCL1Address:             common.HexToAddress(os.Getenv("MXC_L1_ADDRESS")),
+		MXCL2Address:             common.HexToAddress(os.Getenv("MXC_L2_ADDRESS")),
 		L1ProverPrivKey:          l1ProverPrivKey,
 		Dummy:                    true,
 		MaxConcurrentProvingJobs: 1,
-	})))
+	}))
 	s.p = p
 	s.cancel = cancel
 
@@ -64,8 +64,8 @@ func (s *ProverTestSuite) SetupTest() {
 		L1Endpoint:                    os.Getenv("L1_NODE_WS_ENDPOINT"),
 		L2Endpoint:                    os.Getenv("L2_EXECUTION_ENGINE_WS_ENDPOINT"),
 		L2EngineEndpoint:              os.Getenv("L2_EXECUTION_ENGINE_AUTH_ENDPOINT"),
-		TaikoL1Address:                common.HexToAddress(os.Getenv("TAIKO_L1_ADDRESS")),
-		TaikoL2Address:                common.HexToAddress(os.Getenv("TAIKO_L2_ADDRESS")),
+		MXCL1Address:                  common.HexToAddress(os.Getenv("MXC_L1_ADDRESS")),
+		MXCL2Address:                  common.HexToAddress(os.Getenv("MXC_L2_ADDRESS")),
 		ThrowawayBlocksBuilderPrivKey: throwawayBlocksBuilderPrivKey,
 		JwtSecret:                     string(jwtSecret),
 	}))
@@ -78,15 +78,15 @@ func (s *ProverTestSuite) SetupTest() {
 	prop := new(proposer.Proposer)
 
 	proposeInterval := 1024 * time.Hour // No need to periodically propose transactions list in unit tests
-	s.Nil(proposer.InitFromConfig(context.Background(), prop, (&proposer.Config{
+	s.Nil(proposer.InitFromConfig(context.Background(), prop, &proposer.Config{
 		L1Endpoint:              os.Getenv("L1_NODE_WS_ENDPOINT"),
 		L2Endpoint:              os.Getenv("L2_EXECUTION_ENGINE_WS_ENDPOINT"),
-		TaikoL1Address:          common.HexToAddress(os.Getenv("TAIKO_L1_ADDRESS")),
-		TaikoL2Address:          common.HexToAddress(os.Getenv("TAIKO_L2_ADDRESS")),
+		MXCL1Address:            common.HexToAddress(os.Getenv("MXC_L1_ADDRESS")),
+		MXCL2Address:            common.HexToAddress(os.Getenv("MXC_L2_ADDRESS")),
 		L1ProposerPrivKey:       l1ProposerPrivKey,
 		L2SuggestedFeeRecipient: common.HexToAddress(os.Getenv("L2_SUGGESTED_FEE_RECIPIENT")),
 		ProposeInterval:         &proposeInterval, // No need to periodically propose transactions list in unit tests
-	})))
+	}))
 
 	s.proposer = prop
 	s.proposer.AfterCommitHook = s.MineL1Confirmations
@@ -119,7 +119,7 @@ func (s *ProverTestSuite) TestOnBlockProposed() {
 }
 
 func (s *ProverTestSuite) TestOnBlockVerifiedEmptyBlockHash() {
-	s.Nil(s.p.onBlockVerified(context.Background(), &bindings.TaikoL1ClientBlockVerified{
+	s.Nil(s.p.onBlockVerified(context.Background(), &bindings.MXCL1ClientBlockVerified{
 		Id:        common.Big1,
 		BlockHash: common.Hash{}},
 	))
@@ -129,7 +129,7 @@ func (s *ProverTestSuite) TestSubmitProofOp() {
 	s.NotPanics(func() {
 		s.p.submitProofOp(context.Background(), &producer.ProofWithHeader{
 			BlockID: common.Big1,
-			Meta:    &bindings.TaikoDataBlockMetadata{},
+			Meta:    &bindings.MXCDataBlockMetadata{},
 			Header:  &types.Header{},
 			ZkProof: []byte{},
 		}, true)
@@ -137,7 +137,7 @@ func (s *ProverTestSuite) TestSubmitProofOp() {
 	s.NotPanics(func() {
 		s.p.submitProofOp(context.Background(), &producer.ProofWithHeader{
 			BlockID: common.Big1,
-			Meta:    &bindings.TaikoDataBlockMetadata{},
+			Meta:    &bindings.MXCDataBlockMetadata{},
 			Header:  &types.Header{},
 			ZkProof: []byte{},
 		}, false)

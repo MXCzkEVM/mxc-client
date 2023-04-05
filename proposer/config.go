@@ -3,21 +3,22 @@ package proposer
 import (
 	"crypto/ecdsa"
 	"fmt"
+	"math/big"
 	"strings"
 	"time"
 
+	"github.com/MXCzkEVM/mxc-client/cmd/flags"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/taikoxyz/taiko-client/cmd/flags"
 	"github.com/urfave/cli/v2"
 )
 
-// Config contains all configurations to initialize a Taiko proposer.
+// Config contains all configurations to initialize a MXC proposer.
 type Config struct {
 	L1Endpoint                 string
 	L2Endpoint                 string
-	TaikoL1Address             common.Address
-	TaikoL2Address             common.Address
+	MXCL1Address               common.Address
+	MXCL2Address               common.Address
 	L1ProposerPrivKey          *ecdsa.PrivateKey
 	L2SuggestedFeeRecipient    common.Address
 	ProposeInterval            *time.Duration
@@ -25,6 +26,7 @@ type Config struct {
 	LocalAddresses             []common.Address
 	ProposeEmptyBlocksInterval *time.Duration
 	MaxProposedTxListsPerEpoch uint64
+	TxMinGasPrice              *big.Int
 }
 
 // NewConfigFromCliContext initializes a Config instance from
@@ -54,6 +56,14 @@ func NewConfigFromCliContext(c *cli.Context) (*Config, error) {
 		}
 		proposeEmptyBlocksInterval = &interval
 	}
+	var txMinGasPrice *big.Int
+	if c.IsSet(flags.TxMinGasPrice.Name) {
+		var ok bool
+		txMinGasPrice, ok = big.NewInt(0).SetString(c.String(flags.TxMinGasPrice.Name), 10)
+		if !ok {
+			return nil, fmt.Errorf("invalid txMinGasPrice")
+		}
+	}
 
 	l2SuggestedFeeRecipient := c.String(flags.L2SuggestedFeeRecipient.Name)
 	if !common.IsHexAddress(l2SuggestedFeeRecipient) {
@@ -74,8 +84,8 @@ func NewConfigFromCliContext(c *cli.Context) (*Config, error) {
 	return &Config{
 		L1Endpoint:                 c.String(flags.L1WSEndpoint.Name),
 		L2Endpoint:                 c.String(flags.L2HTTPEndpoint.Name),
-		TaikoL1Address:             common.HexToAddress(c.String(flags.TaikoL1Address.Name)),
-		TaikoL2Address:             common.HexToAddress(c.String(flags.TaikoL2Address.Name)),
+		MXCL1Address:               common.HexToAddress(c.String(flags.MXCL1Address.Name)),
+		MXCL2Address:               common.HexToAddress(c.String(flags.MXCL2Address.Name)),
 		L1ProposerPrivKey:          l1ProposerPrivKey,
 		L2SuggestedFeeRecipient:    common.HexToAddress(l2SuggestedFeeRecipient),
 		ProposeInterval:            proposingInterval,
@@ -83,5 +93,6 @@ func NewConfigFromCliContext(c *cli.Context) (*Config, error) {
 		LocalAddresses:             localAddresses,
 		ProposeEmptyBlocksInterval: proposeEmptyBlocksInterval,
 		MaxProposedTxListsPerEpoch: c.Uint64(flags.MaxProposedTxListsPerEpoch.Name),
+		TxMinGasPrice:              txMinGasPrice,
 	}, nil
 }

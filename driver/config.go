@@ -5,20 +5,20 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/MXCzkEVM/mxc-client/cmd/flags"
+	"github.com/MXCzkEVM/mxc-client/pkg/jwt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/taikoxyz/taiko-client/cmd/flags"
-	"github.com/taikoxyz/taiko-client/pkg/jwt"
 	"github.com/urfave/cli/v2"
 )
 
-// Config contains the configurations to initialize a Taiko driver.
+// Config contains the configurations to initialize a MXC driver.
 type Config struct {
 	L1Endpoint                    string
 	L2Endpoint                    string
 	L2EngineEndpoint              string
-	TaikoL1Address                common.Address
-	TaikoL2Address                common.Address
+	MXCL1Address                  common.Address
+	MXCL2Address                  common.Address
 	ThrowawayBlocksBuilderPrivKey *ecdsa.PrivateKey
 	JwtSecret                     string
 	P2PSyncVerifiedBlocks         bool
@@ -42,8 +42,8 @@ func NewConfigFromCliContext(c *cli.Context) (*Config, error) {
 		L1Endpoint:                    c.String(flags.L1WSEndpoint.Name),
 		L2Endpoint:                    c.String(flags.L2WSEndpoint.Name),
 		L2EngineEndpoint:              c.String(flags.L2AuthEndpoint.Name),
-		TaikoL1Address:                common.HexToAddress(c.String(flags.TaikoL1Address.Name)),
-		TaikoL2Address:                common.HexToAddress(c.String(flags.TaikoL2Address.Name)),
+		MXCL1Address:                  common.HexToAddress(c.String(flags.MXCL1Address.Name)),
+		MXCL2Address:                  common.HexToAddress(c.String(flags.MXCL2Address.Name)),
 		ThrowawayBlocksBuilderPrivKey: throwawayBlocksBuilderPrivKey,
 		JwtSecret:                     string(jwtSecret),
 		P2PSyncVerifiedBlocks:         c.Bool(flags.P2PSyncVerifiedBlocks.Name),

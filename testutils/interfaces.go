@@ -3,9 +3,9 @@ package testutils
 import (
 	"context"
 
+	"github.com/MXCzkEVM/mxc-client/bindings"
+	"github.com/MXCzkEVM/mxc-client/cmd/utils"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/taikoxyz/taiko-client/bindings"
-	"github.com/taikoxyz/taiko-client/cmd/utils"
 )
 
 type CalldataSyncer interface {
@@ -17,13 +17,13 @@ type Proposer interface {
 	ProposeOp(ctx context.Context) error
 	ProposeEmptyBlockOp(ctx context.Context) error
 	CommitTxList(ctx context.Context, txListBytes []byte, gasLimit uint64, splittedIdx int) (
-		*bindings.TaikoDataBlockMetadata,
+		*bindings.MXCDataBlockMetadata,
 		*types.Transaction,
 		error,
 	)
 	ProposeTxList(
 		ctx context.Context,
-		meta *bindings.TaikoDataBlockMetadata,
+		meta *bindings.MXCDataBlockMetadata,
 		commitTx *types.Transaction,
 		txListBytes []byte,
 		txNum uint,

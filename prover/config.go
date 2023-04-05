@@ -7,20 +7,20 @@ import (
 	"strings"
 	"time"
 
+	"github.com/MXCzkEVM/mxc-client/cmd/flags"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/taikoxyz/taiko-client/cmd/flags"
 	"github.com/urfave/cli/v2"
 )
 
-// Config contains the configurations to initialize a Taiko prover.
+// Config contains the configurations to initialize a MXC prover.
 type Config struct {
 	L1WsEndpoint                    string
 	L1HttpEndpoint                  string
 	L2WsEndpoint                    string
 	L2HttpEndpoint                  string
-	TaikoL1Address                  common.Address
-	TaikoL2Address                  common.Address
+	MXCL1Address                    common.Address
+	MXCL2Address                    common.Address
 	L1ProverPrivKey                 *ecdsa.PrivateKey
 	ProofSubmittorPrivKey           *ecdsa.PrivateKey
 	ZKEvmRpcdEndpoint               string
@@ -92,8 +92,8 @@ func NewConfigFromCliContext(c *cli.Context) (*Config, error) {
 		L1HttpEndpoint:                  c.String(flags.L1HTTPEndpoint.Name),
 		L2WsEndpoint:                    c.String(flags.L2WSEndpoint.Name),
 		L2HttpEndpoint:                  c.String(flags.L2HTTPEndpoint.Name),
-		TaikoL1Address:                  common.HexToAddress(c.String(flags.TaikoL1Address.Name)),
-		TaikoL2Address:                  common.HexToAddress(c.String(flags.TaikoL2Address.Name)),
+		MXCL1Address:                    common.HexToAddress(c.String(flags.MXCL1Address.Name)),
+		MXCL2Address:                    common.HexToAddress(c.String(flags.MXCL2Address.Name)),
 		L1ProverPrivKey:                 l1ProverPrivKey,
 		ProofSubmittorPrivKey:           proofSubmittorPrivKey,
 		ZKEvmRpcdEndpoint:               c.String(flags.ZkEvmRpcdEndpoint.Name),

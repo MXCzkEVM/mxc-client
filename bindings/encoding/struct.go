@@ -3,10 +3,10 @@ package encoding
 import (
 	"math/big"
 
+	"github.com/MXCzkEVM/mxc-client/bindings"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/beacon"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/taikoxyz/taiko-client/bindings"
 )
 
 type BlockHeader struct {
@@ -28,8 +28,8 @@ type BlockHeader struct {
 	BaseFeePerGas    *big.Int
 }
 
-type TaikoL1Evidence struct {
-	Meta     bindings.TaikoDataBlockMetadata
+type MXCL1Evidence struct {
+	Meta     bindings.MXCDataBlockMetadata
 	Header   BlockHeader
 	Prover   common.Address
 	Proofs   [][]byte

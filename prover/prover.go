@@ -7,18 +7,18 @@ import (
 	"sync"
 	"time"
 
+	"github.com/MXCzkEVM/mxc-client/bindings"
+	"github.com/MXCzkEVM/mxc-client/metrics"
+	eventIterator "github.com/MXCzkEVM/mxc-client/pkg/chain_iterator/event_iterator"
+	"github.com/MXCzkEVM/mxc-client/pkg/rpc"
+	txListValidator "github.com/MXCzkEVM/mxc-client/pkg/tx_list_validator"
+	proofProducer "github.com/MXCzkEVM/mxc-client/prover/proof_producer"
+	proofSubmitter "github.com/MXCzkEVM/mxc-client/prover/proof_submitter"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/taikoxyz/taiko-client/bindings"
-	"github.com/taikoxyz/taiko-client/metrics"
-	eventIterator "github.com/taikoxyz/taiko-client/pkg/chain_iterator/event_iterator"
-	"github.com/taikoxyz/taiko-client/pkg/rpc"
-	txListValidator "github.com/taikoxyz/taiko-client/pkg/tx_list_validator"
-	proofProducer "github.com/taikoxyz/taiko-client/prover/proof_producer"
-	proofSubmitter "github.com/taikoxyz/taiko-client/prover/proof_submitter"
 	"github.com/urfave/cli/v2"
 )
 
@@ -33,7 +33,7 @@ type Prover struct {
 
 	// Contract configurations
 	txListValidator *txListValidator.TxListValidator
-	protocolConfigs *bindings.TaikoDataConfig
+	protocolConfigs *bindings.MXCDataConfig
 
 	// States
 	latestVerifiedL1Height uint64
@@ -45,9 +45,9 @@ type Prover struct {
 	invalidProofSubmitter proofSubmitter.ProofSubmitter
 
 	// Subscriptions
-	blockProposedCh  chan *bindings.TaikoL1ClientBlockProposed
+	blockProposedCh  chan *bindings.MXCL1ClientBlockProposed
 	blockProposedSub event.Subscription
-	blockVerifiedCh  chan *bindings.TaikoL1ClientBlockVerified
+	blockVerifiedCh  chan *bindings.MXCL1ClientBlockVerified
 	blockVerifiedSub event.Subscription
 	proveNotify      chan struct{}
 
@@ -81,16 +81,16 @@ func InitFromConfig(ctx context.Context, p *Prover, cfg *Config) (err error) {
 
 	// Clients
 	if p.rpc, err = rpc.NewClient(p.ctx, &rpc.ClientConfig{
-		L1Endpoint:     cfg.L1WsEndpoint,
-		L2Endpoint:     cfg.L2WsEndpoint,
-		TaikoL1Address: cfg.TaikoL1Address,
-		TaikoL2Address: cfg.TaikoL2Address,
+		L1Endpoint:   cfg.L1WsEndpoint,
+		L2Endpoint:   cfg.L2WsEndpoint,
+		MXCL1Address: cfg.MXCL1Address,
+		MXCL2Address: cfg.MXCL2Address,
 	}); err != nil {
 		return err
 	}
 
 	// Configs
-	protocolConfigs, err := p.rpc.TaikoL1.GetConfig(nil)
+	protocolConfigs, err := p.rpc.MXCL1.GetConfig(nil)
 	if err != nil {
 		return fmt.Errorf("failed to get protocol configs: %w", err)
 	}
@@ -109,8 +109,8 @@ func InitFromConfig(ctx context.Context, p *Prover, cfg *Config) (err error) {
 	p.proverAddress = crypto.PubkeyToAddress(p.cfg.L1ProverPrivKey.PublicKey)
 
 	chBufferSize := p.protocolConfigs.MaxNumBlocks.Uint64()
-	p.blockProposedCh = make(chan *bindings.TaikoL1ClientBlockProposed, chBufferSize)
-	p.blockVerifiedCh = make(chan *bindings.TaikoL1ClientBlockVerified, chBufferSize)
+	p.blockProposedCh = make(chan *bindings.MXCL1ClientBlockProposed, chBufferSize)
+	p.blockVerifiedCh = make(chan *bindings.MXCL1ClientBlockVerified, chBufferSize)
 	p.proveValidProofCh = make(chan *proofProducer.ProofWithHeader, chBufferSize)
 	p.proveInvalidProofCh = make(chan *proofProducer.ProofWithHeader, chBufferSize)
 	p.proveNotify = make(chan struct{}, 1)
@@ -153,7 +153,7 @@ func InitFromConfig(ctx context.Context, p *Prover, cfg *Config) (err error) {
 		p.rpc,
 		producer,
 		p.proveValidProofCh,
-		p.cfg.TaikoL2Address,
+		p.cfg.MXCL2Address,
 		p.cfg.L1ProverPrivKey,
 		p.cfg.ProofSubmittorPrivKey,
 		p.submitProofTxMutex,
@@ -179,7 +179,7 @@ func (p *Prover) Start() error {
 	return nil
 }
 
-// eventLoop starts the main loop of Taiko prover.
+// eventLoop starts the main loop of MXC prover.
 func (p *Prover) eventLoop() {
 	defer func() {
 		p.wg.Done()
@@ -194,7 +194,7 @@ func (p *Prover) eventLoop() {
 		}
 	}
 
-	// If there is too many (TaikoData.Config.maxNumBlocks) pending blocks in TaikoL1 contract, there will be no new
+	// If there is too many (MXCData.Config.maxNumBlocks) pending blocks in MXCL1 contract, there will be no new
 	// BlockProposed temporarily, so except the BlockProposed subscription, we need another trigger to start
 	// fetching the proposed blocks.
 	forceProvingTicker := time.NewTicker(15 * time.Second)
@@ -255,7 +255,7 @@ func (p *Prover) Close() {
 func (p *Prover) proveOp() error {
 	iter, err := eventIterator.NewBlockProposedIterator(p.ctx, &eventIterator.BlockProposedIteratorConfig{
 		Client:               p.rpc.L1,
-		TaikoL1:              p.rpc.TaikoL1,
+		MXCL1:                p.rpc.MXCL1,
 		StartHeight:          new(big.Int).SetUint64(p.l1Current),
 		OnBlockProposedEvent: p.onBlockProposed,
 	})
@@ -269,7 +269,7 @@ func (p *Prover) proveOp() error {
 // onBlockProposed tries to prove that the newly proposed block is valid/invalid.
 func (p *Prover) onBlockProposed(
 	ctx context.Context,
-	event *bindings.TaikoL1ClientBlockProposed,
+	event *bindings.MXCL1ClientBlockProposed,
 	end eventIterator.EndBlockProposedEventIterFunc,
 ) error {
 	// If there is newly generated proofs, we need to submit them as soon as possible.
@@ -370,7 +370,7 @@ func (p *Prover) submitProofOp(ctx context.Context, proofWithHeader *proofProduc
 
 // onBlockVerified update the latestVerified block in current state.
 // TODO: cancel the corresponding block's proof generation, if requested before.
-func (p *Prover) onBlockVerified(ctx context.Context, event *bindings.TaikoL1ClientBlockVerified) error {
+func (p *Prover) onBlockVerified(ctx context.Context, event *bindings.MXCL1ClientBlockVerified) error {
 	metrics.ProverLatestVerifiedIDGauge.Update(event.Id.Int64())
 	p.latestVerifiedL1Height = event.Raw.BlockNumber
 
@@ -401,7 +401,7 @@ func (p *Prover) initL1Current(startingBlockID *big.Int) error {
 		}
 
 		if stateVars.LatestVerifiedId == 0 {
-			p.l1Current = 0
+			p.l1Current = stateVars.GenesisHeight
 			return nil
 		}
 
@@ -446,7 +446,7 @@ func (p *Prover) NeedNewProof(id *big.Int) (bool, error) {
 		parentHash = parentL1Origin.L2BlockHash
 	}
 
-	fc, err := p.rpc.TaikoL1.GetForkChoice(nil, id, parentHash)
+	fc, err := p.rpc.MXCL1.GetForkChoice(nil, id, parentHash)
 	if err != nil {
 		return false, err
 	}
@@ -461,8 +461,8 @@ func (p *Prover) NeedNewProof(id *big.Int) (bool, error) {
 
 // initSubscription initializes all subscriptions in current prover instance.
 func (p *Prover) initSubscription() {
-	p.blockProposedSub = rpc.SubscribeBlockProposed(p.rpc.TaikoL1, p.blockProposedCh)
-	p.blockVerifiedSub = rpc.SubscribeBlockVerified(p.rpc.TaikoL1, p.blockVerifiedCh)
+	p.blockProposedSub = rpc.SubscribeBlockProposed(p.rpc.MXCL1, p.blockProposedCh)
+	p.blockVerifiedSub = rpc.SubscribeBlockVerified(p.rpc.MXCL1, p.blockVerifiedCh)
 }
 
 // closeSubscription closes all subscriptions.
