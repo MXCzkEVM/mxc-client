@@ -33,7 +33,7 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: |
-            gcr.io/mxcchain/mxc-client
+            gcr.io/mxczkevm/mxc-client
           tags: |
             type=ref,event=branch
             type=ref,event=pr
