@@ -176,8 +176,17 @@ func (c *Client) WaitL1Origin(ctx context.Context, blockID *big.Int) (*rawdb.L1O
 
 	log.Debug("Start fetching L1Origin from L2 execution engine", "blockID", blockID)
 
+	if _, ok := ctx.Deadline(); !ok {
+		log.Debug("No deadline set, set a default deadline")
+		ctxWithTimeout, cancel := context.WithTimeout(ctx, 45*time.Second)
+		defer cancel()
+		ctx = ctxWithTimeout
+	}
+
 	for {
 		select {
+		case <-time.After(45 * time.Second):
+			return nil, fmt.Errorf("timeout waiting for L1Origin with block ID %s", blockID)
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		case <-ticker.C:
@@ -188,6 +197,7 @@ func (c *Client) WaitL1Origin(ctx context.Context, blockID *big.Int) (*rawdb.L1O
 			}
 
 			if l1Origin == nil {
+				log.Debug("L1Origin not found", "blockID", blockID)
 				continue
 			}
 
