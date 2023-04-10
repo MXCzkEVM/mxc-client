@@ -91,7 +91,7 @@ func (t *SyncProgressTracker) track(ctx context.Context) {
 			log.Error("Get L2 execution engine head height error", "error", err)
 			return
 		}
-
+		log.Info("L2 execution engine head height", "headHeight", headHeight)
 		if new(big.Int).SetUint64(headHeight).Cmp(t.lastSyncedVerifiedBlockHeight) >= 0 {
 			t.lastProgressedTime = time.Now()
 			log.Info("L2 execution engine has finished the P2P sync work, all verified blocks synced, "+
