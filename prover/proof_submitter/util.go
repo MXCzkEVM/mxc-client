@@ -88,7 +88,7 @@ func sendTxWithBackoff(
 			log.Warn("Failed to wait till transaction executed", "blockID", blockID, "txHash", tx.Hash(), "error", err)
 			// CHANGE(MXC): Unretryable error missing
 			isUnretryableError = true
-			return err
+			return nil
 		}
 
 		return nil
