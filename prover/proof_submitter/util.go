@@ -80,13 +80,14 @@ func sendTxWithBackoff(
 				return err
 			}
 
-			// CHANGE(MXC): Unretryable error missing
-			isUnretryableError = false
+			isUnretryableError = true
 			return nil
 		}
 
 		if _, err := rpc.WaitReceipt(ctx, cli.L1, tx); err != nil {
 			log.Warn("Failed to wait till transaction executed", "blockID", blockID, "txHash", tx.Hash(), "error", err)
+			// CHANGE(MXC): Unretryable error missing
+			isUnretryableError = true
 			return err
 		}
 
