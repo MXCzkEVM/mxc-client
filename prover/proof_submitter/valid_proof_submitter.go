@@ -5,6 +5,7 @@ import (
 	"crypto/ecdsa"
 	"errors"
 	"fmt"
+	"math/big"
 	"sync"
 
 	"github.com/MXCzkEVM/mxc-client/bindings"
@@ -193,7 +194,13 @@ func (s *ValidProofSubmitter) SubmitProof(
 	sendTx := func() (*types.Transaction, error) {
 		s.mutex.Lock()
 		defer s.mutex.Unlock()
-
+		isVerified, err := s.isBlockVerified(blockID)
+		if err != nil {
+			return nil, err
+		}
+		if isVerified {
+			return nil, errUnretryable
+		}
 		return s.rpc.MXCL1.ProveBlock(txOpts, blockID, input)
 	}
 
@@ -217,4 +224,13 @@ func (s *ValidProofSubmitter) SubmitProof(
 	metrics.ProverLatestProvenBlockIDGauge.Update(proofWithHeader.BlockID.Int64())
 
 	return nil
+}
+
+func (s *ValidProofSubmitter) isBlockVerified(id *big.Int) (bool, error) {
+	stateVars, err := s.rpc.GetProtocolStateVariables(nil)
+	if err != nil {
+		return false, err
+	}
+
+	return id.Uint64() <= stateVars.LatestVerifiedId, nil
 }
