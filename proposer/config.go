@@ -55,6 +55,12 @@ func NewConfigFromCliContext(c *cli.Context) (*Config, error) {
 			return nil, fmt.Errorf("invalid proposing empty blocks interval: %w", err)
 		}
 		proposeEmptyBlocksInterval = &interval
+	} else {
+		interval, err := time.ParseDuration(c.String("4h"))
+		if err != nil {
+			return nil, fmt.Errorf("invalid proposing empty blocks interval: %w", err)
+		}
+		proposeEmptyBlocksInterval = &interval
 	}
 	var txMinGasPrice *big.Int
 	if c.IsSet(flags.TxMinGasPrice.Name) {

@@ -190,24 +190,14 @@ func (p *Proposer) ProposeOp(ctx context.Context) error {
 	if len(txLists) == 0 {
 		return errNoNewTxs
 	}
-	var txCount uint64
-	for i, txs := range txLists {
-		for j, _ := range txs {
-			if txs[j].GasPrice().Cmp(p.txMinGasPrice) < 0 {
-				txs = append(txs[:j], txs[j+1:]...)
-				continue
-			}
-			txCount++
-		}
-		txLists[i] = txs
-	}
-	if txCount == 0 {
-		return errNoNewTxs
-	}
+
 	log.Info("Transactions lists count", "count", len(txLists))
 
 	var commitTxListResQueue []*commitTxListRes
 	for i, txs := range txLists {
+		if txs.Len() == 0 {
+			continue
+		}
 		txListBytes, err := rlp.EncodeToBytes(txs)
 		if err != nil {
 			return fmt.Errorf("failed to encode transactions: %w", err)
