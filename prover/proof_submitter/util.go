@@ -75,7 +75,7 @@ func sendTxWithBackoff(
 		tx, err := sendTxFunc()
 		if err != nil {
 			err = encoding.TryParsingCustomError(err)
-			if isSubmitProofTxErrorRetryable(err, blockID) {
+			if isSubmitProofTxErrorRetryable(err, blockID) && !isUnretryableError {
 				log.Info("Retry sending MXCL1.proveBlock transaction", "reason", err)
 				return err
 			}
