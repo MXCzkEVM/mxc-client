@@ -288,6 +288,10 @@ func (p *Prover) onBlockProposed(
 		log.Info("Skip a block with even number", "id", event.Id)
 		return nil
 	}
+	if p.cfg.TotalServerNum > 0 && uint(event.Id.Uint64())%p.cfg.TotalServerNum != p.cfg.CurrentServerID {
+		log.Info("Skip a block with mod number", "id", event.Id, "mod", p.cfg.TotalServerNum, "serverID", p.cfg.CurrentServerID)
+		return nil
+	}
 
 	log.Info("Proposed block", "blockID", event.Id)
 	metrics.ProverReceivedProposedBlockGauge.Update(event.Id.Int64())
