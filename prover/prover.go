@@ -272,6 +272,8 @@ func (p *Prover) onBlockProposed(
 	event *bindings.MXCL1ClientBlockProposed,
 	end eventIterator.EndBlockProposedEventIterFunc,
 ) error {
+	log.Info("Proposed block", "blockID", event.Id)
+	metrics.ProverReceivedProposedBlockGauge.Update(event.Id.Int64())
 	// If there is newly generated proofs, we need to submit them as soon as possible.
 	if len(p.proveValidProofCh) > 0 || len(p.proveInvalidProofCh) > 0 {
 		end()
@@ -292,9 +294,6 @@ func (p *Prover) onBlockProposed(
 		log.Info("Skip a block with mod number", "id", event.Id, "mod", p.cfg.TotalServerNum, "serverID", p.cfg.CurrentServerID)
 		return nil
 	}
-
-	log.Info("Proposed block", "blockID", event.Id)
-	metrics.ProverReceivedProposedBlockGauge.Update(event.Id.Int64())
 
 	handleBlockProposedEvent := func() error {
 		defer func() { <-p.proposeConcurrencyGuard }()
