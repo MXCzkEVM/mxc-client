@@ -70,6 +70,16 @@ var (
 		Usage:    "Private key of L1 proof submittor",
 		Category: proverCategory,
 	}
+	TotalServerNum = &cli.UintFlag{
+		Name:     "totalServerNum",
+		Usage:    "Total number of servers",
+		Category: proverCategory,
+	}
+	CurrentServerID = &cli.UintFlag{
+		Name:     "currentServerID",
+		Usage:    "Current server ID",
+		Category: proverCategory,
+	}
 )
 
 // All prover flags.
@@ -87,4 +97,6 @@ var ProverFlags = MergeFlags(CommonFlags, []cli.Flag{
 	RandomDummyProofDelay,
 	OnlyProveOddNumberBlocks,
 	OnlyProveEvenNumberBlocks,
+	TotalServerNum,
+	CurrentServerID,
 })
