@@ -168,9 +168,9 @@ func (p *Proposer) ProposeOp(ctx context.Context) error {
 	}
 
 	// Wait until L2 execution engine is synced at first.
-	if err := p.rpc.WaitTillL2Synced(ctx); err != nil {
-		return fmt.Errorf("failed to wait until L2 execution engine synced: %w", err)
-	}
+	//if err := p.rpc.WaitTillL2Synced(ctx); err != nil {
+	//	return fmt.Errorf("failed to wait until L2 execution engine synced: %w", err)
+	//}
 
 	log.Info("Start fetching L2 execution engine's transaction pool content")
 
