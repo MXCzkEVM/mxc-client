@@ -2,7 +2,7 @@ name: "Push docker image to GCR"
 
 on:
   push:
-    branches: [main, wannsee]
+    branches: [main, wannsee, wannsee-testnet]
     tags:
       - "v*"
 
