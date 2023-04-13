@@ -119,9 +119,8 @@ func (p *Proposer) eventLoop() {
 	}()
 
 	var lastNonEmptyBlockProposedAt = time.Now()
+	p.updateProposingTicker()
 	for {
-		p.updateProposingTicker()
-
 		select {
 		case <-p.ctx.Done():
 			return
