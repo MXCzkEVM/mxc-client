@@ -42,7 +42,7 @@ type Proposer struct {
 	// Proposing configurations
 	proposingInterval          *time.Duration
 	proposeEmptyBlocksInterval *time.Duration
-	proposingTimer             *time.Timer
+	proposingTimer             *time.Ticker
 	commitSlot                 uint64
 	locals                     []common.Address
 	maxProposedTxListsPerEpoch uint64
@@ -119,8 +119,8 @@ func (p *Proposer) eventLoop() {
 	}()
 
 	var lastNonEmptyBlockProposedAt = time.Now()
+	p.updateProposingTicker()
 	for {
-		p.updateProposingTicker()
 		select {
 		case <-p.ctx.Done():
 			return
@@ -473,7 +473,7 @@ func (p *Proposer) updateProposingTicker() {
 		duration = time.Duration(randomSeconds) * time.Second
 	}
 
-	p.proposingTimer = time.NewTimer(duration)
+	p.proposingTimer = time.NewTicker(duration)
 }
 
 // Name returns the application name.
