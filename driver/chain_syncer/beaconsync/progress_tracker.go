@@ -180,7 +180,6 @@ func (t *SyncProgressTracker) OutOfSync() bool {
 
 // Triggered returns tracker.triggered.
 func (t *SyncProgressTracker) Triggered() bool {
-	log.Warn("SyncProgressTracker.Triggered")
 	t.mutex.RLock()
 	defer t.mutex.RUnlock()
 
