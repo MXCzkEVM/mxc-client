@@ -43,6 +43,7 @@ func (s *Syncer) TriggerBeaconSync() error {
 		blockID                   *big.Int
 		latestVerifiedHeadPayload *beacon.ExecutableDataV1
 	)
+	log.Info("Triggering beacon sync")
 
 	var ctxError error
 	backoff.Retry(func() (err error) {

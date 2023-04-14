@@ -2,7 +2,6 @@ package driver
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"time"
 
@@ -135,12 +134,6 @@ func (d *Driver) eventLoop() {
 
 	for {
 		select {
-		case err := <-d.l1HeadSub.Err():
-			log.Info(fmt.Sprintf("L1 head subscription error : %v", err), d.ctx)
-			_, cancel := context.WithCancel(d.ctx)
-			cancel()
-			d.l1HeadSub = d.state.SubL1HeadsFeed(d.l1HeadCh)
-			reqSync()
 		case <-d.ctx.Done():
 			log.Info("Driver context error", d.ctx.Err())
 			return
@@ -156,7 +149,6 @@ func (d *Driver) eventLoop() {
 // L1 sync cursor to the L1 head, and then applies all corresponding
 // L2 blocks into node's local block chain.
 func (d *Driver) doSync() error {
-	log.Info("doSync")
 	// Check whether the application is closing.
 	if d.ctx.Err() != nil {
 		log.Warn("Driver context error", "error", d.ctx.Err())
