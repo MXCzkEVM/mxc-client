@@ -130,19 +130,18 @@ func (s *Syncer) onBlockProposed(
 		parent *types.Header
 		err    error
 	)
-	//if s.progressTracker.Triggered() {
-	//	// Already synced through beacon sync, just skip this event.
-	//	//if event.Id.Cmp(s.progressTracker.LastSyncedVerifiedBlockID()) <= 0 {
-	//	//	return nil
-	//	//}
-	//
-	//	parent, err = s.rpc.L2.HeaderByHash(ctx, s.progressTracker.LastSyncedVerifiedBlockHash())
-	//} else {
-	parent, err = s.rpc.L2ParentByBlockId(ctx, event.Id)
-	//}
+	if s.progressTracker.Triggered() {
+		// Already synced through beacon sync, just skip this event.
+		if event.Id.Cmp(s.progressTracker.LastSyncedVerifiedBlockID()) <= 0 {
+			return nil
+		}
+		parent, err = s.rpc.L2.HeaderByHash(ctx, s.progressTracker.LastSyncedVerifiedBlockHash())
+	} else {
+		parent, err = s.rpc.L2ParentByBlockId(ctx, event.Id)
+	}
 
 	if err != nil {
-		return fmt.Errorf("failed to fetch L2 parent block: %w", err)
+		return fmt.Errorf("failed to fetch L2 parent block: %w, event.id: %v", err, event.Id)
 	}
 
 	log.Debug("Parent block", "height", parent.Number, "hash", parent.Hash())
