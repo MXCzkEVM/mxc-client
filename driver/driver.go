@@ -134,6 +134,12 @@ func (d *Driver) eventLoop() {
 
 	for {
 		select {
+		case <-d.l1HeadSub.Err():
+			log.Error("L1 head subscription error", "error", d.l1HeadSub.Err())
+			_, cancel := context.WithCancel(d.ctx)
+			cancel()
+			d.l1HeadSub = d.state.SubL1HeadsFeed(d.l1HeadCh)
+			reqSync()
 		case <-d.ctx.Done():
 			return
 		case <-d.syncNotify:

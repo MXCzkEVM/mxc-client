@@ -171,7 +171,7 @@ func (c *Client) WaitL1Origin(ctx context.Context, blockID *big.Int) (*rawdb.L1O
 		err      error
 	)
 
-	ticker := time.NewTicker(time.Second)
+	ticker := time.NewTicker(3 * time.Second)
 	defer ticker.Stop()
 
 	log.Debug("Start fetching L1Origin from L2 execution engine", "blockID", blockID)
