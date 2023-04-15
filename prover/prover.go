@@ -197,7 +197,7 @@ func (p *Prover) eventLoop() {
 	// If there is too many (MXCData.Config.maxNumBlocks) pending blocks in MXCL1 contract, there will be no new
 	// BlockProposed temporarily, so except the BlockProposed subscription, we need another trigger to start
 	// fetching the proposed blocks.
-	forceProvingTicker := time.NewTicker(15 * time.Second)
+	forceProvingTicker := time.NewTicker(1 * time.Second)
 	defer forceProvingTicker.Stop()
 
 	// Call reqProving() right away to catch up with the latest state.
