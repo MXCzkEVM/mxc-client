@@ -132,9 +132,9 @@ func (s *Syncer) onBlockProposed(
 	)
 	if s.progressTracker.Triggered() {
 		// Already synced through beacon sync, just skip this event.
-		//if event.Id.Cmp(s.progressTracker.LastSyncedVerifiedBlockID()) <= 0 {
-		//	return nil
-		//}
+		if event.Id.Cmp(s.progressTracker.LastSyncedVerifiedBlockID()) <= 0 {
+			return nil
+		}
 		parent, err = s.rpc.L2.HeaderByHash(ctx, s.progressTracker.LastSyncedVerifiedBlockHash())
 	} else {
 		parent, err = s.rpc.L2ParentByBlockId(ctx, event.Id)
