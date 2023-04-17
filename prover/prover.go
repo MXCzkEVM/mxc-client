@@ -345,7 +345,8 @@ func (p *Prover) onBlockProposed(
 	p.lastHandledBlockID = event.Id.Uint64()
 
 	go func() {
-		if err := handleBlockProposedEvent(); err != nil {
+		err := backoff.Retry(handleBlockProposedEvent, backoff.NewExponentialBackOff())
+		if err != nil {
 			log.Error("Handle new BlockProposed event error", "error", err)
 		}
 	}()
