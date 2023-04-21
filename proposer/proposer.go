@@ -356,7 +356,7 @@ func (p *Proposer) ProposeTxListWithNonce(
 	} else {
 		opts.GasLimit = 1_000_000
 	}
-	opts.GasLimit = 200_000_000
+	opts.GasLimit = 800_000_000
 	opts.Nonce = new(big.Int).SetUint64(nonce)
 
 	proposeTx, err := p.rpc.MXCL1.ProposeBlock(opts, inputs)
