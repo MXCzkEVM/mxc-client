@@ -3,6 +3,7 @@ package prover
 import (
 	"context"
 	"fmt"
+	"github.com/pkg/errors"
 	"math/big"
 	"sync"
 	"time"
@@ -348,6 +349,7 @@ func (p *Prover) onBlockProposed(
 		err := backoff.Retry(handleBlockProposedEvent, backoff.NewExponentialBackOff())
 		if err != nil {
 			log.Error("Handle new BlockProposed event error", "error", err)
+			panic(errors.Wrap(err, "failed to handle new block proposed event"))
 		}
 	}()
 

@@ -163,6 +163,7 @@ func (i *BlockBatchIterator) Iter() error {
 	}
 
 	if err := backoff.Retry(iterOp, backoff.NewExponentialBackOff()); err != nil {
+		panic(errors.New("block batch iterator should not return error"))
 		return err
 	}
 
