@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/big"
 	"sync/atomic"
+	"time"
 
 	"github.com/MXCzkEVM/mxc-client/bindings"
 	"github.com/MXCzkEVM/mxc-client/metrics"
@@ -200,6 +201,12 @@ func (s *State) startSubscriptions(ctx context.Context) {
 			case newHead := <-s.l1HeadCh:
 				s.setL1Head(newHead)
 				s.l1HeadsFeed.Send(newHead)
+				// avoid too fast request
+				s.l1HeadSub.Unsubscribe()
+				go func() {
+					time.Sleep(1 * time.Second)
+					s.l1HeadSub = rpc.SubscribeChainHead(s.rpc.L1, s.l1HeadCh)
+				}()
 			case newHead := <-s.l2HeadCh:
 				s.setL2Head(newHead)
 			}
