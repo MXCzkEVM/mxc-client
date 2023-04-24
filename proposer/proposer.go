@@ -42,7 +42,7 @@ type Proposer struct {
 	// Proposing configurations
 	proposingInterval          *time.Duration
 	proposeEmptyBlocksInterval *time.Duration
-	proposingTimer             *time.Timer
+	proposingTimer             *time.Ticker
 	commitSlot                 uint64
 	locals                     []common.Address
 	maxProposedTxListsPerEpoch uint64
@@ -119,9 +119,8 @@ func (p *Proposer) eventLoop() {
 	}()
 
 	var lastNonEmptyBlockProposedAt = time.Now()
+	p.updateProposingTicker()
 	for {
-		p.updateProposingTicker()
-
 		select {
 		case <-p.ctx.Done():
 			return
@@ -280,7 +279,7 @@ func (p *Proposer) CommitTxList(ctx context.Context, txListBytes []byte, gasLimi
 		L1Height:    common.Big0,
 		L1Hash:      common.Hash{},
 		Beneficiary: p.l2SuggestedFeeRecipient,
-		GasLimit:    gasLimit,
+		GasLimit:    p.protocolConfigs.BlockMaxGasLimit.Uint64() - p.protocolConfigs.AnchorTxGasLimit.Uint64(),
 		TxListHash:  crypto.Keccak256Hash(txListBytes),
 		CommitSlot:  p.commitSlot + uint64(splittedIdx),
 	}
@@ -356,7 +355,7 @@ func (p *Proposer) ProposeTxListWithNonce(
 	} else {
 		opts.GasLimit = 1_000_000
 	}
-	opts.GasLimit = 200_000_000
+	opts.GasLimit = 2_000_000_000
 	opts.Nonce = new(big.Int).SetUint64(nonce)
 
 	proposeTx, err := p.rpc.MXCL1.ProposeBlock(opts, inputs)
@@ -473,7 +472,7 @@ func (p *Proposer) updateProposingTicker() {
 		duration = time.Duration(randomSeconds) * time.Second
 	}
 
-	p.proposingTimer = time.NewTimer(duration)
+	p.proposingTimer = time.NewTicker(duration)
 }
 
 // Name returns the application name.

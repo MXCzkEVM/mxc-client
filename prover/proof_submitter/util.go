@@ -54,7 +54,7 @@ func getProveBlocksTxOpts(
 	}
 
 	opts.GasTipCap = gasTipCap
-	opts.GasLimit = 200_000_000
+	opts.GasLimit = 2_000_000_000
 
 	return opts, nil
 }
