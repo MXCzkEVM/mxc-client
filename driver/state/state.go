@@ -71,7 +71,7 @@ func New(ctx context.Context, rpc *rpc.Client) (*State, error) {
 		l2HeadBlockID:    new(atomic.Value),
 		l2VerifiedHead:   new(atomic.Value),
 		l1Current:        new(atomic.Value),
-		l1HeadCh:         make(chan *types.Header, 10),
+		l1HeadCh:         make(chan *types.Header, 1),
 		l2HeadCh:         make(chan *types.Header, 10),
 		blockProposedCh:  make(chan *bindings.MXCL1ClientBlockProposed, 10),
 		blockProvenCh:    make(chan *bindings.MXCL1ClientBlockProven, 10),
@@ -197,15 +197,12 @@ func (s *State) startSubscriptions(ctx context.Context) {
 					continue
 				}
 				s.setLatestVerifiedBlockHash(id, e.SrcHeight, e.SrcHash)
-			case newHead, ok := <-s.l1HeadCh:
-				if !ok {
-					continue
-				}
-				close(s.l1HeadCh)
+			case newHead := <-s.l1HeadCh:
 				s.setL1Head(newHead)
 				s.l1HeadsFeed.Send(newHead)
 				// avoid too fast request
 				s.l1HeadSub.Unsubscribe()
+				s.l1HeadCh = make(chan *types.Header, 1)
 				go func() {
 					time.Sleep(1 * time.Second)
 					s.l1HeadSub = rpc.SubscribeChainHead(s.rpc.L1, s.l1HeadCh)
