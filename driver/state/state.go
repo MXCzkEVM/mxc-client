@@ -4,10 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"math/big"
-	"sync/atomic"
-	"time"
-
 	"github.com/MXCzkEVM/mxc-client/bindings"
 	"github.com/MXCzkEVM/mxc-client/metrics"
 	"github.com/MXCzkEVM/mxc-client/pkg/rpc"
@@ -16,6 +12,8 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/log"
+	"math/big"
+	"sync/atomic"
 )
 
 // HeightOrID contains a block height or a block ID.
@@ -202,11 +200,11 @@ func (s *State) startSubscriptions(ctx context.Context) {
 				s.setL1Head(newHead)
 				s.l1HeadsFeed.Send(newHead)
 				// avoid too fast request
-				s.l1HeadSub.Unsubscribe()
-				go func() {
-					time.Sleep(1 * time.Second)
-					s.l1HeadSub = rpc.SubscribeChainHead(s.rpc.L1, s.l1HeadCh)
-				}()
+				//s.l1HeadSub.Unsubscribe()
+				//go func() {
+				//	time.Sleep(1 * time.Second)
+				//	s.l1HeadSub = rpc.SubscribeChainHead(s.rpc.L1, s.l1HeadCh)
+				//}()
 			case newHead := <-s.l2HeadCh:
 				s.setL2Head(newHead)
 			}
