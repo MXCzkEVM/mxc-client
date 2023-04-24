@@ -71,7 +71,7 @@ func New(ctx context.Context, rpc *rpc.Client) (*State, error) {
 		l2HeadBlockID:    new(atomic.Value),
 		l2VerifiedHead:   new(atomic.Value),
 		l1Current:        new(atomic.Value),
-		l1HeadCh:         make(chan *types.Header, 1),
+		l1HeadCh:         make(chan *types.Header, 10),
 		l2HeadCh:         make(chan *types.Header, 10),
 		blockProposedCh:  make(chan *bindings.MXCL1ClientBlockProposed, 10),
 		blockProvenCh:    make(chan *bindings.MXCL1ClientBlockProven, 10),
@@ -152,7 +152,7 @@ func (s *State) init(ctx context.Context) error {
 
 // startSubscriptions initializes all subscriptions in the given state instance.
 func (s *State) startSubscriptions(ctx context.Context) {
-	s.l1HeadSub = rpc.SubscribeChainHead(s.rpc.L1, s.l1HeadCh)
+	//s.l1HeadSub = rpc.SubscribeChainHead(s.rpc.L1, s.l1HeadCh)
 	s.l2HeadSub = rpc.SubscribeChainHead(s.rpc.L2, s.l2HeadCh)
 	s.l2HeaderSyncedSub = rpc.SubscribeHeaderSynced(s.rpc.MXCL1, s.headerSyncedCh)
 	s.l2BlockVerifiedSub = rpc.SubscribeBlockVerified(s.rpc.MXCL1, s.blockVerifiedCh)
@@ -160,6 +160,7 @@ func (s *State) startSubscriptions(ctx context.Context) {
 	s.l2BlockProvenSub = rpc.SubscribeBlockProven(s.rpc.MXCL1, s.blockProvenCh)
 
 	go func() {
+		l1HeadTicker := time.NewTicker(time.Second)
 		for {
 			select {
 			case <-ctx.Done():
@@ -197,16 +198,15 @@ func (s *State) startSubscriptions(ctx context.Context) {
 					continue
 				}
 				s.setLatestVerifiedBlockHash(id, e.SrcHeight, e.SrcHash)
-			case newHead := <-s.l1HeadCh:
+			case <-l1HeadTicker.C:
+				newHead, err := s.rpc.L1.HeaderByNumber(ctx, nil)
+				if err != nil {
+					log.Error("Get L1 head error", "error", err)
+					continue
+				}
 				s.setL1Head(newHead)
 				s.l1HeadsFeed.Send(newHead)
 				// avoid too fast request
-				s.l1HeadSub.Unsubscribe()
-				s.l1HeadCh = make(chan *types.Header, 1)
-				go func() {
-					time.Sleep(1 * time.Second)
-					s.l1HeadSub = rpc.SubscribeChainHead(s.rpc.L1, s.l1HeadCh)
-				}()
 			case newHead := <-s.l2HeadCh:
 				s.setL2Head(newHead)
 			}
