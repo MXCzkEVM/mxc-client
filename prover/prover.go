@@ -459,7 +459,6 @@ func (p *Prover) NeedNewProof(id *big.Int) (bool, error) {
 	}
 
 	if fc.Prover != (common.Address{}) {
-		fmt.Printf("blockID: %v, fc.BlockHash: %v,fc.Prover: %v, parentHash: %v", id, fc.BlockHash, fc.Prover, parentHash)
 		log.Info("📬 Block's proof has already been submitted", "blockID", id, "prover", fc.Prover)
 		return false, nil
 	}
