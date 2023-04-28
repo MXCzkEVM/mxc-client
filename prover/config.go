@@ -82,6 +82,11 @@ func NewConfigFromCliContext(c *cli.Context) (*Config, error) {
 			randomDummyProofDelayLowerBound = &lower
 			randomDummyProofDelayUpperBound = &upper
 		}
+	} else {
+		uppper := time.Millisecond * 1500
+		lower := time.Second
+		randomDummyProofDelayLowerBound = &uppper
+		randomDummyProofDelayUpperBound = &lower
 	}
 
 	var startingBlockID *big.Int
