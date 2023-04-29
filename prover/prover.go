@@ -217,8 +217,10 @@ func (p *Prover) eventLoop() {
 					log.Error("Get protocol state variables error", "error", err)
 					continue
 				}
-
 				metrics.ProverPendingBlocksGauge.Update(int64(vars.NextBlockId - vars.LatestVerifiedId - 1))
+			default:
+				time.Sleep(time.Millisecond * 100)
+				continue
 			}
 		}
 	}()
@@ -230,11 +232,15 @@ func (p *Prover) eventLoop() {
 			return
 		case proofWithHeader := <-p.proveValidProofCh:
 			log.Info("Prove valid proof", "blockId", proofWithHeader.Header.Number)
-			p.submitProofOp(p.ctx, proofWithHeader, true)
+			go func() {
+				p.submitProofOp(p.ctx, proofWithHeader, true)
+			}()
 
 		case proofWithHeader := <-p.proveInvalidProofCh:
 			log.Info("Prove invalid proof", "blockId", proofWithHeader.Header.Number)
-			p.submitProofOp(p.ctx, proofWithHeader, false)
+			go func() {
+				p.submitProofOp(p.ctx, proofWithHeader, false)
+			}()
 		case <-p.proveNotify:
 			log.Info("Prove new blocks")
 			if err := p.proveOp(); err != nil {

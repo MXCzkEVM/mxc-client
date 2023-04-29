@@ -196,6 +196,7 @@ func (s *ValidProofSubmitter) SubmitProof(
 		defer s.mutex.Unlock()
 		isVerified, err := s.isBlockVerified(blockID)
 		if err != nil {
+			log.Error("Failed to check if block is verified", "err", err)
 			return nil, err
 		}
 		if isVerified {
@@ -205,6 +206,7 @@ func (s *ValidProofSubmitter) SubmitProof(
 	}
 
 	if err := sendTxWithBackoff(ctx, s.rpc, blockID, sendTx); err != nil {
+		log.Error("Failed to send MXCL1.proveBlock transaction", "err", err)
 		if errors.Is(err, errUnretryable) {
 			return nil
 		}
