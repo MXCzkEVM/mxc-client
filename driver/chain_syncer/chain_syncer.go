@@ -68,7 +68,9 @@ func (s *L2ChainSyncer) Sync(l1End *types.Header) error {
 	// If current L2 execution engine's chain is behind of the protocol's latest verified block head, and the
 	// `P2PSyncVerifiedBlocks` flag is set, try triggering a beacon sync in L2 execution engine to catch up the
 	// latest verified block head.
+	log.Info("doSync")
 	if s.needNewBeaconSyncTriggered() {
+		log.Info("needNewBeaconSyncTriggered")
 		if err := s.beaconSyncer.TriggerBeaconSync(); err != nil {
 			return fmt.Errorf("trigger beacon sync error: %w", err)
 		}
