@@ -241,7 +241,12 @@ func (p *Prover) eventLoop() {
 			log.Info("Prove new blocks")
 			done := make(chan bool, 1)
 			go func() {
-				defer func() { done <- true }()
+				defer func() {
+					done <- true
+					if _, ok := <-p.proposeConcurrencyGuard; !ok {
+						log.Error("Propose concurrency guard channel closed")
+					}
+				}()
 				if err := p.proveOp(); err != nil {
 					log.Error("Prove new blocks error", "error", err)
 				}
@@ -369,23 +374,11 @@ func (p *Prover) onBlockProposed(
 	p.lastHandledBlockID = event.Id.Uint64()
 
 	go func() {
-		done := make(chan bool, 1)
-		go func() {
-			defer func() { done <- true }()
-			err := backoff.Retry(handleBlockProposedEvent, backoff.NewExponentialBackOff())
-			if err != nil {
-				log.Error("Handle new BlockProposed event error", "error", err)
-				panic(errors.Wrap(err, "failed to handle new block proposed event"))
-			}
-		}()
-		select {
-		case <-done:
-			break
-		case <-time.After(time.Second * 30):
-			defer func() { <-p.proposeConcurrencyGuard }()
-			log.Error("Handle new BlockProposed event timeout", "blockID", event.Id)
+		err := backoff.Retry(handleBlockProposedEvent, backoff.NewExponentialBackOff())
+		if err != nil {
+			log.Error("Handle new BlockProposed event error", "error", err)
+			panic(errors.Wrap(err, "failed to handle new block proposed event"))
 		}
-
 	}()
 
 	return nil
