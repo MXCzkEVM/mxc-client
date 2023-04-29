@@ -224,22 +224,29 @@ func (p *Prover) eventLoop() {
 	for {
 		select {
 		case <-p.ctx.Done():
+			log.Info("Prover context done")
 			return
 		case proofWithHeader := <-p.proveValidProofCh:
+			log.Info("Prove valid proof", "blockId", proofWithHeader.Header.Number)
 			p.submitProofOp(p.ctx, proofWithHeader, true)
 		case proofWithHeader := <-p.proveInvalidProofCh:
+			log.Info("Prove invalid proof", "blockId", proofWithHeader.Header.Number)
 			p.submitProofOp(p.ctx, proofWithHeader, false)
 		case <-p.proveNotify:
+			log.Info("Prove new blocks")
 			if err := p.proveOp(); err != nil {
 				log.Error("Prove new blocks error", "error", err)
 			}
 		case <-p.blockProposedCh:
+			log.Info("Handle BlockProposed event")
 			reqProving()
 		case e := <-p.blockVerifiedCh:
+			log.Info("Handle BlockVerified event")
 			if err := p.onBlockVerified(p.ctx, e); err != nil {
 				log.Error("Handle BlockVerified event error", "error", err)
 			}
 		case <-forceProvingTicker.C:
+			log.Info("Force proving")
 			reqProving()
 		}
 	}

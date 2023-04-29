@@ -123,14 +123,17 @@ func (p *Proposer) eventLoop() {
 	for {
 		select {
 		case <-p.ctx.Done():
+			log.Warn("Proposer context canceled")
 			return
 		case <-p.proposingTimer.C:
 			metrics.ProposerProposeEpochCounter.Inc(1)
-
+			log.Info("Proposing operation triggered")
 			if err := p.ProposeOp(p.ctx); err != nil {
 				if !errors.Is(err, errNoNewTxs) {
 					log.Error("Proposing operation error", "error", err)
 					continue
+				} else if err != nil {
+					log.Error("Proposing error")
 				}
 
 				if p.proposeEmptyBlocksInterval != nil {
