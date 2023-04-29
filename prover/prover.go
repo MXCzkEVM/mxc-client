@@ -239,8 +239,18 @@ func (p *Prover) eventLoop() {
 			p.submitProofOp(p.ctx, proofWithHeader, false)
 		case <-p.proveNotify:
 			log.Info("Prove new blocks")
-			if err := p.proveOp(); err != nil {
-				log.Error("Prove new blocks error", "error", err)
+			done := make(chan bool, 1)
+			go func() {
+				defer func() { done <- true }()
+				if err := p.proveOp(); err != nil {
+					log.Error("Prove new blocks error", "error", err)
+				}
+			}()
+			select {
+			case <-done:
+				continue
+			case <-time.After(time.Second * 30):
+				log.Error("Prove new blocks timeout")
 			}
 		case <-p.blockProposedCh:
 			log.Info("Handle BlockProposed event")
@@ -371,9 +381,7 @@ func (p *Prover) onBlockProposed(
 
 // submitProofOp performs a (valid block / invalid block) proof submission operation.
 func (p *Prover) submitProofOp(ctx context.Context, proofWithHeader *proofProducer.ProofWithHeader, isValidProof bool) {
-	log.Warn("p.submitProofConcurrencyGuard <- start")
 	p.submitProofConcurrencyGuard <- struct{}{}
-	log.Warn("p.submitProofConcurrencyGuard <- end")
 	go func() {
 		defer func() {
 			<-p.submitProofConcurrencyGuard
@@ -383,11 +391,20 @@ func (p *Prover) submitProofOp(ctx context.Context, proofWithHeader *proofProduc
 		if isValidProof {
 			err = backoff.Retry(func() error {
 				log.Info("Submit proof", "proofWithHeader", proofWithHeader.Header.Number)
-				if err := p.validProofSubmitter.SubmitProof(p.ctx, proofWithHeader); err != nil {
-					log.Info("Retry oracle proving", "error", err)
-					return err
+				done := make(chan bool, 1)
+				var err error
+				go func() {
+					defer func() { done <- true }()
+					if err = p.validProofSubmitter.SubmitProof(p.ctx, proofWithHeader); err != nil {
+						log.Info("Retry oracle proving", "error", err)
+					}
+				}()
+				select {
+				case <-done:
+					return nil
+				case <-time.After(time.Second * 30):
+					return fmt.Errorf("timeout")
 				}
-				return nil
 			}, backoff.NewConstantBackOff(3*time.Second))
 		} else {
 			err = p.invalidProofSubmitter.SubmitProof(p.ctx, proofWithHeader)

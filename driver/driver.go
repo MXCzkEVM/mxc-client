@@ -110,9 +110,6 @@ func (d *Driver) Close() {
 // eventLoop starts the main loop of a L2 execution engine's driver.
 func (d *Driver) eventLoop() {
 	defer d.wg.Done()
-	exponentialBackoff := backoff.NewExponentialBackOff()
-	exponentialBackoff.MaxElapsedTime = 30 * time.Second
-
 	// reqSync requests performing a synchronising operation, won't block
 	// if we are already synchronising.
 	reqSync := func() {
@@ -122,16 +119,25 @@ func (d *Driver) eventLoop() {
 		}
 	}
 
-	// doSyncWithBackoff performs a synchronising operation with a backoff strategy.
 	doSyncWithBackoff := func() {
-		if err := backoff.Retry(d.doSync, exponentialBackoff); err != nil {
-			log.Error("Sync L2 execution engine's block chain error", "error", err)
+		done := make(chan bool, 1)
+		go func() {
+			defer func() { done <- true }()
+			if err := backoff.Retry(d.doSync, backoff.NewExponentialBackOff()); err != nil {
+				log.Error("Sync L2 execution engine's block chain error", "error", err)
+			}
+		}()
+		select {
+		case <-done:
+			return
+		case <-time.After(time.Second * 30):
+			log.Error("Sync L2 execution engine's block chain error", "error", "timeout")
 		}
+
 	}
 
 	// Call doSync() right away to catch up with the latest known L1 head.
 	doSyncWithBackoff()
-	ticker := time.NewTicker(time.Second)
 	for {
 		select {
 		case <-d.ctx.Done():
@@ -142,9 +148,6 @@ func (d *Driver) eventLoop() {
 			doSyncWithBackoff()
 		case <-d.l1HeadCh:
 			log.Info("<-d.l1HeadCh")
-			reqSync()
-		case <-ticker.C:
-			log.Info("<-ticker.C")
 			reqSync()
 		default:
 			time.Sleep(100 * time.Millisecond)

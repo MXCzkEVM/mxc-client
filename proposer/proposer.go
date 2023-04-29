@@ -128,30 +128,43 @@ func (p *Proposer) eventLoop() {
 		case <-p.proposingTimer.C:
 			metrics.ProposerProposeEpochCounter.Inc(1)
 			log.Info("Proposing operation triggered")
-			if err := p.ProposeOp(p.ctx); err != nil {
-				if !errors.Is(err, errNoNewTxs) {
+			proposeOpFn := func() error {
+				if err := p.ProposeOp(p.ctx); err != nil {
+					if !errors.Is(err, errNoNewTxs) {
+						return fmt.Errorf("proposing operation error: %v", err)
+					} else if err != nil {
+						log.Error("Proposing error")
+					}
+
+					if p.proposeEmptyBlocksInterval != nil {
+						if time.Now().Before(lastNonEmptyBlockProposedAt.Add(*p.proposeEmptyBlocksInterval)) {
+							return nil
+						}
+
+						if err := p.ProposeEmptyBlockOp(p.ctx); err != nil {
+							log.Error("Proposing an empty block operation error", "error", err)
+						}
+
+						lastNonEmptyBlockProposedAt = time.Now()
+					}
+				}
+				return nil
+			}
+			done := make(chan bool, 1)
+			go func() {
+				defer func() { done <- true }()
+				if err := proposeOpFn(); err != nil {
 					log.Error("Proposing operation error", "error", err)
-					continue
-				} else if err != nil {
-					log.Error("Proposing error")
 				}
-
-				if p.proposeEmptyBlocksInterval != nil {
-					if time.Now().Before(lastNonEmptyBlockProposedAt.Add(*p.proposeEmptyBlocksInterval)) {
-						continue
-					}
-
-					if err := p.ProposeEmptyBlockOp(p.ctx); err != nil {
-						log.Error("Proposing an empty block operation error", "error", err)
-					}
-
-					lastNonEmptyBlockProposedAt = time.Now()
-				}
-
+			}()
+			select {
+			case <-done:
+				break
+			case <-time.After(time.Second * 30):
 				continue
 			}
-
 			lastNonEmptyBlockProposedAt = time.Now()
+
 		default:
 			time.Sleep(100 * time.Millisecond)
 			continue
@@ -243,7 +256,6 @@ func (p *Proposer) ProposeOp(ctx context.Context) error {
 	}
 
 	log.Info("Proposer account information", "chainHead", head, "nonce", nonce)
-	timeoutCtx, _ := context.WithTimeout(ctx, 10*time.Second)
 	g := new(errgroup.Group)
 
 	for i, res := range commitTxListResQueue {
@@ -253,7 +265,7 @@ func (p *Proposer) ProposeOp(ctx context.Context) error {
 					return nil
 				}
 
-				return p.ProposeTxListWithNonce(timeoutCtx, res.meta, res.commitTx, res.txListBytes, res.txNum, nonce+uint64(i))
+				return p.ProposeTxListWithNonce(ctx, res.meta, res.commitTx, res.txListBytes, res.txNum, nonce+uint64(i))
 			})
 		}(i, res)
 	}
@@ -261,7 +273,6 @@ func (p *Proposer) ProposeOp(ctx context.Context) error {
 	if err := g.Wait(); err != nil {
 		return fmt.Errorf("failed to propose transactions: %w", err)
 	}
-
 	return nil
 }
 
