@@ -408,6 +408,7 @@ func (p *Prover) submitProofOp(ctx context.Context, proofWithHeader *proofProduc
 				case <-done:
 					return nil
 				case <-time.After(time.Second * 15):
+					panic("timeout")
 					log.Error("submitProofOp Timeout")
 					return fmt.Errorf("timeout")
 				}
