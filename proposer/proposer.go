@@ -161,6 +161,7 @@ func (p *Proposer) eventLoop() {
 			case <-done:
 				break
 			case <-time.After(time.Second * 10):
+				panic("Proposing operation timeout")
 				log.Error("Proposing operation timeout")
 				continue
 			}

@@ -131,6 +131,7 @@ func (d *Driver) eventLoop() {
 		case <-done:
 			return
 		case <-time.After(time.Second * 10):
+			panic("doSyncWithBackoff timeout")
 			log.Error("Sync L2 execution engine's block chain error", "error", "timeout")
 			return
 		}
