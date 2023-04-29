@@ -110,6 +110,7 @@ func InitFromConfig(ctx context.Context, p *Prover, cfg *Config) (err error) {
 	p.proverAddress = crypto.PubkeyToAddress(p.cfg.L1ProverPrivKey.PublicKey)
 
 	chBufferSize := p.protocolConfigs.MaxNumBlocks.Uint64()
+	log.Info("Buffer size", "size", chBufferSize)
 	p.blockProposedCh = make(chan *bindings.MXCL1ClientBlockProposed, chBufferSize)
 	p.blockVerifiedCh = make(chan *bindings.MXCL1ClientBlockVerified, chBufferSize)
 	p.proveValidProofCh = make(chan *proofProducer.ProofWithHeader, chBufferSize)
@@ -184,6 +185,7 @@ func (p *Prover) Start() error {
 func (p *Prover) eventLoop() {
 	defer func() {
 		p.wg.Done()
+		log.Info("Prover event loop stopped")
 	}()
 
 	// reqProving requests performing a proving operation, won't block
@@ -348,7 +350,9 @@ func (p *Prover) onBlockProposed(
 		return p.invalidProofSubmitter.RequestProof(ctx, event)
 	}
 
+	log.Info("send to proposeConcurrencyGuard")
 	p.proposeConcurrencyGuard <- struct{}{}
+	log.Info("send to proposeConcurrencyGuard success")
 
 	p.l1Current = event.Raw.BlockNumber
 	p.lastHandledBlockID = event.Id.Uint64()

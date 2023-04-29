@@ -35,9 +35,11 @@ func (d *DummyProofProducer) RequestProof(
 	)
 
 	time.AfterFunc(d.proofDelay(), func() {
+		log.Info("delay over, sending dummy proof")
 		resultCh <- &ProofWithHeader{
 			BlockID: blockID, Meta: meta, Header: header, ZkProof: []byte{0xff}, Degree: CircuitsDegree10Txs,
 		}
+		log.Info("send result to channel")
 	})
 
 	return nil
