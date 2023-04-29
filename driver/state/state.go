@@ -186,12 +186,12 @@ func (s *State) startSubscriptions(ctx context.Context) {
 				}
 				s.setLatestVerifiedBlockHash(id, e.SrcHeight, e.SrcHash)
 			case <-l1HeadTicker.C:
-				log.Info("L1 head ticker")
 				newHead, err := s.rpc.L1.HeaderByNumber(ctx, nil)
 				if err != nil {
 					log.Error("Get L1 head error", "error", err)
 					continue
 				}
+				log.Info("L1 head ticker", "height", newHead.Number)
 				s.setL1Head(newHead)
 				s.l1HeadsFeed.Send(newHead)
 				// avoid too fast request
