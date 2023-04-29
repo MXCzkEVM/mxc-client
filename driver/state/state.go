@@ -170,7 +170,6 @@ func (s *State) startSubscriptions(ctx context.Context) {
 				log.Info("L2 block proposed", "height", e.Raw.BlockNumber)
 				s.setHeadBlockID(e.Id)
 			case e := <-s.headerSyncedCh:
-				log.Info("L2 header synced", "height", e.SrcHeight)
 				// Verify the protocol synced block, check if it exists in
 				// L2 execution engine.
 				if s.GetL2Head().Number.Cmp(e.SrcHeight) >= 0 {
@@ -191,12 +190,11 @@ func (s *State) startSubscriptions(ctx context.Context) {
 					log.Error("Get L1 head error", "error", err)
 					continue
 				}
-				log.Info("L1 head ticker", "height", newHead.Number)
+				log.Info("L1 head ticker", "height", newHead.Number, "current", s.GetL1Current().Number)
 				s.setL1Head(newHead)
 				s.l1HeadsFeed.Send(newHead)
 				// avoid too fast request
 			case newHead := <-s.l2HeadCh:
-				log.Info("L2 head changed", "height", newHead.Number)
 				s.setL2Head(newHead)
 			}
 		}
