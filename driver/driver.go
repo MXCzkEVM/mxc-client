@@ -148,6 +148,9 @@ func (d *Driver) eventLoop() {
 		case <-ticker.C:
 			log.Info("<-ticker.C")
 			reqSync()
+		default:
+			time.Sleep(100 * time.Millisecond)
+			continue
 		}
 	}
 }

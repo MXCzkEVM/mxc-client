@@ -251,6 +251,9 @@ func (p *Prover) eventLoop() {
 		case <-forceProvingTicker.C:
 			log.Info("Force proving")
 			reqProving()
+		default:
+			time.Sleep(100 * time.Millisecond)
+			continue
 		}
 	}
 }
