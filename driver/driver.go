@@ -123,7 +123,6 @@ func (d *Driver) eventLoop() {
 
 	// doSyncWithBackoff performs a synchronising operation with a backoff strategy.
 	doSyncWithBackoff := func() {
-		log.Info("doSyncWithBackoff")
 		if err := backoff.Retry(d.doSync, exponentialBackoff); err != nil {
 			log.Error("Sync L2 execution engine's block chain error", "error", err)
 		}

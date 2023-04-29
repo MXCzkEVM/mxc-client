@@ -24,7 +24,7 @@ var (
 	errSyncing = errors.New("syncing")
 	// syncProgressRecheckDelay is the time delay of rechecking the L2 execution engine's sync progress again,
 	// if the previous check failed.
-	syncProgressRecheckDelay = 700 * time.Millisecond
+	syncProgressRecheckDelay = 200 * time.Millisecond
 )
 
 // ensureGenesisMatched fetches the L2 genesis block from MXCL1 contract,
