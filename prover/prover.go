@@ -370,9 +370,15 @@ func (p *Prover) onBlockProposed(
 
 // submitProofOp performs a (valid block / invalid block) proof submission operation.
 func (p *Prover) submitProofOp(ctx context.Context, proofWithHeader *proofProducer.ProofWithHeader, isValidProof bool) {
+	log.Warn("p.submitProofConcurrencyGuard <- start")
 	p.submitProofConcurrencyGuard <- struct{}{}
+	log.Warn("p.submitProofConcurrencyGuard <- end")
 	go func() {
-		defer func() { <-p.submitProofConcurrencyGuard }()
+		defer func() {
+			log.Warn("p.submitProofConcurrencyGuard <- defer start")
+			<-p.submitProofConcurrencyGuard
+			log.Warn("p.submitProofConcurrencyGuard <- defer end")
+		}()
 
 		var err error
 		if isValidProof {
