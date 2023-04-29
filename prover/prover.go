@@ -229,6 +229,7 @@ func (p *Prover) eventLoop() {
 		case proofWithHeader := <-p.proveValidProofCh:
 			log.Info("Prove valid proof", "blockId", proofWithHeader.Header.Number)
 			p.submitProofOp(p.ctx, proofWithHeader, true)
+
 		case proofWithHeader := <-p.proveInvalidProofCh:
 			log.Info("Prove invalid proof", "blockId", proofWithHeader.Header.Number)
 			p.submitProofOp(p.ctx, proofWithHeader, false)
@@ -371,7 +372,13 @@ func (p *Prover) submitProofOp(ctx context.Context, proofWithHeader *proofProduc
 
 		var err error
 		if isValidProof {
-			err = p.validProofSubmitter.SubmitProof(p.ctx, proofWithHeader)
+			err = backoff.Retry(func() error {
+				if err := p.validProofSubmitter.SubmitProof(p.ctx, proofWithHeader); err != nil {
+					log.Info("Retry oracle proving", "error", err)
+					return err
+				}
+				return nil
+			}, backoff.NewConstantBackOff(3*time.Second))
 		} else {
 			err = p.invalidProofSubmitter.SubmitProof(p.ctx, proofWithHeader)
 		}
