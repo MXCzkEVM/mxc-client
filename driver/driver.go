@@ -130,7 +130,7 @@ func (d *Driver) eventLoop() {
 		select {
 		case <-done:
 			return
-		case <-time.After(time.Second * 30):
+		case <-time.After(time.Second * 10):
 			log.Error("Sync L2 execution engine's block chain error", "error", "timeout")
 		}
 
@@ -139,6 +139,7 @@ func (d *Driver) eventLoop() {
 	// Call doSync() right away to catch up with the latest known L1 head.
 	doSyncWithBackoff()
 	for {
+		ticker := time.NewTicker(time.Second)
 		select {
 		case <-d.ctx.Done():
 			log.Info("Driver context error", d.ctx.Err())
@@ -148,6 +149,8 @@ func (d *Driver) eventLoop() {
 			doSyncWithBackoff()
 		case <-d.l1HeadCh:
 			log.Info("<-d.l1HeadCh")
+			reqSync()
+		case <-ticker.C:
 			reqSync()
 		default:
 			time.Sleep(100 * time.Millisecond)

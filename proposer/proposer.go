@@ -160,7 +160,8 @@ func (p *Proposer) eventLoop() {
 			select {
 			case <-done:
 				break
-			case <-time.After(time.Second * 30):
+			case <-time.After(time.Second * 10):
+				log.Error("Proposing operation timeout")
 				continue
 			}
 			lastNonEmptyBlockProposedAt = time.Now()
