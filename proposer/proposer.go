@@ -152,6 +152,9 @@ func (p *Proposer) eventLoop() {
 			}
 
 			lastNonEmptyBlockProposedAt = time.Now()
+		default:
+			time.Sleep(100 * time.Millisecond)
+			continue
 		}
 	}
 }
