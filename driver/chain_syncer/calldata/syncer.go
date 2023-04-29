@@ -84,7 +84,7 @@ func NewSyncer(
 // ProcessL1Blocks fetches all `MXCL1.BlockProposed` events between given
 // L1 block heights, and then tries inserting them into L2 execution engine's block chain.
 func (s *Syncer) ProcessL1Blocks(ctx context.Context, l1End *types.Header) error {
-	log.Warn("processL1Blocks", l1End.Number)
+	log.Warn("processL1Blocks", "l1Header", l1End.Number)
 	iter, err := eventIterator.NewBlockProposedIterator(ctx, &eventIterator.BlockProposedIteratorConfig{
 		Client:               s.rpc.L1,
 		MXCL1:                s.rpc.MXCL1,
@@ -96,6 +96,7 @@ func (s *Syncer) ProcessL1Blocks(ctx context.Context, l1End *types.Header) error
 	if err != nil {
 		return err
 	}
+	log.Warn("processL1Blocks", "startHeight", s.state.GetL1Current().Number, "endheight", l1End.Number)
 
 	if err := iter.Iter(); err != nil {
 		return err
@@ -114,6 +115,7 @@ func (s *Syncer) onBlockProposed(
 	event *bindings.MXCL1ClientBlockProposed,
 	endIter eventIterator.EndBlockProposedEventIterFunc,
 ) error {
+	log.Warn("onBlockProposed")
 	// Ignore those already inserted blocks.
 	if event.Id.Cmp(common.Big0) == 0 || (s.lastInsertedBlockID != nil && event.Id.Cmp(s.lastInsertedBlockID) <= 0) {
 		log.Error("Ignore those already inserted blocks.", "already inserted", event.Id)

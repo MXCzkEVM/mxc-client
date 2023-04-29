@@ -194,7 +194,6 @@ func (s *State) startSubscriptions(ctx context.Context) {
 				log.Info("L1 head ticker", "height", newHead.Number)
 				s.setL1Head(newHead)
 				s.l1HeadsFeed.Send(newHead)
-				s.l1HeadCh <- newHead
 				// avoid too fast request
 			case newHead := <-s.l2HeadCh:
 				log.Info("L2 head changed", "height", newHead.Number)
