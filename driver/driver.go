@@ -132,6 +132,7 @@ func (d *Driver) eventLoop() {
 			return
 		case <-time.After(time.Second * 10):
 			log.Error("Sync L2 execution engine's block chain error", "error", "timeout")
+			return
 		}
 
 	}
