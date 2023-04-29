@@ -111,6 +111,7 @@ func (d *Driver) Close() {
 func (d *Driver) eventLoop() {
 	defer d.wg.Done()
 	exponentialBackoff := backoff.NewExponentialBackOff()
+	exponentialBackoff.MaxElapsedTime = 30 * time.Second
 
 	// reqSync requests performing a synchronising operation, won't block
 	// if we are already synchronising.

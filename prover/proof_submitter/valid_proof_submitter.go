@@ -192,20 +192,10 @@ func (s *ValidProofSubmitter) SubmitProof(
 		return err
 	}
 	sendTx := func() (*types.Transaction, error) {
-		log.Info("start to sendTx", "blockID", blockID)
 		s.mutex.Lock()
 		defer func() {
 			s.mutex.Unlock()
-			log.Info("finish to sendTx", "blockID", blockID)
 		}()
-		isVerified, err := s.isBlockVerified(blockID)
-		if err != nil {
-			log.Error("Failed to check if block is verified", "err", err)
-			return nil, err
-		}
-		if isVerified {
-			return nil, errUnretryable
-		}
 		return s.rpc.MXCL1.ProveBlock(txOpts, blockID, input)
 	}
 

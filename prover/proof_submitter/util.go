@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math/big"
 	"strings"
+	"time"
 
 	"github.com/MXCzkEVM/mxc-client/bindings/encoding"
 	"github.com/MXCzkEVM/mxc-client/pkg/rpc"
@@ -67,6 +68,8 @@ func sendTxWithBackoff(
 	sendTxFunc func() (*types.Transaction, error),
 ) error {
 	var isUnretryableError bool
+	sendBackoff := backoff.NewExponentialBackOff()
+	sendBackoff.MaxElapsedTime = time.Second * 30
 	if err := backoff.Retry(func() error {
 		if ctx.Err() != nil {
 			return nil
@@ -87,12 +90,11 @@ func sendTxWithBackoff(
 
 		if _, err := rpc.WaitReceipt(ctx, cli.L1, tx); err != nil {
 			log.Warn("Failed to wait till transaction executed", "blockID", blockID, "txHash", tx.Hash(), "error", err)
-			panic(err)
 			return err
 		}
 
 		return nil
-	}, backoff.NewExponentialBackOff()); err != nil {
+	}, sendBackoff); err != nil {
 		return fmt.Errorf("failed to send MXCL1.proveBlock transaction: %w", err)
 	}
 

@@ -179,6 +179,7 @@ func (s *InvalidProofSubmitter) SubmitProof(
 	}
 
 	if err := sendTxWithBackoff(ctx, s.rpc, blockID, sendTx); err != nil {
+		//panic(fmt.Errorf("failed to send MXCL1.proveBlockInvalid transaction: %w", err))
 		if errors.Is(err, errUnretryable) {
 			return nil
 		}

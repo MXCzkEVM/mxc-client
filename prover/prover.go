@@ -232,15 +232,11 @@ func (p *Prover) eventLoop() {
 			return
 		case proofWithHeader := <-p.proveValidProofCh:
 			log.Info("Prove valid proof", "blockId", proofWithHeader.Header.Number)
-			go func() {
-				p.submitProofOp(p.ctx, proofWithHeader, true)
-			}()
+			p.submitProofOp(p.ctx, proofWithHeader, true)
 
 		case proofWithHeader := <-p.proveInvalidProofCh:
 			log.Info("Prove invalid proof", "blockId", proofWithHeader.Header.Number)
-			go func() {
-				p.submitProofOp(p.ctx, proofWithHeader, false)
-			}()
+			p.submitProofOp(p.ctx, proofWithHeader, false)
 		case <-p.proveNotify:
 			log.Info("Prove new blocks")
 			if err := p.proveOp(); err != nil {
@@ -313,12 +309,10 @@ func (p *Prover) onBlockProposed(
 		return nil
 	}
 
-	log.Info("Proposed block", "blockID", event.Id)
 	metrics.ProverReceivedProposedBlockGauge.Update(event.Id.Int64())
 
 	handleBlockProposedEvent := func() error {
 		defer func() { <-p.proposeConcurrencyGuard }()
-		log.Info("Handle BlockProposed event", "blockID", event.Id)
 		// Check whether the block has been verified.
 		isVerified, err := p.isBlockVerified(event.Id)
 		if err != nil {
@@ -359,9 +353,7 @@ func (p *Prover) onBlockProposed(
 		return p.invalidProofSubmitter.RequestProof(ctx, event)
 	}
 
-	log.Info("send to proposeConcurrencyGuard")
 	p.proposeConcurrencyGuard <- struct{}{}
-	log.Info("send to proposeConcurrencyGuard success")
 
 	p.l1Current = event.Raw.BlockNumber
 	p.lastHandledBlockID = event.Id.Uint64()
@@ -384,9 +376,7 @@ func (p *Prover) submitProofOp(ctx context.Context, proofWithHeader *proofProduc
 	log.Warn("p.submitProofConcurrencyGuard <- end")
 	go func() {
 		defer func() {
-			log.Warn("p.submitProofConcurrencyGuard <- defer start")
 			<-p.submitProofConcurrencyGuard
-			log.Warn("p.submitProofConcurrencyGuard <- defer end")
 		}()
 
 		var err error
