@@ -369,11 +369,23 @@ func (p *Prover) onBlockProposed(
 	p.lastHandledBlockID = event.Id.Uint64()
 
 	go func() {
-		err := backoff.Retry(handleBlockProposedEvent, backoff.NewExponentialBackOff())
-		if err != nil {
-			log.Error("Handle new BlockProposed event error", "error", err)
-			panic(errors.Wrap(err, "failed to handle new block proposed event"))
+		done := make(chan bool, 1)
+		go func() {
+			defer func() { done <- true }()
+			err := backoff.Retry(handleBlockProposedEvent, backoff.NewExponentialBackOff())
+			if err != nil {
+				log.Error("Handle new BlockProposed event error", "error", err)
+				panic(errors.Wrap(err, "failed to handle new block proposed event"))
+			}
+		}()
+		select {
+		case <-done:
+			break
+		case <-time.After(time.Second * 30):
+			defer func() { <-p.proposeConcurrencyGuard }()
+			log.Error("Handle new BlockProposed event timeout", "blockID", event.Id)
 		}
+
 	}()
 
 	return nil
