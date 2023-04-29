@@ -309,7 +309,7 @@ func (p *Prover) onBlockProposed(
 
 	handleBlockProposedEvent := func() error {
 		defer func() { <-p.proposeConcurrencyGuard }()
-
+		log.Info("Handle BlockProposed event", "blockID", event.Id)
 		// Check whether the block has been verified.
 		isVerified, err := p.isBlockVerified(event.Id)
 		if err != nil {
