@@ -192,8 +192,12 @@ func (s *ValidProofSubmitter) SubmitProof(
 		return err
 	}
 	sendTx := func() (*types.Transaction, error) {
+		log.Info("start to sendTx", "blockID", blockID)
 		s.mutex.Lock()
-		defer s.mutex.Unlock()
+		defer func() {
+			s.mutex.Unlock()
+			log.Info("finish to sendTx", "blockID", blockID)
+		}()
 		isVerified, err := s.isBlockVerified(blockID)
 		if err != nil {
 			log.Error("Failed to check if block is verified", "err", err)
