@@ -131,7 +131,7 @@ func (d *Driver) eventLoop() {
 
 	// Call doSync() right away to catch up with the latest known L1 head.
 	doSyncWithBackoff()
-	ticker := time.NewTicker(time.Millisecond * 1500)
+	ticker := time.NewTicker(time.Second)
 	for {
 		select {
 		case <-d.ctx.Done():

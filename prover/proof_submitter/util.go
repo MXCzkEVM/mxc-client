@@ -74,10 +74,6 @@ func sendTxWithBackoff(
 
 		tx, err := sendTxFunc()
 		if err != nil {
-			if err == errUnretryable {
-				isUnretryableError = true
-				return nil
-			}
 			err = encoding.TryParsingCustomError(err)
 			if isSubmitProofTxErrorRetryable(err, blockID) {
 				log.Info("Retry sending MXCL1.proveBlock transaction", "reason", err)
@@ -90,9 +86,8 @@ func sendTxWithBackoff(
 
 		if _, err := rpc.WaitReceipt(ctx, cli.L1, tx); err != nil {
 			log.Warn("Failed to wait till transaction executed", "blockID", blockID, "txHash", tx.Hash(), "error", err)
-			// CHANGE(MXC): Unretryable error missing
-			isUnretryableError = true
-			return nil
+			panic(err)
+			return err
 		}
 
 		return nil

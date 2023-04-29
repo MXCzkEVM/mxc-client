@@ -174,6 +174,7 @@ func (p *Proposer) ProposeOp(ctx context.Context) error {
 
 	// only for testnet proposer
 	// Wait until L2 execution engine is synced at first.
+	log.Info("Wait until L2 execution engine synced")
 	if err := p.rpc.WaitTillL2Synced(ctx); err != nil {
 		return fmt.Errorf("failed to wait until L2 execution engine synced: %w", err)
 	}
@@ -242,7 +243,7 @@ func (p *Proposer) ProposeOp(ctx context.Context) error {
 	}
 
 	log.Info("Proposer account information", "chainHead", head, "nonce", nonce)
-
+	timeoutCtx, _ := context.WithTimeout(ctx, 10*time.Second)
 	g := new(errgroup.Group)
 
 	for i, res := range commitTxListResQueue {
@@ -252,11 +253,11 @@ func (p *Proposer) ProposeOp(ctx context.Context) error {
 					return nil
 				}
 
-				return p.ProposeTxListWithNonce(ctx, res.meta, res.commitTx, res.txListBytes, res.txNum, nonce+uint64(i))
+				return p.ProposeTxListWithNonce(timeoutCtx, res.meta, res.commitTx, res.txListBytes, res.txNum, nonce+uint64(i))
 			})
 		}(i, res)
 	}
-
+	log.Warn("wait for all txs to be proposed")
 	if err := g.Wait(); err != nil {
 		return fmt.Errorf("failed to propose transactions: %w", err)
 	}
