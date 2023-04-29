@@ -377,6 +377,7 @@ func (p *Prover) submitProofOp(ctx context.Context, proofWithHeader *proofProduc
 		var err error
 		if isValidProof {
 			err = backoff.Retry(func() error {
+				log.Info("Submit proof", "proofWithHeader", proofWithHeader.Header.Number)
 				if err := p.validProofSubmitter.SubmitProof(p.ctx, proofWithHeader); err != nil {
 					log.Info("Retry oracle proving", "error", err)
 					return err
