@@ -155,35 +155,22 @@ func (s *State) startSubscriptions(ctx context.Context) {
 	//s.l1HeadSub = rpc.SubscribeChainHead(s.rpc.L1, s.l1HeadCh)
 	s.l2HeadSub = rpc.SubscribeChainHead(s.rpc.L2, s.l2HeadCh)
 	s.l2HeaderSyncedSub = rpc.SubscribeHeaderSynced(s.rpc.MXCL1, s.headerSyncedCh)
-	s.l2BlockVerifiedSub = rpc.SubscribeBlockVerified(s.rpc.MXCL1, s.blockVerifiedCh)
+	//s.l2BlockVerifiedSub = rpc.SubscribeBlockVerified(s.rpc.MXCL1, s.blockVerifiedCh)
 	s.l2BlockProposedSub = rpc.SubscribeBlockProposed(s.rpc.MXCL1, s.blockProposedCh)
-	s.l2BlockProvenSub = rpc.SubscribeBlockProven(s.rpc.MXCL1, s.blockProvenCh)
+	//s.l2BlockProvenSub = rpc.SubscribeBlockProven(s.rpc.MXCL1, s.blockProvenCh)
 
 	go func() {
 		l1HeadTicker := time.NewTicker(time.Second)
 		for {
 			select {
 			case <-ctx.Done():
+				log.Warn("L1 head subscription stopped")
 				return
 			case e := <-s.blockProposedCh:
+				log.Info("L2 block proposed", "height", e.Raw.BlockNumber)
 				s.setHeadBlockID(e.Id)
-			case e := <-s.blockProvenCh:
-				if e.BlockHash != s.BlockDeadendHash {
-					if e.Prover == (common.Address{}) {
-						log.Info("🔮 Valid block proven by oracle prover", "blockID", e.Id, "hash", common.Hash(e.BlockHash))
-					} else {
-						log.Info("✅ Valid block proven", "blockID", e.Id, "hash", common.Hash(e.BlockHash), "prover", e.Prover)
-					}
-				} else {
-					log.Info("❎ Invalid block proven", "blockID", e.Id, "prover", e.Prover)
-				}
-			case e := <-s.blockVerifiedCh:
-				if e.BlockHash != s.BlockDeadendHash {
-					log.Info("📈 Valid block verified", "blockID", e.Id, "hash", common.Hash(e.BlockHash))
-				} else {
-					log.Info("🗑 Invalid block verified", "blockID", e.Id)
-				}
 			case e := <-s.headerSyncedCh:
+				log.Info("L2 header synced", "height", e.SrcHeight)
 				// Verify the protocol synced block, check if it exists in
 				// L2 execution engine.
 				if s.GetL2Head().Number.Cmp(e.SrcHeight) >= 0 {
@@ -199,6 +186,7 @@ func (s *State) startSubscriptions(ctx context.Context) {
 				}
 				s.setLatestVerifiedBlockHash(id, e.SrcHeight, e.SrcHash)
 			case <-l1HeadTicker.C:
+				log.Info("L1 head ticker")
 				newHead, err := s.rpc.L1.HeaderByNumber(ctx, nil)
 				if err != nil {
 					log.Error("Get L1 head error", "error", err)
@@ -208,6 +196,7 @@ func (s *State) startSubscriptions(ctx context.Context) {
 				s.l1HeadsFeed.Send(newHead)
 				// avoid too fast request
 			case newHead := <-s.l2HeadCh:
+				log.Info("L2 head changed", "height", newHead.Number)
 				s.setL2Head(newHead)
 			}
 		}
