@@ -138,14 +138,14 @@ func (d *Driver) eventLoop() {
 			go func() {
 				defer func() { done <- true }()
 				doSyncWithBackoff()
-				select {
-				case <-done:
-					return
-				case <-time.After(time.Second * 30):
-					log.Error("doSyncWithBackoff timeout")
-					return
-				}
 			}()
+			select {
+			case <-done:
+				return
+			case <-time.After(time.Second * 30):
+				log.Error("doSyncWithBackoff timeout")
+				return
+			}
 		case <-d.l1HeadCh:
 			log.Info("<-d.l1HeadCh")
 			reqSync()
