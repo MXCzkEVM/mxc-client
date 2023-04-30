@@ -218,9 +218,6 @@ func (p *Prover) eventLoop() {
 					continue
 				}
 				metrics.ProverPendingBlocksGauge.Update(int64(vars.NextBlockId - vars.LatestVerifiedId - 1))
-			default:
-				time.Sleep(time.Millisecond * 100)
-				continue
 			}
 		}
 	}()
@@ -268,9 +265,6 @@ func (p *Prover) eventLoop() {
 		case <-forceProvingTicker.C:
 			log.Info("Force proving")
 			reqProving()
-		default:
-			time.Sleep(100 * time.Millisecond)
-			continue
 		}
 	}
 }
@@ -408,7 +402,7 @@ func (p *Prover) submitProofOp(ctx context.Context, proofWithHeader *proofProduc
 				case <-done:
 					return nil
 				case <-time.After(time.Second * 10):
-
+					panic("timeout")
 					return fmt.Errorf("timeout")
 				}
 			}, backoff.NewConstantBackOff(3*time.Second))
