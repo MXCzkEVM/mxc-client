@@ -119,6 +119,7 @@ func (d *Driver) eventLoop() {
 	}
 
 	doSyncWithBackoff := func() {
+		log.Info("doSyncWithBackoff")
 		done := make(chan bool, 1)
 		go func() {
 			defer func() { done <- true }()
