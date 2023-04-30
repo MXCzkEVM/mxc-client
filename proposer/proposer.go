@@ -133,7 +133,7 @@ func (p *Proposer) eventLoop() {
 					if !errors.Is(err, errNoNewTxs) {
 						return fmt.Errorf("proposing operation error: %v", err)
 					} else if err != nil {
-						log.Error("Proposing error")
+						log.Error("Proposing error", "err", err)
 					}
 
 					if p.proposeEmptyBlocksInterval != nil {

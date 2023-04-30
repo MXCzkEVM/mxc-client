@@ -239,9 +239,7 @@ func (p *Prover) eventLoop() {
 			go func() {
 				defer func() {
 					done <- true
-					if _, ok := <-p.proposeConcurrencyGuard; !ok {
-						log.Error("Propose concurrency guard channel closed")
-					}
+					<-p.proposeConcurrencyGuard
 				}()
 				if err := p.proveOp(); err != nil {
 					log.Error("Prove new blocks error", "error", err)
@@ -251,6 +249,7 @@ func (p *Prover) eventLoop() {
 			case <-done:
 				continue
 			case <-time.After(time.Second * 30):
+				<-p.proposeConcurrencyGuard
 				log.Error("Prove new blocks timeout")
 			}
 		case <-p.blockProposedCh:

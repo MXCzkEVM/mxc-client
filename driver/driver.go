@@ -113,7 +113,9 @@ func (d *Driver) eventLoop() {
 	// reqSync requests performing a synchronising operation, won't block
 	// if we are already synchronising.
 	reqSync := func() {
-		d.syncNotify <- struct{}{}
+		go func() {
+			d.syncNotify <- struct{}{}
+		}()
 		log.Info("d.syncNotify <- struct{}{}")
 	}
 
