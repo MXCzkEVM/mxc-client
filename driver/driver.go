@@ -116,6 +116,7 @@ func (d *Driver) eventLoop() {
 		select {
 		case d.syncNotify <- struct{}{}:
 		default:
+			break
 		}
 	}
 
@@ -153,6 +154,7 @@ func (d *Driver) eventLoop() {
 			log.Info("<-d.l1HeadCh")
 			reqSync()
 		case <-ticker.C:
+			log.Info("<-ticker.C")
 			reqSync()
 		default:
 			time.Sleep(100 * time.Millisecond)
