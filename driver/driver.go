@@ -126,7 +126,7 @@ func (d *Driver) eventLoop() {
 	}
 
 	// Call doSync() right away to catch up with the latest known L1 head.
-	doSyncWithBackoff()
+	reqSync()
 	for {
 		select {
 		case <-d.ctx.Done():
