@@ -116,11 +116,18 @@ func NewClient(ctx context.Context, cfg *ClientConfig) (*Client, error) {
 }
 
 func (c *Client) Close() {
-	c.L1.Close()
-	c.L2.Close()
-	c.L1RawRPC.Close()
-	c.L2RawRPC.Close()
-	c.L2Engine.Close()
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Warn("panic when closing RPC clients", "err", r)
+			}
+		}()
+		c.L1.Close()
+		c.L2.Close()
+		c.L1RawRPC.Close()
+		c.L2RawRPC.Close()
+		c.L2Engine.Close()
+	}()
 }
 
 func (c *Client) Reconnect(ctx context.Context) (*Client, error) {
