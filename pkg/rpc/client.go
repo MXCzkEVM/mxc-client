@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"context"
+	"github.com/ethereum/go-ethereum/log"
 	"math/big"
 
 	"github.com/MXCzkEVM/mxc-client/bindings"
@@ -123,6 +124,10 @@ func (c *Client) Close() {
 }
 
 func (c *Client) Reconnect(ctx context.Context) (*Client, error) {
+	log.Warn("reconnecting to RPC clients")
+	defer func() {
+		log.Warn("reconnected to RPC clients success")
+	}()
 	c.Close()
 	return NewClient(ctx, c.cfg)
 }
