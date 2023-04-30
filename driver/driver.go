@@ -113,9 +113,7 @@ func (d *Driver) eventLoop() {
 	// reqSync requests performing a synchronising operation, won't block
 	// if we are already synchronising.
 	reqSync := func() {
-		go func() {
-			d.syncNotify <- struct{}{}
-		}()
+		d.syncNotify <- struct{}{}
 	}
 
 	doSyncWithBackoff := func() {
@@ -141,10 +139,10 @@ func (d *Driver) eventLoop() {
 			}()
 			select {
 			case <-done:
-				return
+				continue
 			case <-time.After(time.Second * 30):
 				log.Error("doSyncWithBackoff timeout")
-				return
+				continue
 			}
 		case <-d.l1HeadCh:
 			log.Info("<-d.l1HeadCh")
