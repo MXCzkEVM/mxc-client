@@ -141,7 +141,11 @@ func (d *Driver) eventLoop() {
 			case <-done:
 				continue
 			case <-time.After(time.Second * 30):
-				panic("doSyncWithBackoff timeout")
+				var err error
+				d.rpc, err = d.rpc.Reconnect(d.ctx)
+				if err != nil {
+					log.Error("Reconnect error", "error", err)
+				}
 				log.Error("doSyncWithBackoff timeout")
 				continue
 			}

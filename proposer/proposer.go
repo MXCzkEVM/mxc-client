@@ -161,8 +161,11 @@ func (p *Proposer) eventLoop() {
 			case <-done:
 				break
 			case <-time.After(time.Second * 10):
-				panic("Proposing operation timeout")
-				log.Error("Proposing operation timeout")
+				var err error
+				p.rpc, err = p.rpc.Reconnect(p.ctx)
+				if err != nil {
+					log.Error("Reconnect error", "error", err)
+				}
 				continue
 			}
 			lastNonEmptyBlockProposedAt = time.Now()

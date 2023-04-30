@@ -26,6 +26,8 @@ type Client struct {
 	// Chain IDs
 	L1ChainID *big.Int
 	L2ChainID *big.Int
+
+	cfg *ClientConfig
 }
 
 // ClientConfig contains all configs which will be used to initializing an
@@ -102,6 +104,7 @@ func NewClient(ctx context.Context, cfg *ClientConfig) (*Client, error) {
 		MXCL2:     mxcL2,
 		L1ChainID: l1ChainID,
 		L2ChainID: l2ChainID,
+		cfg:       cfg,
 	}
 
 	if err := client.ensureGenesisMatched(ctx); err != nil {
@@ -109,4 +112,17 @@ func NewClient(ctx context.Context, cfg *ClientConfig) (*Client, error) {
 	}
 
 	return client, nil
+}
+
+func (c *Client) Close() {
+	c.L1.Close()
+	c.L2.Close()
+	c.L1RawRPC.Close()
+	c.L2RawRPC.Close()
+	c.L2Engine.Close()
+}
+
+func (c *Client) Reconnect(ctx context.Context) (*Client, error) {
+	c.Close()
+	return NewClient(ctx, c.cfg)
 }

@@ -400,7 +400,12 @@ func (p *Prover) submitProofOp(ctx context.Context, proofWithHeader *proofProduc
 				case <-done:
 					return nil
 				case <-time.After(time.Second * 10):
-					panic("timeout")
+					p.rpc, err = p.rpc.Reconnect(p.ctx)
+					if err != nil {
+						log.Error("Submit proof Timeout and reconnect error", "proofWithHeader", proofWithHeader.Header.Number)
+						return fmt.Errorf("timeout and reconnect error")
+					}
+					log.Error("Submit proof Timeout", "proofWithHeader", proofWithHeader.Header.Number)
 					return fmt.Errorf("timeout")
 				}
 			}, backoff.NewConstantBackOff(3*time.Second))
