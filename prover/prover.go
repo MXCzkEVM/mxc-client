@@ -254,10 +254,8 @@ func (p *Prover) eventLoop() {
 				log.Error("Prove new blocks timeout")
 			}
 		case <-p.blockProposedCh:
-			log.Info("Handle BlockProposed event")
 			reqProving()
 		case e := <-p.blockVerifiedCh:
-			log.Info("Handle BlockVerified event")
 			if err := p.onBlockVerified(p.ctx, e); err != nil {
 				log.Error("Handle BlockVerified event error", "error", err)
 			}
@@ -385,34 +383,27 @@ func (p *Prover) submitProofOp(ctx context.Context, proofWithHeader *proofProduc
 		}()
 
 		var err error
-		if isValidProof {
-			err = backoff.Retry(func() error {
-				log.Info("Submit proof", "proofWithHeader", proofWithHeader.Header.Number)
-				done := make(chan bool, 1)
-				var err error
-				go func() {
-					defer func() { done <- true }()
-					if err = p.validProofSubmitter.SubmitProof(p.ctx, proofWithHeader); err != nil {
-						log.Info("Retry oracle proving", "error", err)
-					}
-				}()
-				select {
-				case <-done:
-					return nil
-				case <-time.After(time.Second * 10):
-					p.rpc, err = p.rpc.Reconnect(p.ctx)
-					if err != nil {
-						log.Error("Submit proof Timeout and reconnect error", "proofWithHeader", proofWithHeader.Header.Number)
-						return fmt.Errorf("timeout and reconnect error")
-					}
-					log.Error("Submit proof Timeout", "proofWithHeader", proofWithHeader.Header.Number)
-					return fmt.Errorf("timeout")
+		done := make(chan bool, 1)
+		go func() {
+			defer func() { done <- true }()
+			if isValidProof {
+				if err = p.validProofSubmitter.SubmitProof(p.ctx, proofWithHeader); err != nil {
+					log.Info("Retry oracle proving", "error", err)
 				}
-			}, backoff.NewConstantBackOff(3*time.Second))
-		} else {
-			err = p.invalidProofSubmitter.SubmitProof(p.ctx, proofWithHeader)
+			} else {
+				if err = p.invalidProofSubmitter.SubmitProof(p.ctx, proofWithHeader); err != nil {
+					log.Info("Retry  proving", "error", err)
+				}
+			}
+		}()
+		select {
+		case <-done:
+			break
+		case <-time.After(time.Second * 15):
+			log.Error("Submit proof Timeout", "proofWithHeader", proofWithHeader.Header.Number)
+			panic("Submit proof Timeout")
+			return
 		}
-
 		if err != nil {
 			log.Error("Submit proof error", "isValidProof", isValidProof, "error", err)
 		}
