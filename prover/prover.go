@@ -407,9 +407,8 @@ func (p *Prover) submitProofOp(ctx context.Context, proofWithHeader *proofProduc
 				select {
 				case <-done:
 					return nil
-				case <-time.After(time.Second * 15):
-					panic("timeout")
-					log.Error("submitProofOp Timeout")
+				case <-time.After(time.Second * 10):
+
 					return fmt.Errorf("timeout")
 				}
 			}, backoff.NewConstantBackOff(3*time.Second))

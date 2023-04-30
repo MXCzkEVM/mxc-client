@@ -123,6 +123,7 @@ func waitSubErr(ctx context.Context, sub event.Subscription) (event.Subscription
 	for {
 		select {
 		case err := <-sub.Err():
+			log.Error("Subscription error", "error", err)
 			return sub, err
 		case <-ctx.Done():
 			return sub, nil

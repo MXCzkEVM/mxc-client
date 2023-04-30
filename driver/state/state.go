@@ -160,7 +160,7 @@ func (s *State) startSubscriptions(ctx context.Context) {
 	//s.l2BlockProvenSub = rpc.SubscribeBlockProven(s.rpc.MXCL1, s.blockProvenCh)
 
 	go func() {
-		l1HeadTicker := time.NewTicker(time.Second * 2)
+		l1HeadTicker := time.NewTicker(time.Millisecond * 1500)
 		for {
 			select {
 			case <-ctx.Done():
