@@ -249,7 +249,9 @@ func (p *Prover) eventLoop() {
 			case <-done:
 				continue
 			case <-time.After(time.Second * 30):
-				<-p.proposeConcurrencyGuard
+				go func() {
+					<-p.proposeConcurrencyGuard
+				}()
 				log.Error("Prove new blocks timeout")
 			}
 		case <-p.blockProposedCh:
