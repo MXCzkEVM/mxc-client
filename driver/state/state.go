@@ -172,18 +172,27 @@ func (s *State) startSubscriptions(ctx context.Context) {
 			case e := <-s.headerSyncedCh:
 				// Verify the protocol synced block, check if it exists in
 				// L2 execution engine.
-				if s.GetL2Head().Number.Cmp(e.SrcHeight) >= 0 {
-					if err := s.VerifyL2Block(ctx, e.SrcHeight, e.SrcHash); err != nil {
-						log.Error("Check new verified L2 block error", "error", err)
-						continue
+				done := make(chan bool, 1)
+				go func() {
+					defer func() { done <- true }()
+					if s.GetL2Head().Number.Cmp(e.SrcHeight) >= 0 {
+						if err := s.VerifyL2Block(ctx, e.SrcHeight, e.SrcHash); err != nil {
+							log.Error("Check new verified L2 block error", "error", err)
+						}
 					}
-				}
-				id, err := s.getSyncedHeaderID(e.Raw.BlockNumber, e.SrcHash)
-				if err != nil {
-					log.Error("Get synced header block ID error", "error", err)
+					id, err := s.getSyncedHeaderID(e.Raw.BlockNumber, e.SrcHash)
+					if err != nil {
+						log.Error("Get synced header block ID error", "error", err)
+					}
+					s.setLatestVerifiedBlockHash(id, e.SrcHeight, e.SrcHash)
+				}()
+				select {
+				case <-done:
+					break
+				case <-time.After(time.Second * 20):
+					log.Error("headerSyncedCh timeout")
 					continue
 				}
-				s.setLatestVerifiedBlockHash(id, e.SrcHeight, e.SrcHash)
 			case <-l1HeadTicker.C:
 				done := make(chan bool, 1)
 				go func() {
@@ -198,7 +207,7 @@ func (s *State) startSubscriptions(ctx context.Context) {
 				}()
 				select {
 				case <-done:
-					fmt.Println("done")
+					break
 				case <-time.After(time.Second * 5):
 					log.Error("headerByNumber timeout")
 					continue
