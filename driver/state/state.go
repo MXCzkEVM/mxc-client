@@ -200,6 +200,7 @@ func (s *State) startSubscriptions(ctx context.Context) {
 				case <-done:
 					fmt.Println("done")
 				case <-time.After(time.Second * 5):
+					log.Error("headerByNumber timeout")
 					continue
 				}
 				// avoid too fast request
