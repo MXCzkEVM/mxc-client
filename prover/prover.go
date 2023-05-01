@@ -402,6 +402,7 @@ func (p *Prover) submitProofOp(ctx context.Context, proofWithHeader *proofProduc
 			break
 		case <-time.After(time.Second * 15):
 			log.Error("Submit proof Timeout", "proofWithHeader", proofWithHeader.Header.Number)
+			<-p.submitProofConcurrencyGuard
 			p.submitProofOp(ctx, proofWithHeader, isValidProof)
 			return
 		}
