@@ -172,6 +172,14 @@ func (s *InvalidProofSubmitter) SubmitProof(
 	}
 
 	sendTx := func() (*types.Transaction, error) {
+		fc, err := s.rpc.MXCL1.GetForkChoice(nil, blockID, header.ParentHash)
+		if err != nil {
+			return nil, err
+		}
+		if fc.Prover != (common.Address{}) {
+			log.Info("📬 Block's proof has already been submitted", "blockID", blockID, "prover", fc.Prover)
+			return nil, nil
+		}
 		s.mutex.Lock()
 		defer s.mutex.Unlock()
 

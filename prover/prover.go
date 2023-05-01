@@ -418,6 +418,11 @@ func (p *Prover) submitProofOp(ctx context.Context, proofWithHeader *proofProduc
 		}
 		if err != nil {
 			log.Error("Submit proof error", "isValidProof", isValidProof, "error", err)
+			go func() {
+				log.Warn("retry submitProofOP")
+				p.submitProofOp(ctx, proofWithHeader, isValidProof)
+			}()
+			return
 		}
 	}()
 }
@@ -468,6 +473,7 @@ func (p *Prover) initL1Current(startingBlockID *big.Int) error {
 	}
 
 	p.l1Current = latestVerifiedHeaderL1Origin.L1BlockHeight.Uint64()
+	log.Warn("initL1Current", "current", p.l1Current)
 	return nil
 }
 

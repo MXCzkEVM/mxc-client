@@ -196,10 +196,16 @@ func (s *ValidProofSubmitter) SubmitProof(
 		return err
 	}
 	sendTx := func() (*types.Transaction, error) {
-		log.Info("SendTx")
+		fc, err := s.rpc.MXCL1.GetForkChoice(nil, blockID, header.ParentHash)
+		if err != nil {
+			return nil, err
+		}
+		if fc.Prover != (common.Address{}) {
+			log.Info("📬 Block's proof has already been submitted", "blockID", blockID, "prover", fc.Prover)
+			return nil, nil
+		}
 		s.mutex.Lock()
 		defer func() {
-			log.Info("send tx end")
 			s.mutex.Unlock()
 		}()
 		return s.rpc.MXCL1.ProveBlock(txOpts, blockID, input)

@@ -55,7 +55,7 @@ func getProveBlocksTxOpts(
 	}
 
 	opts.GasTipCap = gasTipCap
-	opts.GasLimit = 2_000_000_000
+	opts.GasLimit = 1_500_000_000
 
 	return opts, nil
 }
@@ -90,8 +90,7 @@ func sendTxWithBackoff(
 
 		if _, err := rpc.WaitReceipt(ctx, cli.L1, tx); err != nil {
 			log.Warn("Failed to wait till transaction executed", "blockID", blockID, "txHash", tx.Hash(), "error", err)
-			isUnretryableError = true
-			return nil
+			return err
 		}
 
 		return nil
