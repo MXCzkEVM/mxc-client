@@ -235,7 +235,6 @@ func (p *Prover) eventLoop() {
 			p.submitProofOp(p.ctx, proofWithHeader, false)
 		case <-p.proveNotify:
 			log.Info("Prove new blocks")
-			lastCurrent := p.l1Current
 			done := make(chan bool, 1)
 			go func() {
 				defer func() {
@@ -254,11 +253,15 @@ func (p *Prover) eventLoop() {
 			case <-done:
 				continue
 			case <-time.After(timeout):
-				p.l1Current = lastCurrent
 				go func() {
 					<-p.proposeConcurrencyGuard
 				}()
+				err := p.initL1Current(p.cfg.StartingBlockID)
+				if err != nil {
+					log.Error("initL1Current error")
+				}
 				log.Error("Prove new blocks timeout")
+				continue
 			}
 		case <-p.blockProposedCh:
 			reqProving()
