@@ -90,7 +90,8 @@ func sendTxWithBackoff(
 
 		if _, err := rpc.WaitReceipt(ctx, cli.L1, tx); err != nil {
 			log.Warn("Failed to wait till transaction executed", "blockID", blockID, "txHash", tx.Hash(), "error", err)
-			return err
+			isUnretryableError = true
+			return nil
 		}
 
 		return nil
