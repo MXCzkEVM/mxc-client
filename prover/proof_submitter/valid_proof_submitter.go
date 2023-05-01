@@ -192,12 +192,11 @@ func (s *ValidProofSubmitter) SubmitProof(
 		return err
 	}
 	sendTx := func() (*types.Transaction, error) {
-		fc, err := s.rpc.MXCL1.GetForkChoice(nil, blockID, header.ParentHash)
+		need, err := s.NeedNewProof(ctx, blockID)
 		if err != nil {
 			return nil, err
 		}
-		if fc.Prover != (common.Address{}) {
-			log.Info("📬 Block's proof has already been submitted", "blockID", blockID, "prover", fc.Prover)
+		if !need {
 			return nil, nil
 		}
 		s.mutex.Lock()
@@ -237,4 +236,35 @@ func (s *ValidProofSubmitter) isBlockVerified(id *big.Int) (bool, error) {
 	}
 
 	return id.Uint64() <= stateVars.LatestVerifiedId, nil
+}
+
+func (s *ValidProofSubmitter) NeedNewProof(ctx context.Context, id *big.Int) (bool, error) {
+	var parentHash common.Hash
+	if id.Cmp(common.Big1) == 0 {
+		header, err := s.rpc.L2.HeaderByNumber(ctx, common.Big0)
+		if err != nil {
+			return false, err
+		}
+
+		parentHash = header.Hash()
+	} else {
+		parentL1Origin, err := s.rpc.WaitL1Origin(ctx, new(big.Int).Sub(id, common.Big1))
+		if err != nil {
+			return false, err
+		}
+
+		parentHash = parentL1Origin.L2BlockHash
+	}
+
+	fc, err := s.rpc.MXCL1.GetForkChoice(nil, id, parentHash)
+	if err != nil {
+		return false, err
+	}
+
+	if fc.Prover != (common.Address{}) {
+		log.Info("📬 Block's proof has already been submitted", "blockID", id, "prover", fc.Prover)
+		return false, nil
+	}
+
+	return true, nil
 }
