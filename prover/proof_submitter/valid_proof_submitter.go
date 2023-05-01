@@ -114,11 +114,14 @@ func (s *ValidProofSubmitter) SubmitProof(
 	metrics.ProverReceivedProofCounter.Inc(1)
 	metrics.ProverReceivedValidProofCounter.Inc(1)
 
+	log.Info("L2 BlockByHash Start", "header", header.Number)
+
 	// Get the corresponding L2 block.
 	block, err := s.rpc.L2.BlockByHash(ctx, header.Hash())
 	if err != nil {
 		return fmt.Errorf("failed to get L2 block with given hash %s: %w", header.Hash(), err)
 	}
+	log.Info("L2 BlockByHash End", "header", header.Number)
 
 	log.Debug(
 		"Get the L2 block to prove",
@@ -143,6 +146,7 @@ func (s *ValidProofSubmitter) SubmitProof(
 	if err != nil {
 		return fmt.Errorf("failed to fetch anchor transaction receipt: %w", err)
 	}
+	log.Info("GetAndValidateAnchorTxReceiptEnd")
 
 	// Generate the merkel proof (whose root is block's txRoot) of this anchor transaction.
 	txRoot, anchorTxProof, err := generateTrieProof(block.Transactions(), 0)
@@ -192,8 +196,10 @@ func (s *ValidProofSubmitter) SubmitProof(
 		return err
 	}
 	sendTx := func() (*types.Transaction, error) {
+		log.Info("SendTx")
 		s.mutex.Lock()
 		defer func() {
+			log.Info("send tx end")
 			s.mutex.Unlock()
 		}()
 		return s.rpc.MXCL1.ProveBlock(txOpts, blockID, input)
