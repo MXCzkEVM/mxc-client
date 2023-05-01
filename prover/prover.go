@@ -402,7 +402,7 @@ func (p *Prover) submitProofOp(ctx context.Context, proofWithHeader *proofProduc
 			break
 		case <-time.After(time.Second * 15):
 			log.Error("Submit proof Timeout", "proofWithHeader", proofWithHeader.Header.Number)
-			panic("Submit proof Timeout")
+			p.submitProofOp(ctx, proofWithHeader, isValidProof)
 			return
 		}
 		if err != nil {

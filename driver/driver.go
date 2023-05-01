@@ -146,7 +146,6 @@ func (d *Driver) eventLoop() {
 				continue
 			case <-time.After(time.Second * 30):
 				log.Error("doSyncWithBackoff timeout")
-				panic("doSyncWithBackoff timeout")
 				continue
 			}
 		case <-d.l1HeadCh:
