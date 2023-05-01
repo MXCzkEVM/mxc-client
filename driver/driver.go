@@ -143,7 +143,7 @@ func (d *Driver) eventLoop() {
 			}()
 			select {
 			case <-done:
-				break
+				continue
 			case <-time.After(time.Second * 30):
 				log.Error("doSyncWithBackoff timeout")
 				panic("doSyncWithBackoff timeout")
