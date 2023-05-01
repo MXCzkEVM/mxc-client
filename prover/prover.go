@@ -110,8 +110,8 @@ func InitFromConfig(ctx context.Context, p *Prover, cfg *Config) (err error) {
 
 	chBufferSize := p.protocolConfigs.MaxNumBlocks.Uint64()
 	log.Info("Buffer size", "size", chBufferSize)
-	p.blockProposedCh = make(chan *bindings.MXCL1ClientBlockProposed, chBufferSize)
-	p.blockVerifiedCh = make(chan *bindings.MXCL1ClientBlockVerified, chBufferSize)
+	//p.blockProposedCh = make(chan *bindings.MXCL1ClientBlockProposed, chBufferSize)
+	//p.blockVerifiedCh = make(chan *bindings.MXCL1ClientBlockVerified, chBufferSize)
 	p.proveValidProofCh = make(chan *proofProducer.ProofWithHeader, chBufferSize)
 	p.proveInvalidProofCh = make(chan *proofProducer.ProofWithHeader, chBufferSize)
 	p.proveNotify = make(chan struct{}, 1)
@@ -199,7 +199,7 @@ func (p *Prover) eventLoop() {
 	// If there is too many (MXCData.Config.maxNumBlocks) pending blocks in MXCL1 contract, there will be no new
 	// BlockProposed temporarily, so except the BlockProposed subscription, we need another trigger to start
 	// fetching the proposed blocks.
-	forceProvingTicker := time.NewTicker(15 * time.Second)
+	forceProvingTicker := time.NewTicker(3 * time.Second)
 	defer forceProvingTicker.Stop()
 
 	// Call reqProving() right away to catch up with the latest state.
@@ -259,12 +259,12 @@ func (p *Prover) eventLoop() {
 				log.Error("Prove new blocks timeout")
 				continue
 			}
-		case <-p.blockProposedCh:
-			reqProving()
-		case e := <-p.blockVerifiedCh:
-			if err := p.onBlockVerified(p.ctx, e); err != nil {
-				log.Error("Handle BlockVerified event error", "error", err)
-			}
+		//case <-p.blockProposedCh:
+		//	reqProving()
+		//case e := <-p.blockVerifiedCh:
+		//	if err := p.onBlockVerified(p.ctx, e); err != nil {
+		//		log.Error("Handle BlockVerified event error", "error", err)
+		//	}
 		case <-forceProvingTicker.C:
 			log.Info("Force proving")
 			reqProving()
@@ -411,6 +411,7 @@ func (p *Prover) submitProofOp(ctx context.Context, proofWithHeader *proofProduc
 			break
 		case <-time.After(time.Second * 15):
 			log.Error("Submit proof Timeout", "proofWithHeader", proofWithHeader.Header.Number)
+			panic("submit proof timeout")
 			go func() {
 				p.submitProofOp(ctx, proofWithHeader, isValidProof)
 			}()

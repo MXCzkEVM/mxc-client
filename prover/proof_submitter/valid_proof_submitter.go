@@ -199,10 +199,10 @@ func (s *ValidProofSubmitter) SubmitProof(
 		if !need {
 			return nil, nil
 		}
-		s.mutex.Lock()
-		defer func() {
-			s.mutex.Unlock()
-		}()
+		//s.mutex.Lock()
+		//defer func() {
+		//	s.mutex.Unlock()
+		//}()
 		return s.rpc.MXCL1.ProveBlock(txOpts, blockID, input)
 	}
 
