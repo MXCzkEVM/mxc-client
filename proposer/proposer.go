@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math/big"
 	"math/rand"
+	"sort"
 	"sync"
 	"time"
 
@@ -161,7 +162,7 @@ func (p *Proposer) eventLoop() {
 			case <-done:
 				break
 			case <-time.After(time.Second * 10):
-				panic("Proposing operation timeout")
+				//panic("Proposing operation timeout")
 				continue
 			}
 			lastNonEmptyBlockProposedAt = time.Now()
@@ -232,6 +233,10 @@ func (p *Proposer) ProposeOp(ctx context.Context) error {
 			txNum:       uint(len(txs)),
 		})
 	}
+	// txNum first avoid
+	sort.Slice(commitTxListResQueue, func(i, j int) bool {
+		return commitTxListResQueue[i].txNum > commitTxListResQueue[j].txNum
+	})
 
 	if p.AfterCommitHook != nil {
 		if err := p.AfterCommitHook(); err != nil {
