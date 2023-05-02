@@ -312,9 +312,9 @@ func (p *Prover) onBlockProposed(
 		end()
 		return nil
 	}
-	if event.Id.Uint64() <= p.lastHandledBlockID {
-		return nil
-	}
+	//if event.Id.Uint64() <= p.lastHandledBlockID {
+	//	return nil
+	//}
 	if p.cfg.OnlyProveEvenNumberBlocks && event.Id.Uint64()%2 != 0 {
 		log.Info("Skip a block with odd number", "id", event.Id)
 		return nil
