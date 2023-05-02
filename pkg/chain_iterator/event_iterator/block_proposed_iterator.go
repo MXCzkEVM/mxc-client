@@ -38,6 +38,7 @@ type BlockProposedIteratorConfig struct {
 	Client                *ethclient.Client
 	MXCL1                 *bindings.MXCL1Client
 	MaxBlocksReadPerEpoch *uint64
+	MaxProcessPerEpoch    *uint64
 	StartHeight           *big.Int
 	EndHeight             *big.Int
 	FilterQuery           []*big.Int
@@ -61,6 +62,7 @@ func NewBlockProposedIterator(ctx context.Context, cfg *BlockProposedIteratorCon
 	blockIterator, err := chainIterator.NewBlockBatchIterator(ctx, &chainIterator.BlockBatchIteratorConfig{
 		Client:                cfg.Client,
 		MaxBlocksReadPerEpoch: cfg.MaxBlocksReadPerEpoch,
+		MaxProcessPerEpoch:    cfg.MaxProcessPerEpoch,
 		StartHeight:           cfg.StartHeight,
 		EndHeight:             cfg.EndHeight,
 		Reverse:               cfg.Reverse,

@@ -174,7 +174,7 @@ func InitFromConfig(ctx context.Context, p *Prover, cfg *Config) (err error) {
 // Start starts the main loop of the L2 block prover.
 func (p *Prover) Start() error {
 	p.wg.Add(1)
-	p.initSubscription()
+	//p.initSubscription()
 	go p.eventLoop()
 
 	return nil
@@ -256,11 +256,6 @@ func (p *Prover) eventLoop() {
 				go func() {
 					<-p.proposeConcurrencyGuard
 				}()
-				err := p.initL1Current(p.cfg.StartingBlockID)
-				if err != nil {
-					log.Info("reset L1 current failed")
-				}
-				p.lastHandledBlockID = p.l1Current
 				log.Error("Prove new blocks timeout")
 				continue
 			}
@@ -290,9 +285,11 @@ func (p *Prover) proveOp() error {
 	if err != nil {
 		return err
 	}
+	maxProcessPerEpoch := uint64(10)
 	iter, err := eventIterator.NewBlockProposedIterator(p.ctx, &eventIterator.BlockProposedIteratorConfig{
 		Client:               p.rpc.L1,
 		MXCL1:                p.rpc.MXCL1,
+		MaxProcessPerEpoch:   &maxProcessPerEpoch,
 		StartHeight:          new(big.Int).SetUint64(p.l1Current),
 		OnBlockProposedEvent: p.onBlockProposed,
 	})
