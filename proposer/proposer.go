@@ -195,7 +195,7 @@ func (p *Proposer) ProposeOp(ctx context.Context) error {
 	txLists, err := p.rpc.GetPoolContent(
 		ctx,
 		p.protocolConfigs.MaxTransactionsPerBlock,
-		p.protocolConfigs.BlockMaxGasLimit,
+		big.NewInt(10_000_000),
 		p.protocolConfigs.MaxBytesPerTxList,
 		p.protocolConfigs.MinTxGasLimit,
 		p.locals,
@@ -300,7 +300,7 @@ func (p *Proposer) CommitTxList(ctx context.Context, txListBytes []byte, gasLimi
 		L1Height:    common.Big0,
 		L1Hash:      common.Hash{},
 		Beneficiary: p.l2SuggestedFeeRecipient,
-		GasLimit:    p.protocolConfigs.BlockMaxGasLimit.Uint64() - p.protocolConfigs.AnchorTxGasLimit.Uint64(),
+		GasLimit:    10_000_000,
 		TxListHash:  crypto.Keccak256Hash(txListBytes),
 		CommitSlot:  p.commitSlot + uint64(splittedIdx),
 	}
