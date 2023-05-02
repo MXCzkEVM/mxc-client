@@ -102,12 +102,16 @@ func NewBlockBatchIterator(ctx context.Context, cfg *BlockBatchIteratorConfig) (
 			return nil, fmt.Errorf("failed to get end header, height: %s, error: %w", cfg.EndHeight, err)
 		}
 	}
+	var maxProcessPerEpoch uint64
+	if cfg.MaxProcessPerEpoch != nil {
+		maxProcessPerEpoch = *cfg.MaxProcessPerEpoch
+	}
 
 	iterator := &BlockBatchIterator{
 		ctx:                   ctx,
 		client:                cfg.Client,
 		chainID:               chainID,
-		blocksProcessPerEpoch: *cfg.MaxProcessPerEpoch,
+		blocksProcessPerEpoch: maxProcessPerEpoch,
 		startHeight:           cfg.StartHeight.Uint64(),
 		onBlocks:              cfg.OnBlocks,
 		reverse:               cfg.Reverse,
