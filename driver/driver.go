@@ -113,10 +113,10 @@ func (d *Driver) eventLoop() {
 	// reqSync requests performing a synchronising operation, won't block
 	// if we are already synchronising.
 	reqSync := func() {
-		go func() {
-			d.syncNotify <- struct{}{}
-		}()
-		log.Info("d.syncNotify <- struct{}{}")
+		select {
+		case d.syncNotify <- struct{}{}:
+		default:
+		}
 	}
 
 	doSyncWithBackoff := func() {
@@ -129,13 +129,15 @@ func (d *Driver) eventLoop() {
 	// Call doSync() right away to catch up with the latest known L1 head.
 	reqSync()
 	for {
-		forceSyncTicker := time.NewTicker(time.Second * 3)
 		select {
 		case <-d.ctx.Done():
 			log.Info("Driver context error", d.ctx.Err())
 			return
 		case <-d.syncNotify:
 			log.Info("<-d.syncNotify")
+			defer func() {
+				log.Info("<-d.syncNotify done")
+			}()
 			done := make(chan bool, 1)
 			go func() {
 				defer func() { done <- true }()
@@ -143,17 +145,11 @@ func (d *Driver) eventLoop() {
 			}()
 			select {
 			case <-done:
-				continue
 			case <-time.After(time.Second * 30):
 				log.Error("doSyncWithBackoff timeout")
-				continue
 			}
 		case <-d.l1HeadCh:
 			log.Info("<-d.l1HeadCh")
-			reqSync()
-			forceSyncTicker.Reset(time.Second * 3)
-		case <-forceSyncTicker.C:
-			log.Info("<-forceSyncTicker.C")
 			reqSync()
 		}
 	}

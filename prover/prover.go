@@ -121,6 +121,9 @@ func InitFromConfig(ctx context.Context, p *Prover, cfg *Config) (err error) {
 		if ctx.Err() != nil {
 			return nil
 		}
+		if err := p.rpc.WaitTillL2Synced(p.ctx); err != nil {
+			return err
+		}
 		return p.initL1Current(cfg.StartingBlockID)
 	}, backoff.NewExponentialBackOff())
 
@@ -447,9 +450,6 @@ func (p *Prover) Name() string {
 
 // initL1Current initializes prover's L1Current cursor.
 func (p *Prover) initL1Current(startingBlockID *big.Int) error {
-	if err := p.rpc.WaitTillL2Synced(p.ctx); err != nil {
-		return err
-	}
 
 	if startingBlockID == nil {
 		stateVars, err := p.rpc.GetProtocolStateVariables(nil)

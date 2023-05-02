@@ -213,6 +213,9 @@ func (s *State) startSubscriptions(ctx context.Context) {
 					continue
 				}
 				// avoid too fast request
+				//case newHead := <-s.l1HeadCh:
+				//s.setL1Head(newHead)
+				//s.l1HeadsFeed.Send(newHead)
 			case newHead := <-s.l2HeadCh:
 				s.setL2Head(newHead)
 			}
