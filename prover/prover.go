@@ -256,6 +256,7 @@ func (p *Prover) eventLoop() {
 				go func() {
 					<-p.proposeConcurrencyGuard
 				}()
+				p.lastHandledBlockID = p.l1Current
 				log.Error("Prove new blocks timeout")
 				continue
 			}
@@ -285,14 +286,11 @@ func (p *Prover) proveOp() error {
 	if err != nil {
 		return err
 	}
-	p.lastHandledBlockID = p.l1Current
-	MaxBlocksReadPerEpoch := uint64(10)
 	iter, err := eventIterator.NewBlockProposedIterator(p.ctx, &eventIterator.BlockProposedIteratorConfig{
-		Client:                p.rpc.L1,
-		MXCL1:                 p.rpc.MXCL1,
-		StartHeight:           new(big.Int).SetUint64(p.l1Current),
-		MaxBlocksReadPerEpoch: &MaxBlocksReadPerEpoch,
-		OnBlockProposedEvent:  p.onBlockProposed,
+		Client:               p.rpc.L1,
+		MXCL1:                p.rpc.MXCL1,
+		StartHeight:          new(big.Int).SetUint64(p.l1Current),
+		OnBlockProposedEvent: p.onBlockProposed,
 	})
 	if err != nil {
 		return err
