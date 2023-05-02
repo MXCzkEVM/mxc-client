@@ -2,6 +2,7 @@ package prover
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math/big"
 	"sync"
@@ -247,7 +248,7 @@ func (p *Prover) eventLoop() {
 			}()
 			timeout := time.Minute * 5
 			if p.cfg.Dummy {
-				timeout = time.Second * 15
+				timeout = time.Second * 20
 			}
 			select {
 			case <-done:
@@ -410,13 +411,8 @@ func (p *Prover) submitProofOp(ctx context.Context, proofWithHeader *proofProduc
 		}()
 		select {
 		case <-done:
-			break
 		case <-time.After(time.Second * 15):
-			log.Error("Submit proof Timeout", "proofWithHeader", proofWithHeader.Header.Number)
-			go func() {
-				p.submitProofOp(ctx, proofWithHeader, isValidProof)
-			}()
-			return
+			err = errors.New("submit proof timeout")
 		}
 		if err != nil {
 			log.Error("Submit proof error", "isValidProof", isValidProof, "error", err)

@@ -218,6 +218,7 @@ func (i *BlockBatchIterator) iter() (err error) {
 		if i.blocksProcessedPerEpoch >= i.blocksProcessPerEpoch {
 			return io.EOF
 		} else {
+			log.Info("i.blocksProcessedPerEpoch++")
 			i.blocksProcessedPerEpoch++
 		}
 	}
