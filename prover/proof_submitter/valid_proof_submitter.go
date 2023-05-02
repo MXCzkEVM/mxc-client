@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math/big"
 	"sync"
+	"time"
 
 	"github.com/MXCzkEVM/mxc-client/bindings"
 	"github.com/MXCzkEVM/mxc-client/bindings/encoding"
@@ -191,7 +192,7 @@ func (s *ValidProofSubmitter) SubmitProof(
 	if err != nil {
 		return err
 	}
-	sendTx := func() (*types.Transaction, error) {
+	sendTx := func() (tx *types.Transaction, err error) {
 		need, err := s.NeedNewProof(ctx, blockID)
 		if err != nil {
 			return nil, err
@@ -199,11 +200,17 @@ func (s *ValidProofSubmitter) SubmitProof(
 		if !need {
 			return nil, nil
 		}
-		//s.mutex.Lock()
-		//defer func() {
-		//	s.mutex.Unlock()
-		//}()
-		return s.rpc.MXCL1.ProveBlock(txOpts, blockID, input)
+		done := make(chan bool, 1)
+		go func() {
+			s.mutex.Lock()
+			tx, err = s.rpc.MXCL1.ProveBlock(txOpts, blockID, input)
+		}()
+		select {
+		case <-done:
+		case <-time.After(time.Second * 5):
+		}
+		s.mutex.Unlock()
+		return tx, err
 	}
 
 	if err := sendTxWithBackoff(ctx, s.rpc, blockID, sendTx); err != nil {
