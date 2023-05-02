@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"math/big"
 	"math/rand"
-	"sort"
 	"sync"
 	"time"
 
@@ -233,10 +232,6 @@ func (p *Proposer) ProposeOp(ctx context.Context) error {
 			txNum:       uint(len(txs)),
 		})
 	}
-	// txNum first avoid
-	sort.Slice(commitTxListResQueue, func(i, j int) bool {
-		return commitTxListResQueue[i].txNum > commitTxListResQueue[j].txNum
-	})
 
 	if p.AfterCommitHook != nil {
 		if err := p.AfterCommitHook(); err != nil {
@@ -263,6 +258,7 @@ func (p *Proposer) ProposeOp(ctx context.Context) error {
 	for i, res := range commitTxListResQueue {
 		func(i int, res *commitTxListRes) {
 			g.Go(func() error {
+				<-time.After(*p.proposingInterval * time.Duration(i))
 				if i >= int(p.maxProposedTxListsPerEpoch) {
 					return nil
 				}
