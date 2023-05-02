@@ -181,16 +181,17 @@ func (s *InvalidProofSubmitter) SubmitProof(
 		if !need {
 			return nil, nil
 		}
+		s.mutex.Lock()
+		defer s.mutex.Unlock()
 		done := make(chan bool, 1)
 		go func() {
-			s.mutex.Lock()
-			tx, err = s.rpc.MXCL1.ProveBlockInvalid(txOpts, blockID, input)
+			defer func() { done <- true }()
+			tx, err = s.rpc.MXCL1.ProveBlock(txOpts, blockID, input)
 		}()
 		select {
 		case <-done:
 		case <-time.After(time.Second * 5):
 		}
-		s.mutex.Unlock()
 		return tx, err
 	}
 
