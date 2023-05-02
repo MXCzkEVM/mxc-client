@@ -256,6 +256,10 @@ func (p *Prover) eventLoop() {
 				go func() {
 					<-p.proposeConcurrencyGuard
 				}()
+				err := p.initL1Current(p.cfg.StartingBlockID)
+				if err != nil {
+					log.Info("reset L1 current failed")
+				}
 				p.lastHandledBlockID = p.l1Current
 				log.Error("Prove new blocks timeout")
 				continue
