@@ -285,6 +285,7 @@ func (p *Prover) proveOp() error {
 	if err != nil {
 		return err
 	}
+	p.lastHandledBlockID = p.l1Current
 	MaxBlocksReadPerEpoch := uint64(10)
 	iter, err := eventIterator.NewBlockProposedIterator(p.ctx, &eventIterator.BlockProposedIteratorConfig{
 		Client:                p.rpc.L1,
