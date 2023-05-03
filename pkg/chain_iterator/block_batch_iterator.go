@@ -41,25 +41,22 @@ type EndIterFunc func()
 // BlockBatchIterator iterates the blocks in batches between the given start and end heights,
 // with the awareness of reorganization.
 type BlockBatchIterator struct {
-	ctx                     context.Context
-	client                  *ethclient.Client
-	chainID                 *big.Int
-	blocksProcessPerEpoch   uint64
-	blocksProcessedPerEpoch uint64
-	blocksReadPerEpoch      uint64
-	startHeight             uint64
-	endHeight               *uint64
-	current                 *types.Header
-	onBlocks                OnBlocksFunc
-	isEnd                   bool
-	reverse                 bool
+	ctx                context.Context
+	client             *ethclient.Client
+	chainID            *big.Int
+	blocksReadPerEpoch uint64
+	startHeight        uint64
+	endHeight          *uint64
+	current            *types.Header
+	onBlocks           OnBlocksFunc
+	isEnd              bool
+	reverse            bool
 }
 
 // BlockBatchIteratorConfig represents the configs of a block batch iterator.
 type BlockBatchIteratorConfig struct {
 	Client                *ethclient.Client
 	MaxBlocksReadPerEpoch *uint64
-	MaxProcessPerEpoch    *uint64
 	StartHeight           *big.Int
 	EndHeight             *big.Int
 	OnBlocks              OnBlocksFunc
@@ -102,19 +99,14 @@ func NewBlockBatchIterator(ctx context.Context, cfg *BlockBatchIteratorConfig) (
 			return nil, fmt.Errorf("failed to get end header, height: %s, error: %w", cfg.EndHeight, err)
 		}
 	}
-	var maxProcessPerEpoch uint64
-	if cfg.MaxProcessPerEpoch != nil {
-		maxProcessPerEpoch = *cfg.MaxProcessPerEpoch
-	}
 
 	iterator := &BlockBatchIterator{
-		ctx:                   ctx,
-		client:                cfg.Client,
-		chainID:               chainID,
-		blocksProcessPerEpoch: maxProcessPerEpoch,
-		startHeight:           cfg.StartHeight.Uint64(),
-		onBlocks:              cfg.OnBlocks,
-		reverse:               cfg.Reverse,
+		ctx:         ctx,
+		client:      cfg.Client,
+		chainID:     chainID,
+		startHeight: cfg.StartHeight.Uint64(),
+		onBlocks:    cfg.OnBlocks,
+		reverse:     cfg.Reverse,
 	}
 
 	if cfg.Reverse {
@@ -216,15 +208,6 @@ func (i *BlockBatchIterator) iter() (err error) {
 
 	if err := i.onBlocks(i.ctx, i.current, endHeader, i.updateCurrent, i.end); err != nil {
 		return err
-	}
-
-	if i.blocksProcessPerEpoch != 0 {
-		if i.blocksProcessedPerEpoch >= i.blocksProcessPerEpoch {
-			return io.EOF
-		} else {
-			log.Info("i.blocksProcessedPerEpoch++")
-			i.blocksProcessedPerEpoch++
-		}
 	}
 
 	if i.isEnd {

@@ -289,11 +289,9 @@ func (p *Prover) proveOp() error {
 	if err != nil {
 		return err
 	}
-	maxProcessPerEpoch := uint64(10)
 	iter, err := eventIterator.NewBlockProposedIterator(p.ctx, &eventIterator.BlockProposedIteratorConfig{
 		Client:               p.rpc.L1,
 		MXCL1:                p.rpc.MXCL1,
-		MaxProcessPerEpoch:   &maxProcessPerEpoch,
 		StartHeight:          new(big.Int).SetUint64(p.l1Current),
 		OnBlockProposedEvent: p.onBlockProposed,
 	})
@@ -315,9 +313,9 @@ func (p *Prover) onBlockProposed(
 		end()
 		return nil
 	}
-	//if event.Id.Uint64() <= p.lastHandledBlockID {
-	//	return nil
-	//}
+	if event.Id.Uint64() <= p.lastHandledBlockID {
+		return nil
+	}
 	if p.cfg.OnlyProveEvenNumberBlocks && event.Id.Uint64()%2 != 0 {
 		log.Info("Skip a block with odd number", "id", event.Id)
 		return nil

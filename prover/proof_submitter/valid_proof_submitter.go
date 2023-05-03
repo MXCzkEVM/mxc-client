@@ -188,10 +188,7 @@ func (s *ValidProofSubmitter) SubmitProof(
 	}
 
 	// Send the MXCL1.proveBlock transaction.
-	txOpts, err := getProveBlocksTxOpts(ctx, s.rpc.L1, s.rpc.L1ChainID, s.submittorPrivKey)
-	if err != nil {
-		return err
-	}
+
 	sendTx := func() (tx *types.Transaction, err error) {
 		need, err := s.NeedNewProof(ctx, blockID)
 		if err != nil {
@@ -199,6 +196,10 @@ func (s *ValidProofSubmitter) SubmitProof(
 		}
 		if !need {
 			return nil, nil
+		}
+		txOpts, err := getProveBlocksTxOpts(ctx, s.rpc.L1, s.rpc.L1ChainID, s.submittorPrivKey)
+		if err != nil {
+			return nil, err
 		}
 		s.mutex.Lock()
 		defer s.mutex.Unlock()
