@@ -285,10 +285,6 @@ func (p *Prover) Close() {
 // proveOp performs a proving operation, find current unproven blocks, then
 // request generating proofs for them.
 func (p *Prover) proveOp() error {
-	err := p.initL1Current(p.cfg.StartingBlockID)
-	if err != nil {
-		return err
-	}
 	iter, err := eventIterator.NewBlockProposedIterator(p.ctx, &eventIterator.BlockProposedIteratorConfig{
 		Client:               p.rpc.L1,
 		MXCL1:                p.rpc.MXCL1,
