@@ -239,30 +239,10 @@ func (p *Prover) eventLoop() {
 			p.submitProofOp(p.ctx, proofWithHeader, false)
 		case <-p.proveNotify:
 			log.Info("Prove new blocks")
-			done := make(chan bool, 1)
-			go func() {
-				defer func() {
-					done <- true
-					<-p.proposeConcurrencyGuard
-				}()
-				if err := p.proveOp(); err != nil {
-					log.Error("Prove new blocks error", "error", err)
-				}
-			}()
-			timeout := time.Minute * 5
-			if p.cfg.Dummy {
-				timeout = time.Second * 20
+			if err := p.proveOp(); err != nil {
+				log.Error("Prove new blocks error", "error", err)
 			}
-			select {
-			case <-done:
-				continue
-			case <-time.After(timeout):
-				go func() {
-					<-p.proposeConcurrencyGuard
-				}()
-				log.Error("Prove new blocks timeout")
-				continue
-			}
+
 		//case <-p.blockProposedCh:
 		//	reqProving()
 		//case e := <-p.blockVerifiedCh:
