@@ -10,11 +10,13 @@ require (
 	github.com/prysmaticlabs/prysm v1.4.2-0.20220805185555-4e225fc667d8
 	github.com/stretchr/testify v1.8.0
 	github.com/urfave/cli/v2 v2.11.1
+	go.uber.org/ratelimit v0.2.0
 	golang.org/x/sync v0.1.0
 )
 
 require (
 	github.com/VictoriaMetrics/fastcache v1.6.0 // indirect
+	github.com/andres-erbsen/clock v0.0.0-20160526145045-9e14626cd129 // indirect
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.2 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
