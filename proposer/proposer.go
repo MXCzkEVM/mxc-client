@@ -296,7 +296,7 @@ func (p *Proposer) CommitTxList(ctx context.Context, txListBytes []byte, gasLimi
 		L1Height:    common.Big0,
 		L1Hash:      common.Hash{},
 		Beneficiary: p.l2SuggestedFeeRecipient,
-		GasLimit:    p.protocolConfigs.BlockMaxGasLimit.Uint64() - p.protocolConfigs.AnchorTxGasLimit.Uint64(),
+		GasLimit:    p.protocolConfigs.BlockMaxGasLimit.Uint64(),
 		TxListHash:  crypto.Keccak256Hash(txListBytes),
 		CommitSlot:  p.commitSlot + uint64(splittedIdx),
 	}
