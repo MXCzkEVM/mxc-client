@@ -393,10 +393,7 @@ func (p *Prover) submitProofOp(ctx context.Context, proofWithHeader *proofProduc
 		}
 		if err != nil {
 			log.Error("Submit proof error", "isValidProof", isValidProof, "error", err)
-			go func() {
-				log.Warn("retry submitProofOP")
-				p.submitProofOp(ctx, proofWithHeader, isValidProof)
-			}()
+			panic(err)
 			return
 		}
 	}()
