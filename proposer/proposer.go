@@ -367,13 +367,6 @@ func (p *Proposer) ProposeTxListWithNonce(
 		return err
 	}
 
-	if len(txListBytes) == 0 {
-		opts.GasLimit = uint64(proposeEmptyBlockGasLimit)
-	} else {
-		opts.GasLimit = 3_000_000_000
-	}
-	opts.Nonce = new(big.Int).SetUint64(nonce)
-
 	proposeTx, err := p.rpc.MXCL1.ProposeBlock(opts, inputs)
 	if err != nil {
 		return encoding.TryParsingCustomError(err)
@@ -437,11 +430,6 @@ func (p *Proposer) ProposeTxList(
 	if err != nil {
 		return err
 	}
-
-	if len(txListBytes) == 0 {
-		opts.GasLimit = uint64(proposeEmptyBlockGasLimit)
-	}
-
 	proposeTx, err := p.rpc.MXCL1.ProposeBlock(opts, inputs)
 	if err != nil {
 		return encoding.TryParsingCustomError(err)

@@ -207,6 +207,9 @@ func (s *ValidProofSubmitter) SubmitProof(
 		go func() {
 			defer func() { done <- true }()
 			tx, err = s.rpc.MXCL1.ProveBlock(txOpts, blockID, input)
+			if err != nil {
+				log.Error("ProveBlock", "error", err)
+			}
 		}()
 		select {
 		case <-done:
@@ -216,7 +219,6 @@ func (s *ValidProofSubmitter) SubmitProof(
 	}
 
 	if err := sendTxWithBackoff(ctx, s.rpc, blockID, sendTx); err != nil {
-		log.Error("Failed to send MXCL1.proveBlock transaction", "err", err)
 		if errors.Is(err, errUnretryable) {
 			return nil
 		}

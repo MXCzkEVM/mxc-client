@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/MXCzkEVM/mxc-client/bindings/encoding"
 	"math/big"
 	"time"
 
@@ -305,4 +306,61 @@ func (c *Client) L2ExecutionEngineSyncProgress(ctx context.Context) (*L2SyncProg
 // GetProtocolStateVariables gets the protocol states from MXCL1 contract.
 func (c *Client) GetProtocolStateVariables(opts *bind.CallOpts) (*bindings.LibUtilsStateVariables, error) {
 	return GetProtocolStateVariables(c.MXCL1, opts)
+}
+
+type GasEstimateComponents struct {
+	GasEstimate       uint64
+	GasEstimateForL1  uint64
+	BaseFee           *big.Int
+	L1BaseFeeEstimate *big.Int
+}
+
+// ArbGasEstimator arb gasEstimate
+func (c *Client) ArbGasEstimator(data []byte) (*big.Int, *big.Int, error) {
+	var (
+		P   *big.Int
+		G   *big.Int
+		err error
+
+		L1P *big.Int
+	)
+	_, L1P, _, _, _, P, err = c.ArbGasInfo.GetPricesInWei(nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	arbNodeInterface := common.HexToAddress("0x00000000000000000000000000000000000000C8")
+	nonZeroAddress := common.HexToAddress("0x1234563d5de0d7198451f87bcbf15aefd00d434d")
+	pack, err := encoding.ArbNodeInterfaceABI.Pack("gasEstimateComponents", nonZeroAddress, false, data)
+	if err != nil {
+		return nil, nil, err
+	}
+	//tx, err := c.ArbNodeInterface.GasEstimateComponents(&bind.TransactOpts{NoSend: true}, arbNodeInterface, false, data)
+	//if err != nil {
+	//	return nil, nil, err
+	//}
+	rawResult, err := c.L1.CallContract(context.Background(), ethereum.CallMsg{
+		From: nonZeroAddress,
+		To:   &arbNodeInterface,
+		Data: pack,
+	}, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	result := &GasEstimateComponents{}
+	err = encoding.ArbNodeInterfaceABI.UnpackIntoInterface(result, "gasEstimateComponents", rawResult)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	L2G := result.GasEstimate - result.GasEstimateForL1
+
+	L1S := int64(140 + len(data))
+
+	L1C := big.NewInt(0).Mul(L1P, big.NewInt(L1S))
+
+	B := big.NewInt(0).Div(L1C, P)
+
+	G = big.NewInt(0).Add(big.NewInt(int64(L2G)), B)
+
+	return P, G, err
 }

@@ -164,8 +164,9 @@ var (
 
 // Contract ABIs.
 var (
-	MXCL1ABI *abi.ABI
-	MXCL2ABI *abi.ABI
+	MXCL1ABI            *abi.ABI
+	MXCL2ABI            *abi.ABI
+	ArbNodeInterfaceABI *abi.ABI
 )
 
 func init() {
@@ -177,6 +178,9 @@ func init() {
 
 	if MXCL2ABI, err = bindings.MXCL2ClientMetaData.GetAbi(); err != nil {
 		log.Crit("Get MXCL2 ABI error", "error", err)
+	}
+	if ArbNodeInterfaceABI, err = bindings.NodeInterfaceMetaData.GetAbi(); err != nil {
+		log.Crit("Get Arb NodeInterface ABI error", "error", err)
 	}
 }
 

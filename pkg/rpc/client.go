@@ -2,7 +2,6 @@ package rpc
 
 import (
 	"context"
-	"github.com/ethereum/go-ethereum/log"
 	"math/big"
 
 	"github.com/MXCzkEVM/mxc-client/bindings"
@@ -22,8 +21,10 @@ type Client struct {
 	// Geth Engine API clients
 	L2Engine *EngineClient
 	// Protocol contracts clients
-	MXCL1 *bindings.MXCL1Client
-	MXCL2 *bindings.MXCL2Client
+	MXCL1            *bindings.MXCL1Client
+	MXCL2            *bindings.MXCL2Client
+	ArbGasInfo       *bindings.ArbGasInfo
+	ArbNodeInterface *bindings.NodeInterface
 	// Chain IDs
 	L1ChainID *big.Int
 	L2ChainID *big.Int
@@ -65,6 +66,16 @@ func NewClient(ctx context.Context, cfg *ClientConfig) (*Client, error) {
 		return nil, err
 	}
 
+	arbGasInfo, err := bindings.NewArbGasInfo(common.HexToAddress("0x000000000000000000000000000000000000006c"), l1RPC)
+	if err != nil {
+		return nil, err
+	}
+
+	arbNodeInterface, err := bindings.NewNodeInterface(common.HexToAddress("0x00000000000000000000000000000000000000C8"), l1RPC)
+	if err != nil {
+		return nil, err
+	}
+
 	l1RawRPC, err := rpc.Dial(cfg.L1Endpoint)
 	if err != nil {
 		return nil, err
@@ -96,16 +107,18 @@ func NewClient(ctx context.Context, cfg *ClientConfig) (*Client, error) {
 	}
 
 	client := &Client{
-		L1:        l1RPC,
-		L2:        l2RPC,
-		L1RawRPC:  l1RawRPC,
-		L2RawRPC:  l2RawRPC,
-		L2Engine:  l2AuthRPC,
-		MXCL1:     mxcL1,
-		MXCL2:     mxcL2,
-		L1ChainID: l1ChainID,
-		L2ChainID: l2ChainID,
-		cfg:       cfg,
+		L1:               l1RPC,
+		L2:               l2RPC,
+		L1RawRPC:         l1RawRPC,
+		L2RawRPC:         l2RawRPC,
+		L2Engine:         l2AuthRPC,
+		MXCL1:            mxcL1,
+		MXCL2:            mxcL2,
+		ArbGasInfo:       arbGasInfo,
+		ArbNodeInterface: arbNodeInterface,
+		L1ChainID:        l1ChainID,
+		L2ChainID:        l2ChainID,
+		cfg:              cfg,
 	}
 
 	if err := client.ensureGenesisMatched(ctx); err != nil {
@@ -113,28 +126,4 @@ func NewClient(ctx context.Context, cfg *ClientConfig) (*Client, error) {
 	}
 
 	return client, nil
-}
-
-func (c *Client) Close() {
-	go func() {
-		defer func() {
-			if r := recover(); r != nil {
-				log.Warn("panic when closing RPC clients", "err", r)
-			}
-		}()
-		c.L1.Close()
-		c.L2.Close()
-		c.L1RawRPC.Close()
-		c.L2RawRPC.Close()
-		c.L2Engine.Close()
-	}()
-}
-
-func (c *Client) Reconnect(ctx context.Context) (*Client, error) {
-	log.Warn("reconnecting to RPC clients")
-	defer func() {
-		log.Warn("reconnected to RPC clients success")
-	}()
-	c.Close()
-	return NewClient(ctx, c.cfg)
 }
