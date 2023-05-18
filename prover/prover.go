@@ -178,7 +178,7 @@ func InitFromConfig(ctx context.Context, p *Prover, cfg *Config) (err error) {
 // Start starts the main loop of the L2 block prover.
 func (p *Prover) Start() error {
 	p.wg.Add(1)
-	//p.initSubscription()
+	p.initSubscription()
 	go p.eventLoop()
 
 	return nil
@@ -189,6 +189,7 @@ func (p *Prover) eventLoop() {
 	defer func() {
 		p.wg.Done()
 		log.Info("Prover event loop stopped")
+		panic("prover event should not stopped")
 	}()
 
 	// reqProving requests performing a proving operation, won't block
@@ -231,6 +232,18 @@ func (p *Prover) eventLoop() {
 			log.Info("Prover context done")
 			return
 		case proofWithHeader := <-p.proveValidProofCh:
+			// check if current proving block more new too much than the latest block
+			if proofWithHeader.Header.Number.Uint64() > p.latestVerifiedL1Height+100 {
+				stateVars, err := p.rpc.GetProtocolStateVariables(nil)
+				if err != nil {
+					log.Error("GetProtocolStateVariables Error")
+					return
+				}
+				if proofWithHeader.Header.Number.Uint64() > stateVars.LatestVerifiedHeight+100 {
+					log.Error("current proving block too much newer than latest block", "latest verified height", stateVars.LatestVerifiedHeight, "proving", proofWithHeader.Header.Number.Uint64())
+					return
+				}
+			}
 			log.Info("Prove valid proof", "blockId", proofWithHeader.Header.Number)
 			p.submitProofOp(p.ctx, proofWithHeader, true)
 
@@ -245,10 +258,10 @@ func (p *Prover) eventLoop() {
 
 		//case <-p.blockProposedCh:
 		//	reqProving()
-		//case e := <-p.blockVerifiedCh:
-		//	if err := p.onBlockVerified(p.ctx, e); err != nil {
-		//		log.Error("Handle BlockVerified event error", "error", err)
-		//	}
+		case e := <-p.blockVerifiedCh:
+			if err := p.onBlockVerified(p.ctx, e); err != nil {
+				log.Error("Handle BlockVerified event error", "error", err)
+			}
 		case <-forceProvingTicker.C:
 			log.Info("Force proving")
 			reqProving()
@@ -393,7 +406,6 @@ func (p *Prover) submitProofOp(ctx context.Context, proofWithHeader *proofProduc
 		}
 		if err != nil {
 			log.Error("Submit proof error", "isValidProof", isValidProof, "error", err)
-			panic(err)
 			return
 		}
 	}()
@@ -490,7 +502,7 @@ func (p *Prover) NeedNewProof(id *big.Int) (bool, error) {
 
 // initSubscription initializes all subscriptions in current prover instance.
 func (p *Prover) initSubscription() {
-	p.blockProposedSub = rpc.SubscribeBlockProposed(p.rpc.MXCL1, p.blockProposedCh)
+	//p.blockProposedSub = rpc.SubscribeBlockProposed(p.rpc.MXCL1, p.blockProposedCh)
 	p.blockVerifiedSub = rpc.SubscribeBlockVerified(p.rpc.MXCL1, p.blockVerifiedCh)
 }
 
