@@ -8,22 +8,22 @@ import (
 	"math/big"
 	"sync"
 
+	"github.com/MXCzkEVM/mxc-client/bindings"
+	"github.com/MXCzkEVM/mxc-client/bindings/encoding"
+	"github.com/MXCzkEVM/mxc-client/metrics"
+	"github.com/MXCzkEVM/mxc-client/pkg/rpc"
+	anchorTxValidator "github.com/MXCzkEVM/mxc-client/prover/anchor_tx_validator"
+	proofProducer "github.com/MXCzkEVM/mxc-client/prover/proof_producer"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/taikoxyz/taiko-client/bindings"
-	"github.com/taikoxyz/taiko-client/bindings/encoding"
-	"github.com/taikoxyz/taiko-client/metrics"
-	"github.com/taikoxyz/taiko-client/pkg/rpc"
-	anchorTxValidator "github.com/taikoxyz/taiko-client/prover/anchor_tx_validator"
-	proofProducer "github.com/taikoxyz/taiko-client/prover/proof_producer"
 )
 
 var _ ProofSubmitter = (*ValidProofSubmitter)(nil)
 
 // ValidProofSubmitter is responsible requesting zk proofs for the given valid L2
-// blocks, and submitting the generated proofs to the TaikoL1 smart contract.
+// blocks, and submitting the generated proofs to the MxcL1 smart contract.
 type ValidProofSubmitter struct {
 	rpc               *rpc.Client
 	proofProducer     proofProducer.ProofProducer
@@ -31,7 +31,7 @@ type ValidProofSubmitter struct {
 	anchorTxValidator *anchorTxValidator.AnchorTxValidator
 	proverPrivKey     *ecdsa.PrivateKey
 	proverAddress     common.Address
-	taikoL2Address    common.Address
+	mxcL2Address      common.Address
 	l1SignalService   common.Address
 	l2SignalService   common.Address
 	mutex             *sync.Mutex
@@ -45,24 +45,24 @@ func NewValidProofSubmitter(
 	rpcClient *rpc.Client,
 	proofProducer proofProducer.ProofProducer,
 	resultCh chan *proofProducer.ProofWithHeader,
-	taikoL2Address common.Address,
+	mxcL2Address common.Address,
 	proverPrivKey *ecdsa.PrivateKey,
 	mutex *sync.Mutex,
 	isOracleProver bool,
 	isSystemProver bool,
 	graffiti string,
 ) (*ValidProofSubmitter, error) {
-	anchorValidator, err := anchorTxValidator.New(taikoL2Address, rpcClient.L2ChainID, rpcClient)
+	anchorValidator, err := anchorTxValidator.New(mxcL2Address, rpcClient.L2ChainID, rpcClient)
 	if err != nil {
 		return nil, err
 	}
 
-	l1SignalService, err := rpcClient.TaikoL1.Resolve0(nil, rpc.StringToBytes32("signal_service"), false)
+	l1SignalService, err := rpcClient.MxcL1.Resolve0(nil, rpc.StringToBytes32("signal_service"), false)
 	if err != nil {
 		return nil, err
 	}
 
-	l2SignalService, err := rpcClient.TaikoL2.Resolve0(nil, rpc.StringToBytes32("signal_service"), false)
+	l2SignalService, err := rpcClient.MxcL2.Resolve0(nil, rpc.StringToBytes32("signal_service"), false)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +76,7 @@ func NewValidProofSubmitter(
 		proverAddress:     crypto.PubkeyToAddress(proverPrivKey.PublicKey),
 		l1SignalService:   l1SignalService,
 		l2SignalService:   l2SignalService,
-		taikoL2Address:    taikoL2Address,
+		mxcL2Address:      mxcL2Address,
 		mutex:             mutex,
 		isOracleProver:    isOracleProver,
 		isSystemProver:    isSystemProver,
@@ -85,7 +85,7 @@ func NewValidProofSubmitter(
 }
 
 // RequestProof implements the ProofSubmitter interface.
-func (s *ValidProofSubmitter) RequestProof(ctx context.Context, event *bindings.TaikoL1ClientBlockProposed) error {
+func (s *ValidProofSubmitter) RequestProof(ctx context.Context, event *bindings.MxcL1ClientBlockProposed) error {
 	l1Origin, err := s.rpc.WaitL1Origin(ctx, event.Id)
 	if err != nil {
 		return fmt.Errorf("failed to fetch l1Origin, blockID: %d, err: %w", event.Id, err)
@@ -102,7 +102,7 @@ func (s *ValidProofSubmitter) RequestProof(ctx context.Context, event *bindings.
 		return err
 	}
 
-	blockInfo, err := s.rpc.TaikoL1.GetBlock(nil, event.Id)
+	blockInfo, err := s.rpc.MxcL1.GetBlock(nil, event.Id)
 	if err != nil {
 		return err
 	}
@@ -123,7 +123,7 @@ func (s *ValidProofSubmitter) RequestProof(ctx context.Context, event *bindings.
 		ProposeBlockTxHash: event.Raw.TxHash,
 		L1SignalService:    s.l1SignalService,
 		L2SignalService:    s.l2SignalService,
-		TaikoL2:            s.taikoL2Address,
+		TaikoL2:            s.mxcL2Address,
 		MetaHash:           blockInfo.MetaHash,
 		BlockHash:          block.Hash(),
 		ParentHash:         block.ParentHash(),
@@ -183,7 +183,7 @@ func (s *ValidProofSubmitter) SubmitProof(
 		return fmt.Errorf("invalid block without anchor transaction, blockID %s", blockID)
 	}
 
-	// Validate TaikoL2.anchor transaction inside the L2 block.
+	// Validate MxcL2.anchor transaction inside the L2 block.
 	anchorTx := block.Transactions()[0]
 	if err := s.anchorTxValidator.ValidateAnchorTx(ctx, anchorTx); err != nil {
 		return fmt.Errorf("invalid anchor transaction: %w", err)
@@ -195,7 +195,7 @@ func (s *ValidProofSubmitter) SubmitProof(
 		return fmt.Errorf("failed to fetch anchor transaction receipt: %w", err)
 	}
 
-	evidence := &encoding.TaikoL1Evidence{
+	evidence := &encoding.MxcL1Evidence{
 		MetaHash:      proofWithHeader.Opts.MetaHash,
 		ParentHash:    proofWithHeader.Opts.ParentHash,
 		BlockHash:     proofWithHeader.Opts.BlockHash,
@@ -230,10 +230,10 @@ func (s *ValidProofSubmitter) SubmitProof(
 
 	input, err := encoding.EncodeProveBlockInput(evidence)
 	if err != nil {
-		return fmt.Errorf("failed to encode TaikoL1.proveBlock inputs: %w", err)
+		return fmt.Errorf("failed to encode MxcL1.proveBlock inputs: %w", err)
 	}
 
-	// Send the TaikoL1.proveBlock transaction.
+	// Send the MxcL1.proveBlock transaction.
 	txOpts, err := getProveBlocksTxOpts(ctx, s.rpc.L1, s.rpc.L1ChainID, s.proverPrivKey)
 	if err != nil {
 		return err
@@ -243,7 +243,7 @@ func (s *ValidProofSubmitter) SubmitProof(
 		s.mutex.Lock()
 		defer s.mutex.Unlock()
 
-		return s.rpc.TaikoL1.ProveBlock(txOpts, blockID, input)
+		return s.rpc.MxcL1.ProveBlock(txOpts, blockID, input)
 	}
 
 	if err := sendTxWithBackoff(ctx, s.rpc, blockID, sendTx); err != nil {

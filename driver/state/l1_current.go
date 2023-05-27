@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/MXCzkEVM/mxc-client/bindings"
+	eventIterator "github.com/MXCzkEVM/mxc-client/pkg/chain_iterator/event_iterator"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/taikoxyz/taiko-client/bindings"
-	eventIterator "github.com/taikoxyz/taiko-client/pkg/chain_iterator/event_iterator"
 )
 
 // GetL1Current reads the L1 current cursor concurrent safely.
@@ -32,7 +32,7 @@ func (s *State) SetL1Current(h *types.Header) {
 func (s *State) ResetL1Current(
 	ctx context.Context,
 	heightOrID *HeightOrID,
-) (*bindings.TaikoL1ClientBlockProposed, *big.Int, error) {
+) (*bindings.MxcL1ClientBlockProposed, *big.Int, error) {
 	if !heightOrID.NotEmpty() {
 		return nil, nil, fmt.Errorf("empty input %v", heightOrID)
 	}
@@ -65,14 +65,14 @@ func (s *State) ResetL1Current(
 			ctx,
 			&eventIterator.BlockProvenIteratorConfig{
 				Client:      s.rpc.L1,
-				TaikoL1:     s.rpc.TaikoL1,
+				MxcL1:       s.rpc.MxcL1,
 				StartHeight: s.GenesisL1Height,
 				EndHeight:   s.GetL1Head().Number,
 				FilterQuery: []*big.Int{},
 				Reverse:     true,
 				OnBlockProvenEvent: func(
 					ctx context.Context,
-					e *bindings.TaikoL1ClientBlockProven,
+					e *bindings.MxcL1ClientBlockProven,
 					end eventIterator.EndBlockProvenEventIterFunc,
 				) error {
 					log.Debug("Filtered BlockProven event", "ID", e.Id, "hash", common.Hash(e.BlockHash))
@@ -99,19 +99,19 @@ func (s *State) ResetL1Current(
 		}
 	}
 
-	var event *bindings.TaikoL1ClientBlockProposed
+	var event *bindings.MxcL1ClientBlockProposed
 	iter, err := eventIterator.NewBlockProposedIterator(
 		ctx,
 		&eventIterator.BlockProposedIteratorConfig{
 			Client:      s.rpc.L1,
-			TaikoL1:     s.rpc.TaikoL1,
+			MxcL1:       s.rpc.MxcL1,
 			StartHeight: s.GenesisL1Height,
 			EndHeight:   s.GetL1Head().Number,
 			FilterQuery: []*big.Int{heightOrID.ID},
 			Reverse:     true,
 			OnBlockProposedEvent: func(
 				ctx context.Context,
-				e *bindings.TaikoL1ClientBlockProposed,
+				e *bindings.MxcL1ClientBlockProposed,
 				end eventIterator.EndBlockProposedEventIterFunc,
 			) error {
 				event = e

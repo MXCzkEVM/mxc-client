@@ -6,11 +6,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/MXCzkEVM/mxc-client/bindings"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/stretchr/testify/require"
-	"github.com/taikoxyz/taiko-client/bindings"
 )
 
 func TestRequestProof(t *testing.T) {

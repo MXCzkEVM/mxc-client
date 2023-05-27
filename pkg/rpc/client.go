@@ -4,11 +4,11 @@ import (
 	"context"
 	"math/big"
 
+	"github.com/MXCzkEVM/mxc-client/bindings"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/ethclient/gethclient"
 	"github.com/ethereum/go-ethereum/rpc"
-	"github.com/taikoxyz/taiko-client/bindings"
 )
 
 // Client contains all L1/L2 RPC clients that a driver needs.
@@ -26,8 +26,8 @@ type Client struct {
 	// Geth Engine API clients
 	L2Engine *EngineClient
 	// Protocol contracts clients
-	TaikoL1 *bindings.TaikoL1Client
-	TaikoL2 *bindings.TaikoL2Client
+	MxcL1 *bindings.MxcL1Client
+	MxcL2 *bindings.MxcL2Client
 	// Chain IDs
 	L1ChainID *big.Int
 	L2ChainID *big.Int
@@ -40,8 +40,8 @@ type ClientConfig struct {
 	L1Endpoint       string
 	L2Endpoint       string
 	L2CheckPoint     string
-	TaikoL1Address   common.Address
-	TaikoL2Address   common.Address
+	MxcL1Address     common.Address
+	MxcL2Address     common.Address
 	L2EngineEndpoint string
 	JwtSecret        string
 }
@@ -53,7 +53,7 @@ func NewClient(ctx context.Context, cfg *ClientConfig) (*Client, error) {
 		return nil, err
 	}
 
-	taikoL1, err := bindings.NewTaikoL1Client(cfg.TaikoL1Address, l1RPC)
+	mxcL1, err := bindings.NewMxcL1Client(cfg.MxcL1Address, l1RPC)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +63,7 @@ func NewClient(ctx context.Context, cfg *ClientConfig) (*Client, error) {
 		return nil, err
 	}
 
-	taikoL2, err := bindings.NewTaikoL2Client(cfg.TaikoL2Address, l2RPC)
+	mxcL2, err := bindings.NewMxcL2Client(cfg.MxcL2Address, l2RPC)
 	if err != nil {
 		return nil, err
 	}
@@ -113,8 +113,8 @@ func NewClient(ctx context.Context, cfg *ClientConfig) (*Client, error) {
 		L1GethClient: gethclient.New(l1RawRPC),
 		L2GethClient: gethclient.New(l2RawRPC),
 		L2Engine:     l2AuthRPC,
-		TaikoL1:      taikoL1,
-		TaikoL2:      taikoL2,
+		MxcL1:        mxcL1,
+		MxcL2:        mxcL2,
 		L1ChainID:    l1ChainID,
 		L2ChainID:    l2ChainID,
 	}

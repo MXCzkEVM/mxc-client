@@ -3,10 +3,10 @@ package tx_list_validator
 import (
 	"math/big"
 
+	"github.com/MXCzkEVM/mxc-client/bindings/encoding"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/taikoxyz/taiko-client/bindings/encoding"
 )
 
 // InvalidTxListReason represents a reason why a transactions list is invalid.
@@ -40,7 +40,7 @@ func NewTxListValidator(
 	}
 }
 
-// ValidateTxList checks whether the transactions list in the TaikoL1.proposeBlock transaction's
+// ValidateTxList checks whether the transactions list in the MxcL1.proposeBlock transaction's
 // input data is valid.
 func (v *TxListValidator) ValidateTxList(
 	blockID *big.Int,

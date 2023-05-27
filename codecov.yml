@@ -3,4 +3,4 @@ coverage:
     patch: off
     project: off
 fixes:
-  - "taiko-client/::"
+  - "mxc-client/::"

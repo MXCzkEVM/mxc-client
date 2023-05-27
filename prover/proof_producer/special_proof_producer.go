@@ -8,14 +8,14 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/MXCzkEVM/mxc-client/bindings"
+	"github.com/MXCzkEVM/mxc-client/bindings/encoding"
+	"github.com/MXCzkEVM/mxc-client/pkg/rpc"
+	anchorTxValidator "github.com/MXCzkEVM/mxc-client/prover/anchor_tx_validator"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/taikoxyz/taiko-client/bindings"
-	"github.com/taikoxyz/taiko-client/bindings/encoding"
-	"github.com/taikoxyz/taiko-client/pkg/rpc"
-	anchorTxValidator "github.com/taikoxyz/taiko-client/prover/anchor_tx_validator"
 )
 
 var (
@@ -37,7 +37,7 @@ type SpecialProofProducer struct {
 func NewSpecialProofProducer(
 	rpcClient *rpc.Client,
 	proverPrivKey *ecdsa.PrivateKey,
-	taikoL2Address common.Address,
+	mxcL2Address common.Address,
 	protocolSpecialProverAddress common.Address,
 	graffiti string,
 	isSystemProver bool,
@@ -47,7 +47,7 @@ func NewSpecialProofProducer(
 		return nil, errProtocolAddressMismatch
 	}
 
-	anchorValidator, err := anchorTxValidator.New(taikoL2Address, rpcClient.L2ChainID, rpcClient)
+	anchorValidator, err := anchorTxValidator.New(mxcL2Address, rpcClient.L2ChainID, rpcClient)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +72,7 @@ func (p *SpecialProofProducer) RequestProof(
 	ctx context.Context,
 	opts *ProofRequestOptions,
 	blockID *big.Int,
-	meta *bindings.TaikoDataBlockMetadata,
+	meta *bindings.MxcDataBlockMetadata,
 	header *types.Header,
 	resultCh chan *ProofWithHeader,
 ) error {
@@ -108,7 +108,7 @@ func (p *SpecialProofProducer) RequestProof(
 		return err
 	}
 
-	blockInfo, err := p.rpc.TaikoL1.GetBlock(nil, blockID)
+	blockInfo, err := p.rpc.MxcL1.GetBlock(nil, blockID)
 	if err != nil {
 		return err
 	}
@@ -125,7 +125,7 @@ func (p *SpecialProofProducer) RequestProof(
 	}
 	// signature should be done with proof set to nil, verifierID set to 0,
 	// and prover set to 0 address.
-	evidence := &encoding.TaikoL1Evidence{
+	evidence := &encoding.MxcL1Evidence{
 		MetaHash:      blockInfo.MetaHash,
 		ParentHash:    block.ParentHash(),
 		BlockHash:     block.Hash(),
@@ -154,22 +154,22 @@ func (p *SpecialProofProducer) RequestProof(
 	return nil
 }
 
-// HashSignAndSetEvidenceForSpecialProof hashes and signs the TaikoL1Evidence according to the
+// HashSignAndSetEvidenceForSpecialProof hashes and signs the MxcL1Evidence according to the
 // protocol spec to generate a special proof via the signature and v value.
 func hashAndSignForSpecialProof(
-	evidence *encoding.TaikoL1Evidence,
+	evidence *encoding.MxcL1Evidence,
 	privateKey *ecdsa.PrivateKey,
 ) ([]byte, error) {
 	inputToSign, err := encoding.EncodeProveBlockInput(evidence)
 	if err != nil {
-		return nil, fmt.Errorf("failed to encode TaikoL1.proveBlock inputs: %w", err)
+		return nil, fmt.Errorf("failed to encode MxcL1.proveBlock inputs: %w", err)
 	}
 
 	hashed := crypto.Keccak256Hash(inputToSign)
 
 	sig, err := crypto.Sign(hashed.Bytes(), privateKey)
 	if err != nil {
-		return nil, fmt.Errorf("failed to sign TaikoL1Evidence: %w", err)
+		return nil, fmt.Errorf("failed to sign MxcL1Evidence: %w", err)
 	}
 
 	// add 27 to be able to be ecrecover in solidity

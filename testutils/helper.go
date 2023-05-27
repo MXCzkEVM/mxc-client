@@ -7,6 +7,8 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/MXCzkEVM/mxc-client/bindings"
+	"github.com/MXCzkEVM/mxc-client/bindings/encoding"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -14,17 +16,15 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/taikoxyz/taiko-client/bindings"
-	"github.com/taikoxyz/taiko-client/bindings/encoding"
 )
 
 func ProposeInvalidTxListBytes(s *ClientTestSuite, proposer Proposer) {
-	configs, err := s.RpcClient.TaikoL1.GetConfig(nil)
+	configs, err := s.RpcClient.MxcL1.GetConfig(nil)
 	s.Nil(err)
 
 	invalidTxListBytes := RandomBytes(256)
 
-	s.Nil(proposer.ProposeTxList(context.Background(), &encoding.TaikoL1BlockMetadataInput{
+	s.Nil(proposer.ProposeTxList(context.Background(), &encoding.MxcL1BlockMetadataInput{
 		Beneficiary:     proposer.L2SuggestedFeeRecipient(),
 		GasLimit:        uint32(rand.Int63n(int64(configs.BlockMaxGasLimit))),
 		TxListHash:      crypto.Keccak256Hash(invalidTxListBytes),
@@ -38,15 +38,15 @@ func ProposeAndInsertEmptyBlocks(
 	s *ClientTestSuite,
 	proposer Proposer,
 	calldataSyncer CalldataSyncer,
-) []*bindings.TaikoL1ClientBlockProposed {
-	var events []*bindings.TaikoL1ClientBlockProposed
+) []*bindings.MxcL1ClientBlockProposed {
+	var events []*bindings.MxcL1ClientBlockProposed
 
 	l1Head, err := s.RpcClient.L1.HeaderByNumber(context.Background(), nil)
 	s.Nil(err)
 
-	sink := make(chan *bindings.TaikoL1ClientBlockProposed)
+	sink := make(chan *bindings.MxcL1ClientBlockProposed)
 
-	sub, err := s.RpcClient.TaikoL1.WatchBlockProposed(nil, sink, nil)
+	sub, err := s.RpcClient.MxcL1.WatchBlockProposed(nil, sink, nil)
 	s.Nil(err)
 	defer func() {
 		sub.Unsubscribe()
@@ -58,7 +58,7 @@ func ProposeAndInsertEmptyBlocks(
 	encoded, err := rlp.EncodeToBytes(emptyTxs)
 	s.Nil(err)
 
-	s.Nil(proposer.ProposeTxList(context.Background(), &encoding.TaikoL1BlockMetadataInput{
+	s.Nil(proposer.ProposeTxList(context.Background(), &encoding.MxcL1BlockMetadataInput{
 		Beneficiary:     proposer.L2SuggestedFeeRecipient(),
 		GasLimit:        21000,
 		TxListHash:      crypto.Keccak256Hash(encoded),
@@ -72,7 +72,7 @@ func ProposeAndInsertEmptyBlocks(
 	// Zero byte txList
 	s.Nil(proposer.ProposeEmptyBlockOp(context.Background()))
 
-	events = append(events, []*bindings.TaikoL1ClientBlockProposed{<-sink, <-sink, <-sink}...)
+	events = append(events, []*bindings.MxcL1ClientBlockProposed{<-sink, <-sink, <-sink}...)
 
 	_, isPending, err := s.RpcClient.L1.TransactionByHash(context.Background(), events[len(events)-1].Raw.TxHash)
 	s.Nil(err)
@@ -100,7 +100,7 @@ func ProposeAndInsertValidBlock(
 	s *ClientTestSuite,
 	proposer Proposer,
 	calldataSyncer CalldataSyncer,
-) *bindings.TaikoL1ClientBlockProposed {
+) *bindings.MxcL1ClientBlockProposed {
 	l1Head, err := s.RpcClient.L1.HeaderByNumber(context.Background(), nil)
 	s.Nil(err)
 
@@ -108,16 +108,16 @@ func ProposeAndInsertValidBlock(
 	s.Nil(err)
 
 	// Propose txs in L2 execution engine's mempool
-	sink := make(chan *bindings.TaikoL1ClientBlockProposed)
+	sink := make(chan *bindings.MxcL1ClientBlockProposed)
 
-	sub, err := s.RpcClient.TaikoL1.WatchBlockProposed(nil, sink, nil)
+	sub, err := s.RpcClient.MxcL1.WatchBlockProposed(nil, sink, nil)
 	s.Nil(err)
 	defer func() {
 		sub.Unsubscribe()
 		close(sink)
 	}()
 
-	baseFee, err := s.RpcClient.TaikoL2.GetBasefee(nil, 0, 60000000, l2Head.GasUsed)
+	baseFee, err := s.RpcClient.MxcL2.GetBasefee(nil, 0, 60000000, l2Head.GasUsed)
 	s.Nil(err)
 
 	nonce, err := s.RpcClient.L2.PendingNonceAt(context.Background(), s.TestAddr)
@@ -169,7 +169,7 @@ func ProposeAndInsertValidBlock(
 }
 
 func DepositEtherToL2(s *ClientTestSuite, depositerPrivKey *ecdsa.PrivateKey) {
-	config, err := s.RpcClient.TaikoL1.GetConfig(nil)
+	config, err := s.RpcClient.MxcL1.GetConfig(nil)
 	s.Nil(err)
 
 	opts, err := bind.NewKeyedTransactorWithChainID(depositerPrivKey, s.RpcClient.L1ChainID)
@@ -177,7 +177,7 @@ func DepositEtherToL2(s *ClientTestSuite, depositerPrivKey *ecdsa.PrivateKey) {
 	opts.Value = config.MinEthDepositAmount
 
 	for i := 0; i < int(config.MinEthDepositsPerBlock); i++ {
-		_, err = s.RpcClient.TaikoL1.DepositEtherToL2(opts)
+		_, err = s.RpcClient.MxcL1.DepositEtherToL2(opts)
 		s.Nil(err)
 	}
 }

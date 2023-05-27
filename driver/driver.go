@@ -5,13 +5,13 @@ import (
 	"sync"
 	"time"
 
+	chainSyncer "github.com/MXCzkEVM/mxc-client/driver/chain_syncer"
+	"github.com/MXCzkEVM/mxc-client/driver/state"
+	"github.com/MXCzkEVM/mxc-client/pkg/rpc"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/log"
-	chainSyncer "github.com/taikoxyz/taiko-client/driver/chain_syncer"
-	"github.com/taikoxyz/taiko-client/driver/state"
-	"github.com/taikoxyz/taiko-client/pkg/rpc"
 	"github.com/urfave/cli/v2"
 )
 
@@ -20,7 +20,7 @@ const (
 	RetryDelay = 10 * time.Second
 )
 
-// Driver keeps the L2 execution engine's local block chain in sync with the TaikoL1
+// Driver keeps the L2 execution engine's local block chain in sync with the MxcL1
 // contract.
 type Driver struct {
 	rpc           *rpc.Client
@@ -56,8 +56,8 @@ func InitFromConfig(ctx context.Context, d *Driver, cfg *Config) (err error) {
 		L1Endpoint:       cfg.L1Endpoint,
 		L2Endpoint:       cfg.L2Endpoint,
 		L2CheckPoint:     cfg.L2CheckPoint,
-		TaikoL1Address:   cfg.TaikoL1Address,
-		TaikoL2Address:   cfg.TaikoL2Address,
+		MxcL1Address:     cfg.MxcL1Address,
+		MxcL2Address:     cfg.MxcL2Address,
 		L2EngineEndpoint: cfg.L2EngineEndpoint,
 		JwtSecret:        cfg.JwtSecret,
 	}); err != nil {
@@ -77,7 +77,7 @@ func InitFromConfig(ctx context.Context, d *Driver, cfg *Config) (err error) {
 		log.Warn("P2P syncing verified blocks enabled, but no connected peer found in L2 execution engine")
 	}
 
-	signalServiceAddress, err := d.rpc.TaikoL1.Resolve0(nil, rpc.StringToBytes32("signal_service"), false)
+	signalServiceAddress, err := d.rpc.MxcL1.Resolve0(nil, rpc.StringToBytes32("signal_service"), false)
 	if err != nil {
 		return err
 	}
@@ -185,7 +185,7 @@ func (d *Driver) reportProtocolStatus() {
 	var maxNumBlocks uint64
 	if err := backoff.Retry(
 		func() error {
-			configs, err := d.rpc.TaikoL1.GetConfig(nil)
+			configs, err := d.rpc.MxcL1.GetConfig(nil)
 			if err != nil {
 				return err
 			}

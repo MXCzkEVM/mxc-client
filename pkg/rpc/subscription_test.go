@@ -4,10 +4,10 @@ import (
 	"context"
 	"testing"
 
+	"github.com/MXCzkEVM/mxc-client/bindings"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/stretchr/testify/require"
-	"github.com/taikoxyz/taiko-client/bindings"
 )
 
 func TestSubscribeEvent(t *testing.T) {
@@ -18,29 +18,29 @@ func TestSubscribeEvent(t *testing.T) {
 
 func TestSubscribeBlockVerified(t *testing.T) {
 	require.NotNil(t, SubscribeBlockVerified(
-		newTestClient(t).TaikoL1,
-		make(chan *bindings.TaikoL1ClientBlockVerified, 1024)),
+		newTestClient(t).MxcL1,
+		make(chan *bindings.MxcL1ClientBlockVerified, 1024)),
 	)
 }
 
 func TestSubscribeBlockProposed(t *testing.T) {
 	require.NotNil(t, SubscribeBlockProposed(
-		newTestClient(t).TaikoL1,
-		make(chan *bindings.TaikoL1ClientBlockProposed, 1024)),
+		newTestClient(t).MxcL1,
+		make(chan *bindings.MxcL1ClientBlockProposed, 1024)),
 	)
 }
 
 func TestSubscribeSubscribeXchainSynced(t *testing.T) {
 	require.NotNil(t, SubscribeXchainSynced(
-		newTestClient(t).TaikoL1,
-		make(chan *bindings.TaikoL1ClientCrossChainSynced, 1024)),
+		newTestClient(t).MxcL1,
+		make(chan *bindings.MxcL1ClientCrossChainSynced, 1024)),
 	)
 }
 
 func TestSubscribeBlockProven(t *testing.T) {
 	require.NotNil(t, SubscribeBlockProven(
-		newTestClient(t).TaikoL1,
-		make(chan *bindings.TaikoL1ClientBlockProven, 1024)),
+		newTestClient(t).MxcL1,
+		make(chan *bindings.MxcL1ClientBlockProven, 1024)),
 	)
 }
 

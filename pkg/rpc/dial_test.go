@@ -5,10 +5,10 @@ import (
 	"os"
 	"testing"
 
+	"github.com/MXCzkEVM/mxc-client/pkg/jwt"
 	"github.com/ethereum/go-ethereum/beacon/engine"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/require"
-	"github.com/taikoxyz/taiko-client/pkg/jwt"
 )
 
 func TestDialEngineClientWithBackoff(t *testing.T) {

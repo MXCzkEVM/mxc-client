@@ -12,11 +12,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/MXCzkEVM/mxc-client/bindings"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/taikoxyz/taiko-client/bindings"
 )
 
 // ZkevmCmdProducer is responsible for generating zk proofs from the given command line binary file.
@@ -38,7 +38,7 @@ func (p *ZkevmCmdProducer) RequestProof(
 	ctx context.Context,
 	opts *ProofRequestOptions,
 	blockID *big.Int,
-	meta *bindings.TaikoDataBlockMetadata,
+	meta *bindings.MxcDataBlockMetadata,
 	header *types.Header,
 	resultCh chan *ProofWithHeader,
 ) error {

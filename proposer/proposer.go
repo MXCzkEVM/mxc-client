@@ -11,6 +11,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/MXCzkEVM/mxc-client/bindings"
+	"github.com/MXCzkEVM/mxc-client/bindings/encoding"
+	"github.com/MXCzkEVM/mxc-client/metrics"
+	"github.com/MXCzkEVM/mxc-client/pkg/rpc"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -18,10 +22,6 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/taikoxyz/taiko-client/bindings"
-	"github.com/taikoxyz/taiko-client/bindings/encoding"
-	"github.com/taikoxyz/taiko-client/metrics"
-	"github.com/taikoxyz/taiko-client/pkg/rpc"
 	"github.com/urfave/cli/v2"
 )
 
@@ -48,7 +48,7 @@ type Proposer struct {
 	minBlockGasLimit           *uint64
 
 	// Protocol configurations
-	protocolConfigs *bindings.TaikoDataConfig
+	protocolConfigs *bindings.MxcDataConfig
 
 	// Only for testing purposes
 	CustomProposeOpHook func() error
@@ -82,16 +82,16 @@ func InitFromConfig(ctx context.Context, p *Proposer, cfg *Config) (err error) {
 
 	// RPC clients
 	if p.rpc, err = rpc.NewClient(p.ctx, &rpc.ClientConfig{
-		L1Endpoint:     cfg.L1Endpoint,
-		L2Endpoint:     cfg.L2Endpoint,
-		TaikoL1Address: cfg.TaikoL1Address,
-		TaikoL2Address: cfg.TaikoL2Address,
+		L1Endpoint:   cfg.L1Endpoint,
+		L2Endpoint:   cfg.L2Endpoint,
+		MxcL1Address: cfg.MxcL1Address,
+		MxcL2Address: cfg.MxcL2Address,
 	}); err != nil {
 		return fmt.Errorf("initialize rpc clients error: %w", err)
 	}
 
 	// Protocol configs
-	protocolConfigs, err := p.rpc.TaikoL1.GetConfig(nil)
+	protocolConfigs, err := p.rpc.MxcL1.GetConfig(nil)
 	if err != nil {
 		return fmt.Errorf("failed to get protocol configs: %w", err)
 	}
@@ -170,7 +170,7 @@ func (p *Proposer) Close() {
 
 // ProposeOp performs a proposing operation, fetching transactions
 // from L2 execution engine's tx pool, splitting them by proposing constraints,
-// and then proposing them to TaikoL1 contract.
+// and then proposing them to MxcL1 contract.
 func (p *Proposer) ProposeOp(ctx context.Context) error {
 	if p.CustomProposeOpHook != nil {
 		return p.CustomProposeOpHook()
@@ -178,7 +178,7 @@ func (p *Proposer) ProposeOp(ctx context.Context) error {
 
 	log.Info("Comparing proposer TKO balance to block fee", "proposer", p.l1ProposerAddress.Hex())
 
-	if err := p.checkTaikoTokenBalance(); err != nil {
+	if err := p.checkMxcTokenBalance(); err != nil {
 		return fmt.Errorf("failed to check Taiko token balance: %w", err)
 	}
 
@@ -212,7 +212,7 @@ func (p *Proposer) ProposeOp(ctx context.Context) error {
 			return fmt.Errorf("failed to encode transactions: %w", err)
 		}
 
-		if err := p.ProposeTxList(ctx, &encoding.TaikoL1BlockMetadataInput{
+		if err := p.ProposeTxList(ctx, &encoding.MxcL1BlockMetadataInput{
 			Beneficiary:     p.l2SuggestedFeeRecipient,
 			GasLimit:        uint32(sumTxsGasLimit(txs)),
 			TxListHash:      crypto.Keccak256Hash(txListBytes),
@@ -233,10 +233,10 @@ func (p *Proposer) ProposeOp(ctx context.Context) error {
 	return nil
 }
 
-// ProposeTxList proposes the given transactions list to TaikoL1 smart contract.
+// ProposeTxList proposes the given transactions list to MxcL1 smart contract.
 func (p *Proposer) ProposeTxList(
 	ctx context.Context,
-	meta *encoding.TaikoL1BlockMetadataInput,
+	meta *encoding.MxcL1BlockMetadataInput,
 	txListBytes []byte,
 	txNum uint,
 ) error {
@@ -255,7 +255,7 @@ func (p *Proposer) ProposeTxList(
 		return err
 	}
 
-	proposeTx, err := p.rpc.TaikoL1.ProposeBlock(opts, inputs, txListBytes)
+	proposeTx, err := p.rpc.MxcL1.ProposeBlock(opts, inputs, txListBytes)
 	if err != nil {
 		return encoding.TryParsingCustomError(err)
 	}
@@ -274,7 +274,7 @@ func (p *Proposer) ProposeTxList(
 
 // ProposeEmptyBlockOp performs a proposing one empty block operation.
 func (p *Proposer) ProposeEmptyBlockOp(ctx context.Context) error {
-	return p.ProposeTxList(ctx, &encoding.TaikoL1BlockMetadataInput{
+	return p.ProposeTxList(ctx, &encoding.MxcL1BlockMetadataInput{
 		TxListHash:      crypto.Keccak256Hash([]byte{}),
 		Beneficiary:     p.L2SuggestedFeeRecipient(),
 		GasLimit:        21000,
@@ -347,8 +347,8 @@ func getTxOpts(
 	return opts, nil
 }
 
-func (p *Proposer) checkTaikoTokenBalance() error {
-	fee, err := p.rpc.TaikoL1.GetBlockFee(nil)
+func (p *Proposer) checkMxcTokenBalance() error {
+	fee, err := p.rpc.MxcL1.GetBlockFee(nil)
 	if err != nil {
 		return fmt.Errorf("failed to get block fee: %w", err)
 	}
@@ -361,7 +361,7 @@ func (p *Proposer) checkTaikoTokenBalance() error {
 		metrics.ProposerBlockFeeGauge.Update(int64(fee))
 	}
 
-	balance, err := p.rpc.TaikoL1.GetTaikoTokenBalance(nil, p.l1ProposerAddress)
+	balance, err := p.rpc.MxcL1.GetMxcTokenBalance(nil, p.l1ProposerAddress)
 	if err != nil {
 		return fmt.Errorf("failed to get tko balance: %w", err)
 	}

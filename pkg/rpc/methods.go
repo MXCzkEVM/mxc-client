@@ -7,6 +7,7 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/MXCzkEVM/mxc-client/bindings"
 	"github.com/cenkalti/backoff/v4"
 	ethereum "github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -16,7 +17,6 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient/gethclient"
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/taikoxyz/taiko-client/bindings"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -29,7 +29,7 @@ var (
 	minTxGasLimit            = 21000
 )
 
-// ensureGenesisMatched fetches the L2 genesis block from TaikoL1 contract,
+// ensureGenesisMatched fetches the L2 genesis block from MxcL1 contract,
 // and checks whether the fetched genesis is same to the node local genesis.
 func (c *Client) ensureGenesisMatched(ctx context.Context) error {
 	stateVars, err := c.GetProtocolStateVariables(nil)
@@ -38,7 +38,7 @@ func (c *Client) ensureGenesisMatched(ctx context.Context) error {
 	}
 
 	// Fetch the genesis `BlockVerified` event.
-	iter, err := c.TaikoL1.FilterBlockVerified(
+	iter, err := c.MxcL1.FilterBlockVerified(
 		&bind.FilterOpts{Start: stateVars.GenesisHeight, End: &stateVars.GenesisHeight},
 		[]*big.Int{common.Big0},
 	)
@@ -55,12 +55,12 @@ func (c *Client) ensureGenesisMatched(ctx context.Context) error {
 	for iter.Next() {
 		l2GenesisHash := iter.Event.BlockHash
 
-		log.Debug("Genesis hash", "node", nodeGenesis.Hash(), "TaikoL1", common.BytesToHash(l2GenesisHash[:]))
+		log.Debug("Genesis hash", "node", nodeGenesis.Hash(), "MxcL1", common.BytesToHash(l2GenesisHash[:]))
 
-		// Node's genesis header and TaikoL1 contract's genesis header must match.
+		// Node's genesis header and MxcL1 contract's genesis header must match.
 		if common.BytesToHash(l2GenesisHash[:]) != nodeGenesis.Hash() {
 			return fmt.Errorf(
-				"genesis header hash mismatch, node: %s, TaikoL1 contract: %s",
+				"genesis header hash mismatch, node: %s, MxcL1 contract: %s",
 				nodeGenesis.Hash(),
 				common.BytesToHash(l2GenesisHash[:]),
 			)
@@ -69,7 +69,7 @@ func (c *Client) ensureGenesisMatched(ctx context.Context) error {
 		}
 	}
 
-	log.Warn("Genesis block not found in TaikoL1")
+	log.Warn("Genesis block not found in MxcL1")
 
 	return nil
 }
@@ -213,7 +213,7 @@ func (c *Client) GetPoolContent(
 	err := c.L2RawRPC.CallContext(
 		ctx,
 		&result,
-		"taiko_txPoolContent",
+		"mxc_txPoolContent",
 		maxTransactionsPerBlock,
 		blockMaxGasLimit,
 		maxBytesPerTxList,
@@ -290,9 +290,9 @@ func (c *Client) L2ExecutionEngineSyncProgress(ctx context.Context) (*L2SyncProg
 	return progress, nil
 }
 
-// GetProtocolStateVariables gets the protocol states from TaikoL1 contract.
-func (c *Client) GetProtocolStateVariables(opts *bind.CallOpts) (*bindings.TaikoDataStateVariables, error) {
-	return GetProtocolStateVariables(c.TaikoL1, opts)
+// GetProtocolStateVariables gets the protocol states from MxcL1 contract.
+func (c *Client) GetProtocolStateVariables(opts *bind.CallOpts) (*bindings.MxcDataStateVariables, error) {
+	return GetProtocolStateVariables(c.MxcL1, opts)
 }
 
 // GetStorageRoot returns a contract's storage root at the given height.

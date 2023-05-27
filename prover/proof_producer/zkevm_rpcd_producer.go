@@ -11,11 +11,11 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/MXCzkEVM/mxc-client/bindings"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/taikoxyz/taiko-client/bindings"
 )
 
 var (
@@ -31,7 +31,7 @@ type ZkevmRpcdProducer struct {
 	Retry           bool                           // retry proof computation if error
 	CustomProofHook func() ([]byte, uint64, error) // only for testing purposes
 	ProofTimeTarget uint64                         // used for calculating proof delay
-	ProtocolConfig  *bindings.TaikoDataConfig      // protocol configurations
+	ProtocolConfig  *bindings.MxcDataConfig        // protocol configurations
 }
 
 // RequestProofBody represents the JSON body for requesting the proof.
@@ -96,7 +96,7 @@ func NewZkevmRpcdProducer(
 	l2Endpoint string,
 	retry bool,
 	proofTimeTarget uint64,
-	protocolConfig *bindings.TaikoDataConfig,
+	protocolConfig *bindings.MxcDataConfig,
 ) (*ZkevmRpcdProducer, error) {
 	return &ZkevmRpcdProducer{
 		RpcdEndpoint:    rpcdEndpoint,
@@ -130,7 +130,7 @@ func (p *ZkevmRpcdProducer) RequestProof(
 	ctx context.Context,
 	opts *ProofRequestOptions,
 	blockID *big.Int,
-	meta *bindings.TaikoDataBlockMetadata,
+	meta *bindings.MxcDataBlockMetadata,
 	header *types.Header,
 	resultCh chan *ProofWithHeader,
 ) error {

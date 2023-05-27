@@ -23,7 +23,7 @@ var (
 	}
 	L2WSEndpoint = &cli.StringFlag{
 		Name:     "l2.ws",
-		Usage:    "Websocket RPC endpoint of a L2 taiko-geth execution engine",
+		Usage:    "Websocket RPC endpoint of a L2 mxc-geth execution engine",
 		Required: true,
 		Category: commonCategory,
 	}
@@ -35,19 +35,19 @@ var (
 	}
 	L2HTTPEndpoint = &cli.StringFlag{
 		Name:     "l2.http",
-		Usage:    "HTTP RPC endpoint of a L2 taiko-geth execution engine",
+		Usage:    "HTTP RPC endpoint of a L2 mxc-geth execution engine",
 		Required: true,
 		Category: commonCategory,
 	}
-	TaikoL1Address = &cli.StringFlag{
-		Name:     "taikoL1",
-		Usage:    "TaikoL1 contract address",
+	MxcL1Address = &cli.StringFlag{
+		Name:     "mxcL1",
+		Usage:    "MxcL1 contract address",
 		Required: true,
 		Category: commonCategory,
 	}
-	TaikoL2Address = &cli.StringFlag{
-		Name:     "taikoL2",
-		Usage:    "TaikoL2 contract address",
+	MxcL2Address = &cli.StringFlag{
+		Name:     "mxcL2",
+		Usage:    "MxcL2 contract address",
 		Required: true,
 		Category: commonCategory,
 	}
@@ -89,8 +89,8 @@ var (
 var CommonFlags = []cli.Flag{
 	// Required
 	L1WSEndpoint,
-	TaikoL1Address,
-	TaikoL2Address,
+	MxcL1Address,
+	MxcL2Address,
 	// Optional
 	Verbosity,
 	LogJson,

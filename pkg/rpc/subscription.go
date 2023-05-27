@@ -3,12 +3,12 @@ package rpc
 import (
 	"context"
 
+	"github.com/MXCzkEVM/mxc-client/bindings"
 	"github.com/cenkalti/backoff/v4"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/taikoxyz/taiko-client/bindings"
 )
 
 // SubscribeEvent creates a event subscription, will retry if the established subscription failed.
@@ -30,13 +30,13 @@ func SubscribeEvent(
 
 // SubscribeBlockVerified subscribes the protocol's BlockVerified events.
 func SubscribeBlockVerified(
-	taikoL1 *bindings.TaikoL1Client,
-	ch chan *bindings.TaikoL1ClientBlockVerified,
+	mxcL1 *bindings.MxcL1Client,
+	ch chan *bindings.MxcL1ClientBlockVerified,
 ) event.Subscription {
 	return SubscribeEvent("BlockVerified", func(ctx context.Context) (event.Subscription, error) {
-		sub, err := taikoL1.WatchBlockVerified(nil, ch, nil)
+		sub, err := mxcL1.WatchBlockVerified(nil, ch, nil)
 		if err != nil {
-			log.Error("Create TaikoL1.BlockVerified subscription error", "error", err)
+			log.Error("Create MxcL1.BlockVerified subscription error", "error", err)
 			return nil, err
 		}
 
@@ -48,13 +48,13 @@ func SubscribeBlockVerified(
 
 // SubscribeBlockProposed subscribes the protocol's BlockProposed events.
 func SubscribeBlockProposed(
-	taikoL1 *bindings.TaikoL1Client,
-	ch chan *bindings.TaikoL1ClientBlockProposed,
+	mxcL1 *bindings.MxcL1Client,
+	ch chan *bindings.MxcL1ClientBlockProposed,
 ) event.Subscription {
 	return SubscribeEvent("BlockProposed", func(ctx context.Context) (event.Subscription, error) {
-		sub, err := taikoL1.WatchBlockProposed(nil, ch, nil)
+		sub, err := mxcL1.WatchBlockProposed(nil, ch, nil)
 		if err != nil {
-			log.Error("Create TaikoL1.BlockProposed subscription error", "error", err)
+			log.Error("Create MxcL1.BlockProposed subscription error", "error", err)
 			return nil, err
 		}
 
@@ -66,13 +66,13 @@ func SubscribeBlockProposed(
 
 // SubscribeXchainSynced subscribes the protocol's XchainSynced events.
 func SubscribeXchainSynced(
-	taikoL1 *bindings.TaikoL1Client,
-	ch chan *bindings.TaikoL1ClientCrossChainSynced,
+	mxcL1 *bindings.MxcL1Client,
+	ch chan *bindings.MxcL1ClientCrossChainSynced,
 ) event.Subscription {
 	return SubscribeEvent("CrossChainSynced", func(ctx context.Context) (event.Subscription, error) {
-		sub, err := taikoL1.WatchCrossChainSynced(nil, ch, nil)
+		sub, err := mxcL1.WatchCrossChainSynced(nil, ch, nil)
 		if err != nil {
-			log.Error("Create TaikoL1.XchainSynced subscription error", "error", err)
+			log.Error("Create MxcL1.XchainSynced subscription error", "error", err)
 			return nil, err
 		}
 
@@ -84,13 +84,13 @@ func SubscribeXchainSynced(
 
 // SubscribeBlockProven subscribes the protocol's BlockProven events.
 func SubscribeBlockProven(
-	taikoL1 *bindings.TaikoL1Client,
-	ch chan *bindings.TaikoL1ClientBlockProven,
+	mxcL1 *bindings.MxcL1Client,
+	ch chan *bindings.MxcL1ClientBlockProven,
 ) event.Subscription {
 	return SubscribeEvent("BlockProven", func(ctx context.Context) (event.Subscription, error) {
-		sub, err := taikoL1.WatchBlockProven(nil, ch, nil)
+		sub, err := mxcL1.WatchBlockProven(nil, ch, nil)
 		if err != nil {
-			log.Error("Create TaikoL1.BlockProven subscription error", "error", err)
+			log.Error("Create MxcL1.BlockProven subscription error", "error", err)
 			return nil, err
 		}
 

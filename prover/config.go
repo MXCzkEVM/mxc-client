@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/MXCzkEVM/mxc-client/cmd/flags"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/taikoxyz/taiko-client/cmd/flags"
 	"github.com/urfave/cli/v2"
 )
 
@@ -19,8 +19,8 @@ type Config struct {
 	L1HttpEndpoint                  string
 	L2WsEndpoint                    string
 	L2HttpEndpoint                  string
-	TaikoL1Address                  common.Address
-	TaikoL2Address                  common.Address
+	MxcL1Address                    common.Address
+	MxcL2Address                    common.Address
 	L1ProverPrivKey                 *ecdsa.PrivateKey
 	ZKEvmRpcdEndpoint               string
 	ZkEvmRpcdParamsPath             string
@@ -119,8 +119,8 @@ func NewConfigFromCliContext(c *cli.Context) (*Config, error) {
 		L1HttpEndpoint:                  c.String(flags.L1HTTPEndpoint.Name),
 		L2WsEndpoint:                    c.String(flags.L2WSEndpoint.Name),
 		L2HttpEndpoint:                  c.String(flags.L2HTTPEndpoint.Name),
-		TaikoL1Address:                  common.HexToAddress(c.String(flags.TaikoL1Address.Name)),
-		TaikoL2Address:                  common.HexToAddress(c.String(flags.TaikoL2Address.Name)),
+		MxcL1Address:                    common.HexToAddress(c.String(flags.MxcL1Address.Name)),
+		MxcL2Address:                    common.HexToAddress(c.String(flags.MxcL2Address.Name)),
 		L1ProverPrivKey:                 l1ProverPrivKey,
 		ZKEvmRpcdEndpoint:               c.String(flags.ZkEvmRpcdEndpoint.Name),
 		ZkEvmRpcdParamsPath:             c.String(flags.ZkEvmRpcdParamsPath.Name),

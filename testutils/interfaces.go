@@ -3,10 +3,10 @@ package testutils
 import (
 	"context"
 
+	"github.com/MXCzkEVM/mxc-client/bindings/encoding"
+	"github.com/MXCzkEVM/mxc-client/cmd/utils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/taikoxyz/taiko-client/bindings/encoding"
-	"github.com/taikoxyz/taiko-client/cmd/utils"
 )
 
 type CalldataSyncer interface {
@@ -20,7 +20,7 @@ type Proposer interface {
 	L2SuggestedFeeRecipient() common.Address
 	ProposeTxList(
 		ctx context.Context,
-		meta *encoding.TaikoL1BlockMetadataInput,
+		meta *encoding.MxcL1BlockMetadataInput,
 		txListBytes []byte,
 		txNum uint,
 	) error

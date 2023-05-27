@@ -6,11 +6,11 @@ import (
 	"os"
 	"testing"
 
+	"github.com/MXCzkEVM/mxc-client/testutils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/suite"
-	"github.com/taikoxyz/taiko-client/testutils"
 )
 
 type AnchorTxConstructorTestSuite struct {
@@ -45,7 +45,7 @@ func (s *AnchorTxConstructorTestSuite) TestAssembleAnchorTx() {
 }
 
 func (s *AnchorTxConstructorTestSuite) TestNewAnchorTransactor() {
-	goldenTouchAddress, err := s.RpcClient.TaikoL2.GOLDENTOUCHADDRESS(nil)
+	goldenTouchAddress, err := s.RpcClient.MxcL2.GOLDENTOUCHADDRESS(nil)
 	s.Nil(err)
 
 	c, err := New(

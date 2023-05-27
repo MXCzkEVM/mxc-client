@@ -5,20 +5,20 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/MXCzkEVM/mxc-client/cmd/flags"
+	"github.com/MXCzkEVM/mxc-client/pkg/jwt"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/taikoxyz/taiko-client/cmd/flags"
-	"github.com/taikoxyz/taiko-client/pkg/jwt"
 	"github.com/urfave/cli/v2"
 )
 
-// Config contains the configurations to initialize a Taiko driver.
+// Config contains the configurations to initialize a Mxc driver.
 type Config struct {
 	L1Endpoint            string
 	L2Endpoint            string
 	L2EngineEndpoint      string
 	L2CheckPoint          string
-	TaikoL1Address        common.Address
-	TaikoL2Address        common.Address
+	MxcL1Address          common.Address
+	MxcL2Address          common.Address
 	JwtSecret             string
 	P2PSyncVerifiedBlocks bool
 	P2PSyncTimeout        time.Duration
@@ -46,8 +46,8 @@ func NewConfigFromCliContext(c *cli.Context) (*Config, error) {
 		L2Endpoint:            c.String(flags.L2WSEndpoint.Name),
 		L2EngineEndpoint:      c.String(flags.L2AuthEndpoint.Name),
 		L2CheckPoint:          l2CheckPoint,
-		TaikoL1Address:        common.HexToAddress(c.String(flags.TaikoL1Address.Name)),
-		TaikoL2Address:        common.HexToAddress(c.String(flags.TaikoL2Address.Name)),
+		MxcL1Address:          common.HexToAddress(c.String(flags.MxcL1Address.Name)),
+		MxcL2Address:          common.HexToAddress(c.String(flags.MxcL2Address.Name)),
 		JwtSecret:             string(jwtSecret),
 		P2PSyncVerifiedBlocks: p2pSyncVerifiedBlocks,
 		P2PSyncTimeout:        time.Duration(int64(time.Second) * int64(c.Uint(flags.P2PSyncTimeout.Name))),

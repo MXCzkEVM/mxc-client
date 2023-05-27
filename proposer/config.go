@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/MXCzkEVM/mxc-client/cmd/flags"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/taikoxyz/taiko-client/cmd/flags"
 	"github.com/urfave/cli/v2"
 )
 
@@ -16,8 +16,8 @@ import (
 type Config struct {
 	L1Endpoint                 string
 	L2Endpoint                 string
-	TaikoL1Address             common.Address
-	TaikoL2Address             common.Address
+	MxcL1Address               common.Address
+	MxcL2Address               common.Address
 	L1ProposerPrivKey          *ecdsa.PrivateKey
 	L2SuggestedFeeRecipient    common.Address
 	ProposeInterval            *time.Duration
@@ -74,8 +74,8 @@ func NewConfigFromCliContext(c *cli.Context) (*Config, error) {
 	return &Config{
 		L1Endpoint:                 c.String(flags.L1WSEndpoint.Name),
 		L2Endpoint:                 c.String(flags.L2HTTPEndpoint.Name),
-		TaikoL1Address:             common.HexToAddress(c.String(flags.TaikoL1Address.Name)),
-		TaikoL2Address:             common.HexToAddress(c.String(flags.TaikoL2Address.Name)),
+		MxcL1Address:               common.HexToAddress(c.String(flags.MxcL1Address.Name)),
+		MxcL2Address:               common.HexToAddress(c.String(flags.MxcL2Address.Name)),
 		L1ProposerPrivKey:          l1ProposerPrivKey,
 		L2SuggestedFeeRecipient:    common.HexToAddress(l2SuggestedFeeRecipient),
 		ProposeInterval:            proposingInterval,

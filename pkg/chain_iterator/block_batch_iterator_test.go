@@ -5,10 +5,10 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/MXCzkEVM/mxc-client/testutils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/suite"
-	"github.com/taikoxyz/taiko-client/testutils"
 )
 
 type BlockBatchIteratorTestSuite struct {

@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/MXCzkEVM/mxc-client/driver/state"
+	"github.com/MXCzkEVM/mxc-client/testutils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/suite"
-	"github.com/taikoxyz/taiko-client/driver/state"
-	"github.com/taikoxyz/taiko-client/testutils"
 )
 
 type ChainSyncerTestSuite struct {

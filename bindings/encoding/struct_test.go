@@ -6,11 +6,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/MXCzkEVM/mxc-client/bindings"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/stretchr/testify/require"
-	"github.com/taikoxyz/taiko-client/bindings"
 )
 
 var (
@@ -32,7 +32,7 @@ var (
 		Nonce:       types.EncodeNonce(rand.Uint64()),
 		BaseFee:     new(big.Int).SetUint64(rand.Uint64()),
 	}
-	testMetaInput = TaikoL1BlockMetadataInput{
+	testMetaInput = MxcL1BlockMetadataInput{
 		Beneficiary:     common.BytesToAddress(randomHash().Bytes()),
 		GasLimit:        rand.Uint32(),
 		TxListHash:      randomHash(),
@@ -40,7 +40,7 @@ var (
 		TxListByteEnd:   common.Big0,
 		CacheTxListInfo: 0,
 	}
-	testMeta = bindings.TaikoDataBlockMetadata{
+	testMeta = bindings.MxcDataBlockMetadata{
 		Id:              rand.Uint64(),
 		L1Height:        rand.Uint64(),
 		L1Hash:          randomHash(),

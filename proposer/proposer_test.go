@@ -7,12 +7,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/MXCzkEVM/mxc-client/bindings"
+	"github.com/MXCzkEVM/mxc-client/testutils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/suite"
-	"github.com/taikoxyz/taiko-client/bindings"
-	"github.com/taikoxyz/taiko-client/testutils"
 )
 
 type ProposerTestSuite struct {
@@ -34,8 +34,8 @@ func (s *ProposerTestSuite) SetupTest() {
 	s.Nil(InitFromConfig(ctx, p, (&Config{
 		L1Endpoint:              os.Getenv("L1_NODE_WS_ENDPOINT"),
 		L2Endpoint:              os.Getenv("L2_EXECUTION_ENGINE_HTTP_ENDPOINT"),
-		TaikoL1Address:          common.HexToAddress(os.Getenv("TAIKO_L1_ADDRESS")),
-		TaikoL2Address:          common.HexToAddress(os.Getenv("TAIKO_L2_ADDRESS")),
+		MxcL1Address:            common.HexToAddress(os.Getenv("MXC_L1_ADDRESS")),
+		MxcL2Address:            common.HexToAddress(os.Getenv("MXC_L2_ADDRESS")),
 		L1ProposerPrivKey:       l1ProposerPrivKey,
 		L2SuggestedFeeRecipient: common.HexToAddress(os.Getenv("L2_SUGGESTED_FEE_RECIPIENT")),
 		ProposeInterval:         &proposeInterval,
@@ -64,9 +64,9 @@ func (s *ProposerTestSuite) TestProposeOp() {
 	s.EqualError(errNoNewTxs, s.p.ProposeOp(context.Background()).Error())
 
 	// Propose txs in L2 execution engine's mempool
-	sink := make(chan *bindings.TaikoL1ClientBlockProposed)
+	sink := make(chan *bindings.MxcL1ClientBlockProposed)
 
-	sub, err := s.p.rpc.TaikoL1.WatchBlockProposed(nil, sink, nil)
+	sub, err := s.p.rpc.MxcL1.WatchBlockProposed(nil, sink, nil)
 	s.Nil(err)
 	defer func() {
 		sub.Unsubscribe()
@@ -81,7 +81,7 @@ func (s *ProposerTestSuite) TestProposeOp() {
 	parent, err := s.p.rpc.L2.BlockByNumber(context.Background(), nil)
 	s.Nil(err)
 
-	baseFee, err := s.p.rpc.TaikoL2.GetBasefee(nil, 1, uint64(gaslimit), parent.GasUsed())
+	baseFee, err := s.p.rpc.MxcL2.GetBasefee(nil, 1, uint64(gaslimit), parent.GasUsed())
 	s.Nil(err)
 
 	to := common.BytesToAddress(testutils.RandomBytes(32))

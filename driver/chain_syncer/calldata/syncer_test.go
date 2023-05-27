@@ -8,16 +8,16 @@ import (
 	"testing"
 	"time"
 
+	"github.com/MXCzkEVM/mxc-client/bindings"
+	"github.com/MXCzkEVM/mxc-client/driver/chain_syncer/beaconsync"
+	"github.com/MXCzkEVM/mxc-client/driver/state"
+	"github.com/MXCzkEVM/mxc-client/proposer"
+	"github.com/MXCzkEVM/mxc-client/testutils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/rawdb"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/suite"
-	"github.com/taikoxyz/taiko-client/bindings"
-	"github.com/taikoxyz/taiko-client/driver/chain_syncer/beaconsync"
-	"github.com/taikoxyz/taiko-client/driver/state"
-	"github.com/taikoxyz/taiko-client/proposer"
-	"github.com/taikoxyz/taiko-client/testutils"
 )
 
 type CalldataSyncerTestSuite struct {
@@ -49,8 +49,8 @@ func (s *CalldataSyncerTestSuite) SetupTest() {
 	s.Nil(proposer.InitFromConfig(context.Background(), prop, (&proposer.Config{
 		L1Endpoint:              os.Getenv("L1_NODE_WS_ENDPOINT"),
 		L2Endpoint:              os.Getenv("L2_EXECUTION_ENGINE_WS_ENDPOINT"),
-		TaikoL1Address:          common.HexToAddress(os.Getenv("TAIKO_L1_ADDRESS")),
-		TaikoL2Address:          common.HexToAddress(os.Getenv("TAIKO_L2_ADDRESS")),
+		MxcL1Address:            common.HexToAddress(os.Getenv("MXC_L1_ADDRESS")),
+		MxcL2Address:            common.HexToAddress(os.Getenv("MXC_L2_ADDRESS")),
 		L1ProposerPrivKey:       l1ProposerPrivKey,
 		L2SuggestedFeeRecipient: common.HexToAddress(os.Getenv("L2_SUGGESTED_FEE_RECIPIENT")),
 		ProposeInterval:         &proposeInterval,
@@ -66,8 +66,8 @@ func (s *CalldataSyncerTestSuite) TestProcessL1Blocks() {
 }
 
 func (s *CalldataSyncerTestSuite) TestOnBlockProposed() {
-	s.Nil(s.s.onBlockProposed(context.Background(), &bindings.TaikoL1ClientBlockProposed{Id: common.Big0}, func() {}))
-	s.NotNil(s.s.onBlockProposed(context.Background(), &bindings.TaikoL1ClientBlockProposed{Id: common.Big1}, func() {}))
+	s.Nil(s.s.onBlockProposed(context.Background(), &bindings.MxcL1ClientBlockProposed{Id: common.Big0}, func() {}))
+	s.NotNil(s.s.onBlockProposed(context.Background(), &bindings.MxcL1ClientBlockProposed{Id: common.Big1}, func() {}))
 }
 
 func (s *CalldataSyncerTestSuite) TestInsertNewHead() {
@@ -77,9 +77,9 @@ func (s *CalldataSyncerTestSuite) TestInsertNewHead() {
 	s.Nil(err)
 	_, rpcErr, payloadErr := s.s.insertNewHead(
 		context.Background(),
-		&bindings.TaikoL1ClientBlockProposed{
+		&bindings.MxcL1ClientBlockProposed{
 			Id: common.Big1,
-			Meta: bindings.TaikoDataBlockMetadata{
+			Meta: bindings.MxcDataBlockMetadata{
 				Id:          1,
 				L1Height:    l1Head.NumberU64(),
 				L1Hash:      l1Head.Hash(),
@@ -112,7 +112,7 @@ func (s *CalldataSyncerTestSuite) TestHandleReorgToGenesis() {
 	s.NotZero(s.s.lastInsertedBlockID.Uint64())
 	s.s.lastInsertedBlockID = common.Big0 // let the chain reorg to genesis
 
-	s.Nil(s.s.handleReorg(context.Background(), &bindings.TaikoL1ClientBlockProposed{
+	s.Nil(s.s.handleReorg(context.Background(), &bindings.MxcL1ClientBlockProposed{
 		Id:  l2Head1.Number(),
 		Raw: types.Log{Removed: true},
 	}))
@@ -131,7 +131,7 @@ func (s *CalldataSyncerTestSuite) TestHandleReorgToNoneGenesis() {
 	s.NotZero(s.s.lastInsertedBlockID.Uint64())
 	s.s.lastInsertedBlockID = common.Big1 // let the chain reorg to height 1
 
-	s.Nil(s.s.handleReorg(context.Background(), &bindings.TaikoL1ClientBlockProposed{
+	s.Nil(s.s.handleReorg(context.Background(), &bindings.MxcL1ClientBlockProposed{
 		Id:  l2Head1.Number(),
 		Raw: types.Log{Removed: true},
 	}))

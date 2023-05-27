@@ -5,13 +5,13 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/MXCzkEVM/mxc-client/bindings"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/taikoxyz/taiko-client/bindings"
 )
 
 // ABI arguments marshaling components.
@@ -157,24 +157,24 @@ var (
 
 // Contract ABIs.
 var (
-	TaikoL1ABI *abi.ABI
-	TaikoL2ABI *abi.ABI
+	MxcL1ABI *abi.ABI
+	MxcL2ABI *abi.ABI
 )
 
 func init() {
 	var err error
 
-	if TaikoL1ABI, err = bindings.TaikoL1ClientMetaData.GetAbi(); err != nil {
-		log.Crit("Get TaikoL1 ABI error", "error", err)
+	if MxcL1ABI, err = bindings.MxcL1ClientMetaData.GetAbi(); err != nil {
+		log.Crit("Get MxcL1 ABI error", "error", err)
 	}
 
-	if TaikoL2ABI, err = bindings.TaikoL2ClientMetaData.GetAbi(); err != nil {
-		log.Crit("Get TaikoL2 ABI error", "error", err)
+	if MxcL2ABI, err = bindings.MxcL2ClientMetaData.GetAbi(); err != nil {
+		log.Crit("Get MxcL2 ABI error", "error", err)
 	}
 }
 
 // EncodeBlockMetadataInput performs the solidity `abi.encode` for the given blockMetadataInput.
-func EncodeBlockMetadataInput(meta *TaikoL1BlockMetadataInput) ([]byte, error) {
+func EncodeBlockMetadataInput(meta *MxcL1BlockMetadataInput) ([]byte, error) {
 	b, err := blockMetadataInputArgs.Pack(meta)
 	if err != nil {
 		return nil, fmt.Errorf("failed to abi.encode block metadata input, %w", err)
@@ -183,7 +183,7 @@ func EncodeBlockMetadataInput(meta *TaikoL1BlockMetadataInput) ([]byte, error) {
 }
 
 // EncodeBlockMetadata performs the solidity `abi.encode` for the given blockMetadata.
-func EncodeBlockMetadata(meta *bindings.TaikoDataBlockMetadata) ([]byte, error) {
+func EncodeBlockMetadata(meta *bindings.MxcDataBlockMetadata) ([]byte, error) {
 	b, err := blockMetadataArgs.Pack(meta)
 	if err != nil {
 		return nil, fmt.Errorf("failed to abi.encode block metadata, %w", err)
@@ -192,7 +192,7 @@ func EncodeBlockMetadata(meta *bindings.TaikoDataBlockMetadata) ([]byte, error) 
 }
 
 // EncodeEvidence performs the solidity `abi.encode` for the given evidence.
-func EncodeEvidence(e *TaikoL1Evidence) ([]byte, error) {
+func EncodeEvidence(e *MxcL1Evidence) ([]byte, error) {
 	b, err := EvidenceArgs.Pack(e)
 	if err != nil {
 		return nil, fmt.Errorf("failed to abi.encode evidence, %w", err)
@@ -209,8 +209,8 @@ func EncodeCommitHash(beneficiary common.Address, txListHash [32]byte) []byte {
 	)
 }
 
-// EncodeProposeBlockInput encodes the input params for TaikoL1.proposeBlock.
-func EncodeProposeBlockInput(metadataInput *TaikoL1BlockMetadataInput) ([]byte, error) {
+// EncodeProposeBlockInput encodes the input params for MxcL1.proposeBlock.
+func EncodeProposeBlockInput(metadataInput *MxcL1BlockMetadataInput) ([]byte, error) {
 	metaBytes, err := EncodeBlockMetadataInput(metadataInput)
 	if err != nil {
 		return nil, err
@@ -218,9 +218,9 @@ func EncodeProposeBlockInput(metadataInput *TaikoL1BlockMetadataInput) ([]byte, 
 	return metaBytes, nil
 }
 
-// EncodeProveBlockInput encodes the input params for TaikoL1.proveBlock.
+// EncodeProveBlockInput encodes the input params for MxcL1.proveBlock.
 func EncodeProveBlockInput(
-	evidence *TaikoL1Evidence,
+	evidence *MxcL1Evidence,
 ) ([]byte, error) {
 	evidenceBytes, err := EncodeEvidence(evidence)
 	if err != nil {
@@ -230,10 +230,10 @@ func EncodeProveBlockInput(
 	return evidenceBytes, nil
 }
 
-// EncodeProveBlockInvalidInput encodes the input params for TaikoL1.proveBlockInvalid.
+// EncodeProveBlockInvalidInput encodes the input params for MxcL1.proveBlockInvalid.
 func EncodeProveBlockInvalidInput(
-	evidence *TaikoL1Evidence,
-	target *bindings.TaikoDataBlockMetadata,
+	evidence *MxcL1Evidence,
+	target *bindings.MxcDataBlockMetadata,
 	receipt *types.Receipt,
 ) ([][]byte, error) {
 	evidenceBytes, err := EncodeEvidence(evidence)
@@ -254,9 +254,9 @@ func EncodeProveBlockInvalidInput(
 	return [][]byte{evidenceBytes, metaBytes, receiptBytes}, nil
 }
 
-// UnpackTxListBytes unpacks the input data of a TaikoL1.proposeBlock transaction, and returns the txList bytes.
+// UnpackTxListBytes unpacks the input data of a MxcL1.proposeBlock transaction, and returns the txList bytes.
 func UnpackTxListBytes(txData []byte) ([]byte, error) {
-	method, err := TaikoL1ABI.MethodById(txData)
+	method, err := MxcL1ABI.MethodById(txData)
 	if err != nil {
 		return nil, err
 	}

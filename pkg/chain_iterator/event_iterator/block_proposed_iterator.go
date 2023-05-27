@@ -5,29 +5,29 @@ import (
 	"errors"
 	"math/big"
 
+	"github.com/MXCzkEVM/mxc-client/bindings"
+	chainIterator "github.com/MXCzkEVM/mxc-client/pkg/chain_iterator"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/taikoxyz/taiko-client/bindings"
-	chainIterator "github.com/taikoxyz/taiko-client/pkg/chain_iterator"
 )
 
 // EndBlockProposedEventIterFunc ends the current iteration.
 type EndBlockProposedEventIterFunc func()
 
-// OnBlockProposedEvent represents the callback function which will be called when a TaikoL1.BlockProposed event is
+// OnBlockProposedEvent represents the callback function which will be called when a MxcL1.BlockProposed event is
 // iterated.
 type OnBlockProposedEvent func(
 	context.Context,
-	*bindings.TaikoL1ClientBlockProposed,
+	*bindings.MxcL1ClientBlockProposed,
 	EndBlockProposedEventIterFunc,
 ) error
 
-// BlockProposedIterator iterates the emitted TaikoL1.BlockProposed events in the chain,
+// BlockProposedIterator iterates the emitted MxcL1.BlockProposed events in the chain,
 // with the awareness of reorganization.
 type BlockProposedIterator struct {
 	ctx                context.Context
-	taikoL1            *bindings.TaikoL1Client
+	mxcL1              *bindings.MxcL1Client
 	blockBatchIterator *chainIterator.BlockBatchIterator
 	filterQuery        []*big.Int
 	isEnd              bool
@@ -36,7 +36,7 @@ type BlockProposedIterator struct {
 // BlockProposedIteratorConfig represents the configs of a BlockProposed event iterator.
 type BlockProposedIteratorConfig struct {
 	Client                *ethclient.Client
-	TaikoL1               *bindings.TaikoL1Client
+	MxcL1                 *bindings.MxcL1Client
 	MaxBlocksReadPerEpoch *uint64
 	StartHeight           *big.Int
 	EndHeight             *big.Int
@@ -53,7 +53,7 @@ func NewBlockProposedIterator(ctx context.Context, cfg *BlockProposedIteratorCon
 
 	iterator := &BlockProposedIterator{
 		ctx:         ctx,
-		taikoL1:     cfg.TaikoL1,
+		mxcL1:       cfg.MxcL1,
 		filterQuery: cfg.FilterQuery,
 	}
 
@@ -66,7 +66,7 @@ func NewBlockProposedIterator(ctx context.Context, cfg *BlockProposedIteratorCon
 		Reverse:               cfg.Reverse,
 		OnBlocks: assembleBlockProposedIteratorCallback(
 			cfg.Client,
-			cfg.TaikoL1,
+			cfg.MxcL1,
 			cfg.FilterQuery,
 			cfg.OnBlockProposedEvent,
 			iterator,
@@ -96,7 +96,7 @@ func (i *BlockProposedIterator) end() {
 // by a event iterator's inner block iterator.
 func assembleBlockProposedIteratorCallback(
 	client *ethclient.Client,
-	taikoL1Client *bindings.TaikoL1Client,
+	mxcL1Client *bindings.MxcL1Client,
 	filterQuery []*big.Int,
 	callback OnBlockProposedEvent,
 	eventIter *BlockProposedIterator,
@@ -109,7 +109,7 @@ func assembleBlockProposedIteratorCallback(
 		endFunc chainIterator.EndIterFunc,
 	) (bool, error) {
 		endHeight := end.Number.Uint64()
-		iter, err := taikoL1Client.FilterBlockProposed(
+		iter, err := mxcL1Client.FilterBlockProposed(
 			&bind.FilterOpts{Start: start.Number.Uint64(), End: &endHeight, Context: ctx},
 			filterQuery,
 		)

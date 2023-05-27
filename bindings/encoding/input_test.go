@@ -12,7 +12,7 @@ import (
 )
 
 func TestEncodeEvidence(t *testing.T) {
-	evidence := &TaikoL1Evidence{
+	evidence := &MxcL1Evidence{
 		MetaHash:      randomHash(),
 		BlockHash:     randomHash(),
 		ParentHash:    randomHash(),
@@ -44,7 +44,7 @@ func TestEncodeProposeBlockInput(t *testing.T) {
 
 func TestEncodeProveBlockInput(t *testing.T) {
 	encoded, err := EncodeProveBlockInput(
-		&TaikoL1Evidence{
+		&MxcL1Evidence{
 			MetaHash:      randomHash(),
 			BlockHash:     randomHash(),
 			ParentHash:    randomHash(),
@@ -64,7 +64,7 @@ func TestEncodeProveBlockInput(t *testing.T) {
 
 func TestEncodeProveBlockInvalidInput(t *testing.T) {
 	encoded, err := EncodeProveBlockInvalidInput(
-		&TaikoL1Evidence{
+		&MxcL1Evidence{
 			MetaHash:      randomHash(),
 			BlockHash:     randomHash(),
 			ParentHash:    randomHash(),

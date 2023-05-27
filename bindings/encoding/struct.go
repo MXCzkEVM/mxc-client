@@ -27,7 +27,7 @@ type BlockHeader struct {
 	BaseFeePerGas    *big.Int
 }
 
-type TaikoL1Evidence struct {
+type MxcL1Evidence struct {
 	MetaHash      [32]byte
 	BlockHash     [32]byte
 	ParentHash    [32]byte
@@ -40,7 +40,7 @@ type TaikoL1Evidence struct {
 	Proof         []byte
 }
 
-type TaikoL1BlockMetadataInput struct {
+type MxcL1BlockMetadataInput struct {
 	TxListHash      [32]byte
 	Beneficiary     common.Address
 	GasLimit        uint32

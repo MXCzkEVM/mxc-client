@@ -7,6 +7,15 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/MXCzkEVM/mxc-client/bindings"
+	"github.com/MXCzkEVM/mxc-client/bindings/encoding"
+	anchorTxConstructor "github.com/MXCzkEVM/mxc-client/driver/anchor_tx_constructor"
+	"github.com/MXCzkEVM/mxc-client/driver/chain_syncer/beaconsync"
+	"github.com/MXCzkEVM/mxc-client/driver/state"
+	"github.com/MXCzkEVM/mxc-client/metrics"
+	eventIterator "github.com/MXCzkEVM/mxc-client/pkg/chain_iterator/event_iterator"
+	"github.com/MXCzkEVM/mxc-client/pkg/rpc"
+	txListValidator "github.com/MXCzkEVM/mxc-client/pkg/tx_list_validator"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/beacon/engine"
@@ -15,15 +24,6 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
-	"github.com/taikoxyz/taiko-client/bindings"
-	"github.com/taikoxyz/taiko-client/bindings/encoding"
-	anchorTxConstructor "github.com/taikoxyz/taiko-client/driver/anchor_tx_constructor"
-	"github.com/taikoxyz/taiko-client/driver/chain_syncer/beaconsync"
-	"github.com/taikoxyz/taiko-client/driver/state"
-	"github.com/taikoxyz/taiko-client/metrics"
-	eventIterator "github.com/taikoxyz/taiko-client/pkg/chain_iterator/event_iterator"
-	"github.com/taikoxyz/taiko-client/pkg/rpc"
-	txListValidator "github.com/taikoxyz/taiko-client/pkg/tx_list_validator"
 )
 
 // Syncer responsible for letting the L2 execution engine catching up with protocol's latest
@@ -33,7 +33,7 @@ type Syncer struct {
 	rpc               *rpc.Client
 	state             *state.State
 	progressTracker   *beaconsync.SyncProgressTracker          // Sync progress tracker
-	anchorConstructor *anchorTxConstructor.AnchorTxConstructor // TaikoL2.anchor transactions constructor
+	anchorConstructor *anchorTxConstructor.AnchorTxConstructor // MxcL2.anchor transactions constructor
 	txListValidator   *txListValidator.TxListValidator         // Transactions list validator
 	// Used by BlockInserter
 	lastInsertedBlockID *big.Int
@@ -47,7 +47,7 @@ func NewSyncer(
 	progressTracker *beaconsync.SyncProgressTracker,
 	signalServiceAddress common.Address,
 ) (*Syncer, error) {
-	configs, err := rpc.TaikoL1.GetConfig(nil)
+	configs, err := rpc.MxcL1.GetConfig(nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get protocol configs: %w", err)
 	}
@@ -72,12 +72,12 @@ func NewSyncer(
 	}, nil
 }
 
-// ProcessL1Blocks fetches all `TaikoL1.BlockProposed` events between given
+// ProcessL1Blocks fetches all `MxcL1.BlockProposed` events between given
 // L1 block heights, and then tries inserting them into L2 execution engine's block chain.
 func (s *Syncer) ProcessL1Blocks(ctx context.Context, l1End *types.Header) error {
 	iter, err := eventIterator.NewBlockProposedIterator(ctx, &eventIterator.BlockProposedIteratorConfig{
 		Client:               s.rpc.L1,
-		TaikoL1:              s.rpc.TaikoL1,
+		MxcL1:                s.rpc.MxcL1,
 		StartHeight:          s.state.GetL1Current().Number,
 		EndHeight:            l1End.Number,
 		FilterQuery:          nil,
@@ -101,7 +101,7 @@ func (s *Syncer) ProcessL1Blocks(ctx context.Context, l1End *types.Header) error
 // inserting the proposed block one by one to the L2 execution engine.
 func (s *Syncer) onBlockProposed(
 	ctx context.Context,
-	event *bindings.TaikoL1ClientBlockProposed,
+	event *bindings.MxcL1ClientBlockProposed,
 	endIter eventIterator.EndBlockProposedEventIterFunc,
 ) error {
 	// Ignore those already inserted blocks.
@@ -150,7 +150,7 @@ func (s *Syncer) onBlockProposed(
 		event.Raw.TxIndex,
 	)
 	if err != nil {
-		return fmt.Errorf("failed to fetch original TaikoL1.proposeBlock transaction: %w", err)
+		return fmt.Errorf("failed to fetch original MxcL1.proposeBlock transaction: %w", err)
 	}
 
 	// Check whether the transactions list is valid.
@@ -168,7 +168,7 @@ func (s *Syncer) onBlockProposed(
 
 	l1Origin := &rawdb.L1Origin{
 		BlockID:       event.Id,
-		L2BlockHash:   common.Hash{}, // Will be set by taiko-geth.
+		L2BlockHash:   common.Hash{}, // Will be set by mxc-geth.
 		L1BlockHeight: new(big.Int).SetUint64(event.Raw.BlockNumber),
 		L1BlockHash:   event.Raw.BlockHash,
 	}
@@ -231,7 +231,7 @@ func (s *Syncer) onBlockProposed(
 
 // handleReorg detects reorg and rewinds the chain by 1 until we find a block that is still in the chain,
 // then inserts that block as the new head.
-func (s *Syncer) handleReorg(ctx context.Context, event *bindings.TaikoL1ClientBlockProposed) error {
+func (s *Syncer) handleReorg(ctx context.Context, event *bindings.MxcL1ClientBlockProposed) error {
 	log.Info(
 		"Reorg detected",
 		"L1Height", event.Raw.BlockNumber,
@@ -335,7 +335,7 @@ func (s *Syncer) handleReorg(ctx context.Context, event *bindings.TaikoL1ClientB
 // block chain through Engine APIs.
 func (s *Syncer) insertNewHead(
 	ctx context.Context,
-	event *bindings.TaikoL1ClientBlockProposed,
+	event *bindings.MxcL1ClientBlockProposed,
 	parent *types.Header,
 	headBlockID *big.Int,
 	txListBytes []byte,
@@ -349,7 +349,7 @@ func (s *Syncer) insertNewHead(
 		"l1Origin", l1Origin,
 	)
 
-	// Insert a TaikoL2.anchor transaction at transactions list head
+	// Insert a MxcL2.anchor transaction at transactions list head
 	var txList []*types.Transaction
 	if len(txListBytes) != 0 {
 		if err := rlp.DecodeBytes(txListBytes, &txList); err != nil {
@@ -358,13 +358,13 @@ func (s *Syncer) insertNewHead(
 		}
 	}
 
-	parentTimestamp, err := s.rpc.TaikoL2.ParentTimestamp(&bind.CallOpts{BlockNumber: parent.Number})
+	parentTimestamp, err := s.rpc.MxcL2.ParentTimestamp(&bind.CallOpts{BlockNumber: parent.Number})
 	if err != nil {
 		return nil, nil, err
 	}
 
 	// Get L2 baseFee
-	baseFee, err := s.rpc.TaikoL2.GetBasefee(
+	baseFee, err := s.rpc.MxcL2.GetBasefee(
 		&bind.CallOpts{BlockNumber: parent.Number},
 		uint32(event.Meta.Timestamp-parentTimestamp),
 		uint64(event.Meta.GasLimit+uint32(s.anchorConstructor.GasLimit())),
@@ -388,7 +388,7 @@ func (s *Syncer) insertNewHead(
 		withdrawals[i] = &types.Withdrawal{Address: d.Recipient, Amount: d.Amount.Uint64()}
 	}
 
-	// Assemble a TaikoL2.anchor transaction
+	// Assemble a MxcL2.anchor transaction
 	anchorTx, err := s.anchorConstructor.AssembleAnchorTx(
 		ctx,
 		new(big.Int).SetUint64(event.Meta.L1Height),
@@ -398,7 +398,7 @@ func (s *Syncer) insertNewHead(
 		parent.GasUsed,
 	)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create TaikoL2.anchor transaction: %w", err)
+		return nil, nil, fmt.Errorf("failed to create MxcL2.anchor transaction: %w", err)
 	}
 
 	txList = append([]*types.Transaction{anchorTx}, txList...)
@@ -442,7 +442,7 @@ func (s *Syncer) insertNewHead(
 // Engine APIs.
 func (s *Syncer) createExecutionPayloads(
 	ctx context.Context,
-	event *bindings.TaikoL1ClientBlockProposed,
+	event *bindings.MxcL1ClientBlockProposed,
 	parentHash common.Hash,
 	l1Origin *rawdb.L1Origin,
 	headBlockID *big.Int,

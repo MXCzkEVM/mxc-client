@@ -8,10 +8,10 @@ import (
 	"os"
 	"testing"
 
+	"github.com/MXCzkEVM/mxc-client/bindings/encoding"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
-	"github.com/taikoxyz/taiko-client/bindings/encoding"
 )
 
 // randomHash generates a random blob of data and returns it as a hash.
@@ -24,7 +24,7 @@ func randomHash() common.Hash {
 }
 
 func TestHashAndSignOracleProof(t *testing.T) {
-	evidence := &encoding.TaikoL1Evidence{
+	evidence := &encoding.MxcL1Evidence{
 		MetaHash:      randomHash(),
 		BlockHash:     randomHash(),
 		ParentHash:    randomHash(),

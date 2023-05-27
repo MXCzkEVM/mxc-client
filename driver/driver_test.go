@@ -7,13 +7,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/MXCzkEVM/mxc-client/bindings/encoding"
+	"github.com/MXCzkEVM/mxc-client/pkg/jwt"
+	"github.com/MXCzkEVM/mxc-client/proposer"
+	"github.com/MXCzkEVM/mxc-client/testutils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/suite"
-	"github.com/taikoxyz/taiko-client/bindings/encoding"
-	"github.com/taikoxyz/taiko-client/pkg/jwt"
-	"github.com/taikoxyz/taiko-client/proposer"
-	"github.com/taikoxyz/taiko-client/testutils"
 )
 
 type DriverTestSuite struct {
@@ -38,8 +38,8 @@ func (s *DriverTestSuite) SetupTest() {
 		L1Endpoint:       os.Getenv("L1_NODE_WS_ENDPOINT"),
 		L2Endpoint:       os.Getenv("L2_EXECUTION_ENGINE_WS_ENDPOINT"),
 		L2EngineEndpoint: os.Getenv("L2_EXECUTION_ENGINE_AUTH_ENDPOINT"),
-		TaikoL1Address:   common.HexToAddress(os.Getenv("TAIKO_L1_ADDRESS")),
-		TaikoL2Address:   common.HexToAddress(os.Getenv("TAIKO_L2_ADDRESS")),
+		MxcL1Address:     common.HexToAddress(os.Getenv("MXC_L1_ADDRESS")),
+		MxcL2Address:     common.HexToAddress(os.Getenv("MXC_L2_ADDRESS")),
 		JwtSecret:        string(jwtSecret),
 	}))
 	s.d = d
@@ -54,8 +54,8 @@ func (s *DriverTestSuite) SetupTest() {
 	s.Nil(proposer.InitFromConfig(context.Background(), p, (&proposer.Config{
 		L1Endpoint:              os.Getenv("L1_NODE_WS_ENDPOINT"),
 		L2Endpoint:              os.Getenv("L2_EXECUTION_ENGINE_WS_ENDPOINT"),
-		TaikoL1Address:          common.HexToAddress(os.Getenv("TAIKO_L1_ADDRESS")),
-		TaikoL2Address:          common.HexToAddress(os.Getenv("TAIKO_L2_ADDRESS")),
+		MxcL1Address:            common.HexToAddress(os.Getenv("MXC_L1_ADDRESS")),
+		MxcL2Address:            common.HexToAddress(os.Getenv("MXC_L2_ADDRESS")),
 		L1ProposerPrivKey:       l1ProposerPrivKey,
 		L2SuggestedFeeRecipient: common.HexToAddress(os.Getenv("L2_SUGGESTED_FEE_RECIPIENT")),
 		ProposeInterval:         &proposeInterval, // No need to periodically propose transactions list in unit tests
@@ -104,7 +104,7 @@ func (s *DriverTestSuite) TestProcessL1Blocks() {
 		anchorTx, err := s.d.rpc.L2.TransactionInBlock(context.Background(), header.Hash(), 0)
 		s.Nil(err)
 
-		method, err := encoding.TaikoL2ABI.MethodById(anchorTx.Data())
+		method, err := encoding.MxcL2ABI.MethodById(anchorTx.Data())
 		s.Nil(err)
 		s.Equal("anchor", method.Name)
 	}

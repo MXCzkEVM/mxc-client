@@ -6,21 +6,21 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/MXCzkEVM/mxc-client/bindings"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/ethclient/gethclient"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rpc"
-	"github.com/taikoxyz/taiko-client/bindings"
 )
 
-// GetProtocolStateVariables gets the protocol states from TaikoL1 contract.
+// GetProtocolStateVariables gets the protocol states from MxcL1 contract.
 func GetProtocolStateVariables(
-	taikoL1Client *bindings.TaikoL1Client,
+	mxcL1Client *bindings.MxcL1Client,
 	opts *bind.CallOpts,
-) (*bindings.TaikoDataStateVariables, error) {
-	stateVars, err := taikoL1Client.GetStateVariables(opts)
+) (*bindings.MxcDataStateVariables, error) {
+	stateVars, err := mxcL1Client.GetStateVariables(opts)
 	if err != nil {
 		return nil, err
 	}

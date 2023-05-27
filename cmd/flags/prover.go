@@ -21,7 +21,7 @@ var (
 	L1ProverPrivKey = &cli.StringFlag{
 		Name: "l1.proverPrivKey",
 		Usage: "Private key of L1 prover, " +
-			"who will send TaikoL1.proveBlock / TaikoL1.proveBlockInvalid transactions",
+			"who will send MxcL1.proveBlock / MxcL1.proveBlockInvalid transactions",
 		Required: true,
 		Category: proverCategory,
 	}
