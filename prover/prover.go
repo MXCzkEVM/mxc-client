@@ -94,10 +94,11 @@ func InitFromConfig(ctx context.Context, p *Prover, cfg *Config) (err error) {
 
 	// Clients
 	if p.rpc, err = rpc.NewClient(p.ctx, &rpc.ClientConfig{
-		L1Endpoint:   cfg.L1WsEndpoint,
-		L2Endpoint:   cfg.L2WsEndpoint,
-		MxcL1Address: cfg.MxcL1Address,
-		MxcL2Address: cfg.MxcL2Address,
+		L1Endpoint:     cfg.L1WsEndpoint,
+		L1HTTPEndpoint: cfg.L1HttpEndpoint,
+		L2Endpoint:     cfg.L2WsEndpoint,
+		MxcL1Address:   cfg.MxcL1Address,
+		MxcL2Address:   cfg.MxcL2Address,
 	}); err != nil {
 		return err
 	}
@@ -227,7 +228,7 @@ func (p *Prover) Start() error {
 	return nil
 }
 
-// eventLoop starts the main loop of Taiko prover.
+// eventLoop starts the main loop of Mxc prover.
 func (p *Prover) eventLoop() {
 	defer func() {
 		p.wg.Done()
@@ -242,7 +243,7 @@ func (p *Prover) eventLoop() {
 		}
 	}
 
-	// If there is too many (TaikoData.Config.maxNumBlocks) pending blocks in MxcL1 contract, there will be no new
+	// If there is too many (MxcData.Config.maxNumBlocks) pending blocks in MxcL1 contract, there will be no new
 	// BlockProposed temporarily, so except the BlockProposed subscription, we need another trigger to start
 	// fetching the proposed blocks.
 	forceProvingTicker := time.NewTicker(15 * time.Second)

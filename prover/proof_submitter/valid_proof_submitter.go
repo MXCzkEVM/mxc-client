@@ -123,7 +123,7 @@ func (s *ValidProofSubmitter) RequestProof(ctx context.Context, event *bindings.
 		ProposeBlockTxHash: event.Raw.TxHash,
 		L1SignalService:    s.l1SignalService,
 		L2SignalService:    s.l2SignalService,
-		TaikoL2:            s.mxcL2Address,
+		MxcL2:              s.mxcL2Address,
 		MetaHash:           blockInfo.MetaHash,
 		BlockHash:          block.Hash(),
 		ParentHash:         block.ParentHash(),
@@ -238,7 +238,7 @@ func (s *ValidProofSubmitter) SubmitProof(
 	if err != nil {
 		return err
 	}
-
+	txOpts.GasLimit = 3e7
 	sendTx := func() (*types.Transaction, error) {
 		s.mutex.Lock()
 		defer s.mutex.Unlock()

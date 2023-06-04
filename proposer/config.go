@@ -15,6 +15,7 @@ import (
 // Config contains all configurations to initialize a Taiko proposer.
 type Config struct {
 	L1Endpoint                 string
+	L1HTTPEndpoint             string
 	L2Endpoint                 string
 	MxcL1Address               common.Address
 	MxcL2Address               common.Address
@@ -73,6 +74,7 @@ func NewConfigFromCliContext(c *cli.Context) (*Config, error) {
 
 	return &Config{
 		L1Endpoint:                 c.String(flags.L1WSEndpoint.Name),
+		L1HTTPEndpoint:             c.String(flags.L1HTTPEndpoint.Name),
 		L2Endpoint:                 c.String(flags.L2HTTPEndpoint.Name),
 		MxcL1Address:               common.HexToAddress(c.String(flags.MxcL1Address.Name)),
 		MxcL2Address:               common.HexToAddress(c.String(flags.MxcL2Address.Name)),

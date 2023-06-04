@@ -26,7 +26,7 @@ type ProofRequestOptions struct {
 	ProposeBlockTxHash common.Hash
 	L1SignalService    common.Address
 	L2SignalService    common.Address
-	TaikoL2            common.Address
+	MxcL2              common.Address
 	MetaHash           common.Hash
 	BlockHash          common.Hash
 	ParentHash         common.Hash

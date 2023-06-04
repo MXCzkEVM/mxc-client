@@ -363,13 +363,15 @@ func (s *Syncer) insertNewHead(
 		return nil, nil, err
 	}
 
+	// CHANGE(MXC): Get BaseFee from meta
 	// Get L2 baseFee
-	baseFee, err := s.rpc.MxcL2.GetBasefee(
-		&bind.CallOpts{BlockNumber: parent.Number},
-		uint32(event.Meta.Timestamp-parentTimestamp),
-		uint64(event.Meta.GasLimit+uint32(s.anchorConstructor.GasLimit())),
-		parent.GasUsed,
-	)
+	//baseFee, err := s.rpc.MxcL2.GetBasefee(
+	//	&bind.CallOpts{BlockNumber: parent.Number},
+	//	uint32(event.Meta.Timestamp-parentTimestamp),
+	//	uint64(event.Meta.GasLimit+uint32(s.anchorConstructor.GasLimit())),
+	//	parent.GasUsed,
+	//)
+	baseFee := event.Meta.BaseFee
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get L2 baseFee: %w", encoding.TryParsingCustomError(err))
 	}
@@ -463,7 +465,7 @@ func (s *Syncer) createExecutionPayloads(
 			Timestamp:      event.Meta.Timestamp,
 			TxList:         txListBytes,
 			MixHash:        event.Meta.MixHash,
-			ExtraData:      []byte{},
+			ExtraData:      event.Meta.BlockReward.Bytes(),
 		},
 		BaseFeePerGas: baseFeee,
 		L1Origin:      l1Origin,

@@ -38,6 +38,7 @@ type Client struct {
 // won't be initialized.
 type ClientConfig struct {
 	L1Endpoint       string
+	L1HTTPEndpoint   string
 	L2Endpoint       string
 	L2CheckPoint     string
 	MxcL1Address     common.Address
@@ -56,6 +57,17 @@ func NewClient(ctx context.Context, cfg *ClientConfig) (*Client, error) {
 	mxcL1, err := bindings.NewMxcL1Client(cfg.MxcL1Address, l1RPC)
 	if err != nil {
 		return nil, err
+	}
+	if cfg.L1HTTPEndpoint != "" {
+		l1HTTPRPC, err := DialClientWithBackoff(ctx, cfg.L1HTTPEndpoint)
+		if err != nil {
+			return nil, err
+		}
+		mxcL1ClientTransactor, err := bindings.NewMxcL1ClientTransactor(cfg.MxcL1Address, l1HTTPRPC)
+		if err != nil {
+			return nil, err
+		}
+		mxcL1.MxcL1ClientTransactor = *mxcL1ClientTransactor
 	}
 
 	l2RPC, err := DialClientWithBackoff(ctx, cfg.L2Endpoint)

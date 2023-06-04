@@ -42,7 +42,7 @@ type Proposer struct {
 	// Proposing configurations
 	proposingInterval          *time.Duration
 	proposeEmptyBlocksInterval *time.Duration
-	proposingTimer             *time.Timer
+	proposingTimer             *time.Ticker
 	commitSlot                 uint64
 	locals                     []common.Address
 	minBlockGasLimit           *uint64
@@ -82,10 +82,11 @@ func InitFromConfig(ctx context.Context, p *Proposer, cfg *Config) (err error) {
 
 	// RPC clients
 	if p.rpc, err = rpc.NewClient(p.ctx, &rpc.ClientConfig{
-		L1Endpoint:   cfg.L1Endpoint,
-		L2Endpoint:   cfg.L2Endpoint,
-		MxcL1Address: cfg.MxcL1Address,
-		MxcL2Address: cfg.MxcL2Address,
+		L1Endpoint:     cfg.L1Endpoint,
+		L1HTTPEndpoint: cfg.L1HTTPEndpoint,
+		L2Endpoint:     cfg.L2Endpoint,
+		MxcL1Address:   cfg.MxcL1Address,
+		MxcL2Address:   cfg.MxcL2Address,
 	}); err != nil {
 		return fmt.Errorf("initialize rpc clients error: %w", err)
 	}
@@ -126,11 +127,9 @@ func (p *Proposer) eventLoop() {
 		p.proposingTimer.Stop()
 		p.wg.Done()
 	}()
-
 	var lastNonEmptyBlockProposedAt = time.Now()
+	p.updateProposingTicker()
 	for {
-		p.updateProposingTicker()
-
 		select {
 		case <-p.ctx.Done():
 			return
@@ -176,10 +175,10 @@ func (p *Proposer) ProposeOp(ctx context.Context) error {
 		return p.CustomProposeOpHook()
 	}
 
-	log.Info("Comparing proposer TKO balance to block fee", "proposer", p.l1ProposerAddress.Hex())
+	log.Info("Comparing proposer MXC balance to block fee", "proposer", p.l1ProposerAddress.Hex())
 
 	if err := p.checkMxcTokenBalance(); err != nil {
-		return fmt.Errorf("failed to check Taiko token balance: %w", err)
+		return fmt.Errorf("failed to check MXC token balance: %w", err)
 	}
 
 	// Wait until L2 execution engine is synced at first.
@@ -264,7 +263,7 @@ func (p *Proposer) ProposeTxList(
 		return err
 	}
 
-	log.Info("📝 Propose transactions succeeded", "txs", txNum)
+	log.Info("📝 Propose transactions succeeded", "txs", txNum, "hash", proposeTx.Hash().String())
 
 	metrics.ProposerProposedTxListsCounter.Inc(1)
 	metrics.ProposerProposedTxsCounter.Inc(int64(txNum))
@@ -299,7 +298,7 @@ func (p *Proposer) updateProposingTicker() {
 		duration = time.Duration(randomSeconds) * time.Second
 	}
 
-	p.proposingTimer = time.NewTimer(duration)
+	p.proposingTimer = time.NewTicker(duration)
 }
 
 // Name returns the application name.
@@ -363,11 +362,11 @@ func (p *Proposer) checkMxcTokenBalance() error {
 
 	balance, err := p.rpc.MxcL1.GetMxcTokenBalance(nil, p.l1ProposerAddress)
 	if err != nil {
-		return fmt.Errorf("failed to get tko balance: %w", err)
+		return fmt.Errorf("failed to mxc tko balance: %w", err)
 	}
 
 	if balance.Cmp(new(big.Int).SetUint64(fee)) == -1 {
-		return fmt.Errorf("proposer does not have enough tko balance to propose, balance: %d, fee: %d", balance, fee)
+		return fmt.Errorf("proposer does not have enough mxc balance to propose, balance: %d, fee: %d", balance, fee)
 	}
 
 	return nil

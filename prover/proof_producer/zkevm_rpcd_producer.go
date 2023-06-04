@@ -55,7 +55,7 @@ type RequestProofBodyParam struct {
 	Prover                  string   `json:"prover"`
 	L1SignalService         string   `json:"l1_signal_service"`
 	L2SignalService         string   `json:"l2_signal_service"`
-	TaikoL2                 string   `json:"l2_contract"`
+	MxcL2                   string   `json:"l2_contract"`
 	MetaHash                string   `json:"meta_hash"`
 	BlockHash               string   `json:"block_hash"`
 	ParentHash              string   `json:"parent_hash"`
@@ -220,7 +220,7 @@ func (p *ZkevmRpcdProducer) requestProof(opts *ProofRequestOptions) (*RpcdOutput
 			Prover:                  opts.ProverAddress.Hex()[2:],
 			L1SignalService:         opts.L1SignalService.Hex()[2:],
 			L2SignalService:         opts.L2SignalService.Hex()[2:],
-			TaikoL2:                 opts.TaikoL2.Hex()[2:],
+			MxcL2:                   opts.MxcL2.Hex()[2:],
 			MetaHash:                opts.MetaHash.Hex()[2:],
 			BlockHash:               opts.BlockHash.Hex()[2:],
 			ParentHash:              opts.ParentHash.Hex()[2:],

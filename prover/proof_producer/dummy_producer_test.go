@@ -39,7 +39,7 @@ func TestRequestProof(t *testing.T) {
 		context.Background(),
 		&ProofRequestOptions{},
 		blockID,
-		&bindings.TaikoDataBlockMetadata{},
+		&bindings.MxcDataBlockMetadata{},
 		header,
 		resCh,
 	))

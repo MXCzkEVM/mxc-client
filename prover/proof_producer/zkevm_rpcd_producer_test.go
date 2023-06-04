@@ -21,7 +21,7 @@ func TestNewZkevmRpcdProducer(t *testing.T) {
 		"",
 		false,
 		proofTimeTarget,
-		&bindings.TaikoDataConfig{},
+		&bindings.MxcDataConfig{},
 	)
 	require.Nil(t, err)
 
@@ -54,7 +54,7 @@ func TestNewZkevmRpcdProducer(t *testing.T) {
 		context.Background(),
 		&ProofRequestOptions{},
 		blockID,
-		&bindings.TaikoDataBlockMetadata{},
+		&bindings.MxcDataBlockMetadata{},
 		header,
 		resCh,
 	))

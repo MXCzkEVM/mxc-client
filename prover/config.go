@@ -13,7 +13,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-// Config contains the configurations to initialize a Taiko prover.
+// Config contains the configurations to initialize a Mxc prover.
 type Config struct {
 	L1WsEndpoint                    string
 	L1HttpEndpoint                  string

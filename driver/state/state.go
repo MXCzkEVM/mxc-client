@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/big"
 	"sync/atomic"
+	"time"
 
 	"github.com/MXCzkEVM/mxc-client/bindings"
 	"github.com/MXCzkEVM/mxc-client/metrics"
@@ -152,7 +153,7 @@ func (s *State) init(ctx context.Context) error {
 
 // startSubscriptions initializes all subscriptions in the given state instance.
 func (s *State) startSubscriptions(ctx context.Context) {
-	s.l1HeadSub = rpc.SubscribeChainHead(s.rpc.L1, s.l1HeadCh)
+	//s.l1HeadSub = rpc.SubscribeChainHead(s.rpc.L1, s.l1HeadCh)
 	s.l2HeadSub = rpc.SubscribeChainHead(s.rpc.L2, s.l2HeadCh)
 	s.l2HeaderSyncedSub = rpc.SubscribeXchainSynced(s.rpc.MxcL1, s.crossChainSynced)
 	s.l2BlockVerifiedSub = rpc.SubscribeBlockVerified(s.rpc.MxcL1, s.blockVerifiedCh)
@@ -160,6 +161,8 @@ func (s *State) startSubscriptions(ctx context.Context) {
 	s.l2BlockProvenSub = rpc.SubscribeBlockProven(s.rpc.MxcL1, s.blockProvenCh)
 
 	go func() {
+		l1HeadTicker := time.NewTicker(time.Millisecond * 1500)
+
 		for {
 			select {
 			case <-ctx.Done():
@@ -193,9 +196,17 @@ func (s *State) startSubscriptions(ctx context.Context) {
 					continue
 				}
 				s.setLatestVerifiedBlockHash(id, e.SrcHeight, e.BlockHash)
-			case newHead := <-s.l1HeadCh:
+			case <-l1HeadTicker.C:
+				newHead, err := s.rpc.L1.HeaderByNumber(ctx, nil)
+				if err != nil {
+					log.Error("Get L1 head error", "error", err)
+				}
+				log.Info("L1 head ticker", "height", newHead.Number, "current", s.GetL1Current().Number)
 				s.setL1Head(newHead)
 				s.l1HeadsFeed.Send(newHead)
+			//case newHead := <-s.l1HeadCh:
+			//	s.setL1Head(newHead)
+			//	s.l1HeadsFeed.Send(newHead)
 			case newHead := <-s.l2HeadCh:
 				s.setL2Head(newHead)
 			}
