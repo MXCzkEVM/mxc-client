@@ -25,7 +25,7 @@ var (
 	errSyncing = errors.New("syncing")
 	// syncProgressRecheckDelay is the time delay of rechecking the L2 execution engine's sync progress again,
 	// if the previous check failed.
-	syncProgressRecheckDelay = 12 * time.Second
+	syncProgressRecheckDelay = time.Second
 	minTxGasLimit            = 21000
 )
 
