@@ -232,6 +232,8 @@ func (p *Prover) Start() error {
 func (p *Prover) eventLoop() {
 	defer func() {
 		p.wg.Done()
+		log.Info("Prover event loop stopped")
+		panic("prover event should not stopped")
 	}()
 
 	// reqProving requests performing a proving operation, won't block
@@ -257,6 +259,18 @@ func (p *Prover) eventLoop() {
 		case <-p.ctx.Done():
 			return
 		case proofWithHeader := <-p.proveValidProofCh:
+			// check if current proving block more new too much than the latest block
+			if proofWithHeader.Header.Number.Uint64() > p.latestVerifiedL1Height+500 {
+				stateVars, err := p.rpc.GetProtocolStateVariables(nil)
+				if err != nil {
+					log.Error("GetProtocolStateVariables Error")
+					return
+				}
+				if proofWithHeader.Header.Number.Uint64() > stateVars.LastVerifiedBlockId+500 {
+					log.Error("current proving block too much newer than latest block", "latest verified height", stateVars.LastVerifiedBlockId, "proving", proofWithHeader.Header.Number.Uint64())
+					return
+				}
+			}
 			p.submitProofOp(p.ctx, proofWithHeader, true)
 		case proofWithHeader := <-p.proveInvalidProofCh:
 			p.submitProofOp(p.ctx, proofWithHeader, false)
