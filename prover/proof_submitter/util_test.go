@@ -3,11 +3,11 @@ package submitter
 import (
 	"context"
 	"errors"
+	"github.com/MXCzkEVM/mxc-client/bindings"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/taikoxyz/taiko-client/bindings"
 )
 
 func (s *ProofSubmitterTestSuite) TestIsSubmitProofTxErrorRetryable() {
@@ -30,7 +30,7 @@ func (s *ProofSubmitterTestSuite) TestGetProveBlocksTxOpts() {
 func (s *ProofSubmitterTestSuite) TestSendTxWithBackoff() {
 	l1Head, err := s.RpcClient.L1.HeaderByNumber(context.Background(), nil)
 	s.Nil(err)
-	meta := &bindings.TaikoDataBlockMetadata{L1Height: l1Head.Number.Uint64(), L1Hash: l1Head.Hash()}
+	meta := &bindings.MxcDataBlockMetadata{L1Height: l1Head.Number.Uint64(), L1Hash: l1Head.Hash()}
 	s.NotNil(sendTxWithBackoff(
 		context.Background(),
 		s.RpcClient,
