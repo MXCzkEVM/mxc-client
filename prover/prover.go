@@ -5,7 +5,6 @@ import (
 	"crypto/ecdsa"
 	"fmt"
 	"math/big"
-	"strings"
 	"sync"
 	"time"
 
@@ -18,7 +17,6 @@ import (
 	proofProducer "github.com/MXCzkEVM/mxc-client/prover/proof_producer"
 	proofSubmitter "github.com/MXCzkEVM/mxc-client/prover/proof_submitter"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/log"
@@ -46,6 +44,7 @@ type Prover struct {
 	latestVerifiedL1Height uint64
 	lastHandledBlockID     uint64
 	l1Current              uint64
+	reorgDetectedFlag      bool
 
 	// Proof submitters
 	validProofSubmitter proofSubmitter.ProofSubmitter
@@ -155,12 +154,6 @@ func InitFromConfig(ctx context.Context, p *Prover, cfg *Config) (err error) {
 	isSystemProver := cfg.SystemProver
 	isOracleProver := cfg.OracleProver
 
-	stateVars, err := p.rpc.GetProtocolStateVariables(nil)
-	if err != nil {
-		log.Error("error retrieving protocol state variables", "error", err)
-		return
-	}
-
 	if isSystemProver || isOracleProver {
 		var specialProverAddress common.Address
 		var privateKey *ecdsa.PrivateKey
@@ -194,7 +187,6 @@ func InitFromConfig(ctx context.Context, p *Prover, cfg *Config) (err error) {
 			cfg.L1HttpEndpoint,
 			cfg.L2HttpEndpoint,
 			true,
-			stateVars.ProofTimeTarget,
 			p.protocolConfigs,
 		); err != nil {
 			return err
@@ -212,6 +204,7 @@ func InitFromConfig(ctx context.Context, p *Prover, cfg *Config) (err error) {
 		p.cfg.OracleProver,
 		p.cfg.SystemProver,
 		p.cfg.Graffiti,
+		p.cfg.ExpectedReward,
 	); err != nil {
 		return err
 	}
@@ -303,17 +296,27 @@ func (p *Prover) Close() {
 // proveOp performs a proving operation, find current unproven blocks, then
 // request generating proofs for them.
 func (p *Prover) proveOp() error {
-	iter, err := eventIterator.NewBlockProposedIterator(p.ctx, &eventIterator.BlockProposedIteratorConfig{
-		Client:               p.rpc.L1,
-		MxcL1:                p.rpc.MxcL1,
-		StartHeight:          new(big.Int).SetUint64(p.l1Current),
-		OnBlockProposedEvent: p.onBlockProposed,
-	})
-	if err != nil {
-		return err
+	firstTry := true
+	for firstTry || p.reorgDetectedFlag {
+		p.reorgDetectedFlag = false
+		firstTry = false
+
+		iter, err := eventIterator.NewBlockProposedIterator(p.ctx, &eventIterator.BlockProposedIteratorConfig{
+			Client:               p.rpc.L1,
+			MxcL1:              p.rpc.MxcL1,
+			StartHeight:          new(big.Int).SetUint64(p.l1Current),
+			OnBlockProposedEvent: p.onBlockProposed,
+		})
+		if err != nil {
+			return err
+		}
+
+		if err := iter.Iter(); err != nil {
+			return err
+		}
 	}
 
-	return iter.Iter()
+	return nil
 }
 
 // onBlockProposed tries to prove that the newly proposed block is valid/invalid.
@@ -327,6 +330,31 @@ func (p *Prover) onBlockProposed(
 		end()
 		return nil
 	}
+
+	// Check whteher the L1 chain has been reorged.
+	reorged, l1CurrentToReset, lastHandledBlockIDToReset, err := p.rpc.CheckL1Reorg(
+		ctx,
+		new(big.Int).Sub(event.Id, common.Big1),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to check whether L1 chain was reorged: %w", err)
+	}
+
+	if reorged {
+		log.Info(
+			"Reset L1Current cursor due to reorg",
+			"l1CurrentHeightOld", p.l1Current,
+			"l1CurrentHeightNew", l1CurrentToReset.Number,
+			"lastHandledBlockIDOld", p.lastHandledBlockID,
+			"lastHandledBlockIDNew", lastHandledBlockIDToReset,
+		)
+		p.l1Current = l1CurrentToReset.Number.Uint64()
+		p.lastHandledBlockID = lastHandledBlockIDToReset.Uint64()
+		p.reorgDetectedFlag = true
+
+		return nil
+	}
+
 	if event.Id.Uint64() <= p.lastHandledBlockID {
 		return nil
 	}
@@ -347,13 +375,28 @@ func (p *Prover) onBlockProposed(
 			return nil
 		}
 
-		needNewProof, err := p.NeedNewProof(event.Id)
-		if err != nil {
-			return fmt.Errorf("failed to check whether the L2 block needs a new proof: %w", err)
+		// Check whether the block's proof is still needed.
+		if !p.cfg.OracleProver && !p.cfg.SystemProver {
+			needNewProof, err := rpc.NeedNewProof(
+				p.ctx,
+				p.rpc,
+				event.Id,
+				p.proverAddress,
+				p.protocolConfigs.RealProofSkipSize,
+			)
+			if err != nil {
+				return fmt.Errorf("failed to check whether the L2 block needs a new proof: %w", err)
+			}
+
+			if !needNewProof {
+				return nil
+			}
 		}
 
-		if !needNewProof {
-			return nil
+		// Check if the current prover has seen this block ID before, there was probably
+		// a L1 reorg, we need to cancel that reorged block's proof generation task at first.
+		if p.currentBlocksBeingProven[event.Meta.Id] != nil {
+			p.cancelProof(ctx, event.Meta.Id)
 		}
 
 		ctx, cancelCtx := context.WithCancel(ctx)
@@ -426,11 +469,11 @@ func (p *Prover) onBlockVerified(ctx context.Context, event *bindings.MxcL1Clien
 // and the proof is not the oracle proof address.
 func (p *Prover) onBlockProven(ctx context.Context, event *bindings.MxcL1ClientBlockProven) error {
 	metrics.ProverReceivedProvenBlockGauge.Update(event.Id.Int64())
-	// if this proof is submitted by an oracle prover or a system prover, dont cancel proof.
+	// if this proof is submitted by an oracle prover or a system prover, don't cancel proof.
 	if event.Prover == p.oracleProverAddress ||
 		event.Prover == p.systemProverAddress ||
-		event.Prover == common.HexToAddress("0x0000000000000000000000000000000000000000") ||
-		event.Prover == common.HexToAddress("0x0000000000000000000000000000000000000001") {
+		event.Prover == encoding.SystemProverAddress ||
+		event.Prover == encoding.OracleProverAddress {
 		return nil
 	}
 
@@ -486,57 +529,6 @@ func (p *Prover) isBlockVerified(id *big.Int) (bool, error) {
 	return id.Uint64() <= stateVars.LastVerifiedBlockId, nil
 }
 
-// NeedNewProof checks whether the L2 block still needs a new proof.
-func (p *Prover) NeedNewProof(id *big.Int) (bool, error) {
-	if !p.cfg.OracleProver && !p.cfg.SystemProver {
-		conf, err := p.rpc.MxcL1.GetConfig(nil)
-		if err != nil {
-			return false, err
-		}
-
-		if id.Uint64()%conf.RealProofSkipSize.Uint64() != 0 {
-			log.Info(
-				"Skipping valid block proof",
-				"blockID", id.Uint64(),
-				"skipSize", conf.RealProofSkipSize.Uint64(),
-			)
-
-			return false, nil
-		}
-	}
-
-	var parent *types.Header
-	if id.Cmp(common.Big1) == 0 {
-		header, err := p.rpc.L2.HeaderByNumber(p.ctx, common.Big0)
-		if err != nil {
-			return false, err
-		}
-
-		parent = header
-	} else {
-		parentL1Origin, err := p.rpc.WaitL1Origin(p.ctx, new(big.Int).Sub(id, common.Big1))
-		if err != nil {
-			return false, err
-		}
-
-		if parent, err = p.rpc.L2.HeaderByHash(p.ctx, parentL1Origin.L2BlockHash); err != nil {
-			return false, err
-		}
-	}
-
-	fc, err := p.rpc.MxcL1.GetForkChoice(nil, id, parent.Hash(), uint32(parent.GasUsed))
-	if err != nil && !strings.Contains(encoding.TryParsingCustomError(err).Error(), "L1_FORK_CHOICE_NOT_FOUND") {
-		return false, encoding.TryParsingCustomError(err)
-	}
-
-	if p.proverAddress == fc.Prover {
-		log.Info("📬 Block's proof has already been submitted by current prover", "blockID", id)
-		return false, nil
-	}
-
-	return true, nil
-}
-
 // initSubscription initializes all subscriptions in current prover instance.
 func (p *Prover) initSubscription() {
 	p.blockProposedSub = rpc.SubscribeBlockProposed(p.rpc.MxcL1, p.blockProposedCh)
@@ -578,6 +570,5 @@ func (p *Prover) cancelProof(ctx context.Context, blockID uint64) {
 	if cancel, ok := p.currentBlocksBeingProven[blockID]; ok {
 		cancel()
 		delete(p.currentBlocksBeingProven, blockID)
-		log.Info("Cancelled proof for ", "blockID", blockID)
 	}
 }

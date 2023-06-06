@@ -10,7 +10,7 @@ require (
 	github.com/prysmaticlabs/prysm/v4 v4.0.1
 	github.com/stretchr/testify v1.8.1
 	github.com/urfave/cli/v2 v2.23.7
-	golang.org/x/sync v0.1.0
+	golang.org/x/sync v0.2.0
 )
 
 require (
@@ -81,4 +81,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/ethereum/go-ethereum v1.11.5 => github.com/MXCzkEVM/mxc-geth v0.0.0-20230527002201-555d6295f8e7
+replace github.com/ethereum/go-ethereum v1.11.5 => github.com/MXCzkEVM/mxc-geth v0.0.0-20230606094725-4599316e16f8

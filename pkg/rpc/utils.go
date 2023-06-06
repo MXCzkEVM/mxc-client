@@ -3,11 +3,14 @@ package rpc
 import (
 	"context"
 	"fmt"
+	"github.com/MXCzkEVM/mxc-client/bindings/encoding"
 	"math/big"
+	"strings"
 	"time"
 
 	"github.com/MXCzkEVM/mxc-client/bindings"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/ethclient/gethclient"
@@ -106,6 +109,71 @@ func GetReceiptsByBlock(ctx context.Context, cli *rpc.Client, block *types.Block
 	}
 
 	return receipts, nil
+}
+
+// NeedNewProof checks whether the L2 block still needs a new proof.
+func NeedNewProof(
+	ctx context.Context,
+	cli *Client,
+	id *big.Int,
+	proverAddress common.Address,
+	realProofSkipSize *big.Int,
+) (bool, error) {
+	if realProofSkipSize != nil && id.Uint64()%realProofSkipSize.Uint64() != 0 {
+		log.Info(
+			"Skipping valid block proof",
+			"blockID", id.Uint64(),
+			"skipSize", realProofSkipSize.Uint64(),
+		)
+
+		return false, nil
+	}
+
+	var parent *types.Header
+	if id.Cmp(common.Big1) == 0 {
+		header, err := cli.L2.HeaderByNumber(ctx, common.Big0)
+		if err != nil {
+			return false, err
+		}
+
+		parent = header
+	} else {
+		parentL1Origin, err := cli.WaitL1Origin(ctx, new(big.Int).Sub(id, common.Big1))
+		if err != nil {
+			return false, err
+		}
+
+		if parent, err = cli.L2.HeaderByHash(ctx, parentL1Origin.L2BlockHash); err != nil {
+			return false, err
+		}
+	}
+
+	fc, err := cli.MxcL1.GetForkChoice(nil, id, parent.Hash(), uint32(parent.GasUsed))
+	if err != nil {
+		if !strings.Contains(encoding.TryParsingCustomError(err).Error(), "L1_FORK_CHOICE_NOT_FOUND") {
+			return false, encoding.TryParsingCustomError(err)
+		}
+
+		return true, nil
+	}
+
+	if fc.Prover == encoding.OracleProverAddress || fc.Prover == encoding.SystemProverAddress {
+		return true, nil
+	}
+
+	if proverAddress == fc.Prover {
+		log.Info("📬 Block's proof has already been submitted by current prover", "blockID", id)
+		return false, nil
+	}
+
+	log.Info(
+		"📬 Block's proof has already been submitted by another prover",
+		"blockID", id,
+		"prover", fc.Prover,
+		"provenAt", fc.ProvenAt,
+	)
+
+	return false, nil
 }
 
 // SetHead makes a `debug_setHead` RPC call to set the chain's head, should only be used

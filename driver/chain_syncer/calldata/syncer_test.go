@@ -15,7 +15,6 @@ import (
 	"github.com/MXCzkEVM/mxc-client/testutils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/rawdb"
-	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/suite"
 )
@@ -47,13 +46,14 @@ func (s *CalldataSyncerTestSuite) SetupTest() {
 	s.Nil(err)
 	proposeInterval := 1024 * time.Hour // No need to periodically propose transactions list in unit tests
 	s.Nil(proposer.InitFromConfig(context.Background(), prop, (&proposer.Config{
-		L1Endpoint:              os.Getenv("L1_NODE_WS_ENDPOINT"),
-		L2Endpoint:              os.Getenv("L2_EXECUTION_ENGINE_WS_ENDPOINT"),
-		MxcL1Address:            common.HexToAddress(os.Getenv("MXC_L1_ADDRESS")),
-		MxcL2Address:            common.HexToAddress(os.Getenv("MXC_L2_ADDRESS")),
-		L1ProposerPrivKey:       l1ProposerPrivKey,
-		L2SuggestedFeeRecipient: common.HexToAddress(os.Getenv("L2_SUGGESTED_FEE_RECIPIENT")),
-		ProposeInterval:         &proposeInterval,
+		L1Endpoint:                 os.Getenv("L1_NODE_WS_ENDPOINT"),
+		L2Endpoint:                 os.Getenv("L2_EXECUTION_ENGINE_WS_ENDPOINT"),
+		MxcL1Address:             common.HexToAddress(os.Getenv("MXC_L1_ADDRESS")),
+		MxcL2Address:             common.HexToAddress(os.Getenv("MXC_L2_ADDRESS")),
+		L1ProposerPrivKey:          l1ProposerPrivKey,
+		L2SuggestedFeeRecipient:    common.HexToAddress(os.Getenv("L2_SUGGESTED_FEE_RECIPIENT")),
+		ProposeInterval:            &proposeInterval,
+		MaxProposedTxListsPerEpoch: 1,
 	})))
 
 	s.p = prop
@@ -75,7 +75,7 @@ func (s *CalldataSyncerTestSuite) TestInsertNewHead() {
 	s.Nil(err)
 	l1Head, err := s.s.rpc.L1.BlockByNumber(context.Background(), nil)
 	s.Nil(err)
-	_, rpcErr, payloadErr := s.s.insertNewHead(
+	_, err = s.s.insertNewHead(
 		context.Background(),
 		&bindings.MxcL1ClientBlockProposed{
 			Id: common.Big1,
@@ -99,52 +99,7 @@ func (s *CalldataSyncerTestSuite) TestInsertNewHead() {
 			L1BlockHash:   testutils.RandomHash(),
 		},
 	)
-	s.Nil(rpcErr)
-	s.Nil(payloadErr)
-}
-
-func (s *CalldataSyncerTestSuite) TestHandleReorgToGenesis() {
-	testutils.ProposeAndInsertEmptyBlocks(&s.ClientTestSuite, s.p, s.s)
-
-	l2Head1, err := s.s.rpc.L2.BlockByNumber(context.Background(), nil)
 	s.Nil(err)
-	s.Greater(l2Head1.NumberU64(), uint64(0))
-	s.NotZero(s.s.lastInsertedBlockID.Uint64())
-	s.s.lastInsertedBlockID = common.Big0 // let the chain reorg to genesis
-
-	s.Nil(s.s.handleReorg(context.Background(), &bindings.MxcL1ClientBlockProposed{
-		Id:  l2Head1.Number(),
-		Raw: types.Log{Removed: true},
-	}))
-
-	l2Head2, err := s.s.rpc.L2.BlockByNumber(context.Background(), nil)
-	s.Nil(err)
-	s.Equal(uint64(0), l2Head2.NumberU64())
-}
-
-func (s *CalldataSyncerTestSuite) TestHandleReorgToNoneGenesis() {
-	testutils.ProposeAndInsertEmptyBlocks(&s.ClientTestSuite, s.p, s.s)
-
-	l2Head1, err := s.s.rpc.L2.BlockByNumber(context.Background(), nil)
-	s.Nil(err)
-	s.Greater(l2Head1.NumberU64(), uint64(0))
-	s.NotZero(s.s.lastInsertedBlockID.Uint64())
-	s.s.lastInsertedBlockID = common.Big1 // let the chain reorg to height 1
-
-	s.Nil(s.s.handleReorg(context.Background(), &bindings.MxcL1ClientBlockProposed{
-		Id:  l2Head1.Number(),
-		Raw: types.Log{Removed: true},
-	}))
-
-	l2Head2, err := s.s.rpc.L2.BlockByNumber(context.Background(), nil)
-	s.Nil(err)
-	s.Equal(uint64(1), l2Head2.NumberU64())
-
-	testutils.ProposeAndInsertEmptyBlocks(&s.ClientTestSuite, s.p, s.s)
-	l2Head3, err := s.s.rpc.L2.BlockByNumber(context.Background(), nil)
-	s.Nil(err)
-	s.Greater(l2Head3.NumberU64(), l2Head2.NumberU64())
-	s.Greater(s.s.lastInsertedBlockID.Uint64(), uint64(1))
 }
 
 func (s *CalldataSyncerTestSuite) TestTreasuryIncomeAllAnchors() {

@@ -8,6 +8,11 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 )
 
+var (
+	OracleProverAddress = common.HexToAddress("0x0000000000000000000000000000000000000000")
+	SystemProverAddress = common.HexToAddress("0x0000000000000000000000000000000000000001")
+)
+
 type BlockHeader struct {
 	ParentHash       [32]byte
 	OmmersHash       [32]byte
@@ -101,9 +106,9 @@ func ToGethHeader(header *BlockHeader) *types.Header {
 	}
 }
 
-// ToExecutableDataV1 converts a GETH *types.Header to *beacon.ExecutableDataV1.
-func ToExecutableDataV1(header *types.Header) *engine.ExecutableData {
-	return &engine.ExecutableData{
+// ToExecutableData converts a GETH *types.Header to *engine.ExecutableData.
+func ToExecutableData(header *types.Header) *engine.ExecutableData {
+	executableData := &engine.ExecutableData{
 		ParentHash:    header.ParentHash,
 		FeeRecipient:  header.Coinbase,
 		StateRoot:     header.Root,
@@ -119,6 +124,12 @@ func ToExecutableDataV1(header *types.Header) *engine.ExecutableData {
 		BlockHash:     header.Hash(),
 		TxHash:        header.TxHash,
 	}
+
+	if header.WithdrawalsHash != nil {
+		executableData.WithdrawalsHash = *header.WithdrawalsHash
+	}
+
+	return executableData
 }
 
 // BloomToBytes converts a types.Bloom to [8][32]byte slice.
