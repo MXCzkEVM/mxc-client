@@ -327,7 +327,7 @@ func (c *Client) CheckL1Reorg(ctx context.Context, blockID *big.Int) (bool, *typ
 	)
 	for {
 		if blockID.Cmp(common.Big0) == 0 {
-			stateVars, err := c.TaikoL1.GetStateVariables(nil)
+			stateVars, err := c.MxcL1.GetStateVariables(nil)
 			if err != nil {
 				return false, nil, nil, err
 			}

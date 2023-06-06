@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/MXCzkEVM/mxc-client/bindings"
-	"github.com/MXCzkEVM/mxc-client/bindings/encoding"
 	anchorTxConstructor "github.com/MXCzkEVM/mxc-client/driver/anchor_tx_constructor"
 	"github.com/MXCzkEVM/mxc-client/driver/chain_syncer/beaconsync"
 	"github.com/MXCzkEVM/mxc-client/driver/state"
@@ -83,7 +82,7 @@ func (s *Syncer) ProcessL1Blocks(ctx context.Context, l1End *types.Header) error
 
 		iter, err := eventIterator.NewBlockProposedIterator(ctx, &eventIterator.BlockProposedIteratorConfig{
 			Client:               s.rpc.L1,
-			MxcL1:              s.rpc.MxcL1,
+			MxcL1:                s.rpc.MxcL1,
 			StartHeight:          s.state.GetL1Current().Number,
 			EndHeight:            l1End.Number,
 			FilterQuery:          nil,
@@ -427,7 +426,7 @@ func (s *Syncer) insertNewHead(
 		parent.GasUsed,
 	)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create MxcL2.anchor transaction: %w", err)
+		return nil, fmt.Errorf("failed to create MxcL2.anchor transaction: %w", err)
 	}
 
 	txList = append([]*types.Transaction{anchorTx}, txList...)
