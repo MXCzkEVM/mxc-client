@@ -12,6 +12,8 @@ github.com/MXCzkEVM/mxc-geth v0.0.0-20230606093810-c286f1a51596 h1:AdF0U21wIgF6Q
 github.com/MXCzkEVM/mxc-geth v0.0.0-20230606093810-c286f1a51596/go.mod h1:it7x0DWnTDMfVFdXcU6Ti4KEFQynLHVRarcSlPr0HBo=
 github.com/MXCzkEVM/mxc-geth v0.0.0-20230606094725-4599316e16f8 h1:F1R746mz1q0E6oJFkfUhNOWHSAEgUVmLbu7DPnjqCcE=
 github.com/MXCzkEVM/mxc-geth v0.0.0-20230606094725-4599316e16f8/go.mod h1:it7x0DWnTDMfVFdXcU6Ti4KEFQynLHVRarcSlPr0HBo=
+github.com/MXCzkEVM/mxc-geth v0.0.0-20230606100027-75ebd3641934 h1:dyGLCWRBMfPylkrt/yORjpBG/Fi6Qnvoj7yCff21zUo=
+github.com/MXCzkEVM/mxc-geth v0.0.0-20230606100027-75ebd3641934/go.mod h1:it7x0DWnTDMfVFdXcU6Ti4KEFQynLHVRarcSlPr0HBo=
 github.com/Shopify/goreferrer v0.0.0-20181106222321-ec9c9a553398/go.mod h1:a1uqRtAwp2Xwc6WNPJEufxJ7fx3npB4UV/JOLmbu5I0=
 github.com/VictoriaMetrics/fastcache v1.12.0 h1:vnVi/y9yKDcD9akmc4NqAoqgQhJrOwUF+j9LTgn4QDE=
 github.com/VictoriaMetrics/fastcache v1.12.0/go.mod h1:tjiYeEfYXCqacuvYw/7UoDIeJaNxq6132xHICNP77w8=
@@ -325,6 +327,8 @@ github.com/stretchr/testify v1.8.1 h1:w7B6lhMri9wdJUVmEZPGGhZzrYTPvgJArz7wNPgYKs
 github.com/stretchr/testify v1.8.1/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
 github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d h1:vfofYNRScrDdvS342BElfbETmL1Aiz3i2t0zfRj16Hs=
 github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d/go.mod h1:RRCYJbIwD5jmqPI9XoAFR0OcDxqUctll6zUj/+B4S48=
+github.com/taikoxyz/taiko-client v0.9.0 h1:e6v4SfliIb0Tkq/7rnH5Zp2Myb6q4z2P6sW4SPSLP2w=
+github.com/taikoxyz/taiko-client v0.9.0/go.mod h1:4dM39IOjJPbwJmU69eaSkWA8eXeMen3kQomGq5qQcEU=
 github.com/thomaso-mirodin/intmath v0.0.0-20160323211736-5dc6d854e46e h1:cR8/SYRgyQCt5cNCMniB/ZScMkhI9nk8U5C7SbISXjo=
 github.com/thomaso-mirodin/intmath v0.0.0-20160323211736-5dc6d854e46e/go.mod h1:Tu4lItkATkonrYuvtVjG0/rhy15qrNGNTjPdaphtZ/8=
 github.com/tklauser/go-sysconf v0.3.11 h1:89WgdJhk5SNwJfu+GKyYveZ4IaJ7xAkecBo+KdJV0CM=
