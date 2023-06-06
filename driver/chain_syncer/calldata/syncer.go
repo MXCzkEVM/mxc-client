@@ -37,6 +37,7 @@ type Syncer struct {
 	txListValidator   *txListValidator.TxListValidator         // Transactions list validator
 	// Used by BlockInserter
 	lastInsertedBlockID *big.Int
+	reorgDetectedFlag   bool
 }
 
 // NewSyncer creates a new syncer instance.
@@ -75,20 +76,26 @@ func NewSyncer(
 // ProcessL1Blocks fetches all `MxcL1.BlockProposed` events between given
 // L1 block heights, and then tries inserting them into L2 execution engine's block chain.
 func (s *Syncer) ProcessL1Blocks(ctx context.Context, l1End *types.Header) error {
-	iter, err := eventIterator.NewBlockProposedIterator(ctx, &eventIterator.BlockProposedIteratorConfig{
-		Client:               s.rpc.L1,
-		MxcL1:                s.rpc.MxcL1,
-		StartHeight:          s.state.GetL1Current().Number,
-		EndHeight:            l1End.Number,
-		FilterQuery:          nil,
-		OnBlockProposedEvent: s.onBlockProposed,
-	})
-	if err != nil {
-		return err
-	}
+	firstTry := true
+	for firstTry || s.reorgDetectedFlag {
+		s.reorgDetectedFlag = false
+		firstTry = false
 
-	if err := iter.Iter(); err != nil {
-		return err
+		iter, err := eventIterator.NewBlockProposedIterator(ctx, &eventIterator.BlockProposedIteratorConfig{
+			Client:               s.rpc.L1,
+			MxcL1:              s.rpc.MxcL1,
+			StartHeight:          s.state.GetL1Current().Number,
+			EndHeight:            l1End.Number,
+			FilterQuery:          nil,
+			OnBlockProposedEvent: s.onBlockProposed,
+		})
+		if err != nil {
+			return err
+		}
+
+		if err := iter.Iter(); err != nil {
+			return err
+		}
 	}
 
 	s.state.SetL1Current(l1End)
@@ -104,8 +111,41 @@ func (s *Syncer) onBlockProposed(
 	event *bindings.MxcL1ClientBlockProposed,
 	endIter eventIterator.EndBlockProposedEventIterFunc,
 ) error {
+	if event.Id.Cmp(common.Big0) == 0 {
+		return nil
+	}
+
+	if !s.progressTracker.Triggered() {
+		// Check whteher we need to reorg the L2 chain at first.
+		reorged, l1CurrentToReset, lastInsertedBlockIDToReset, err := s.rpc.CheckL1Reorg(
+			ctx,
+			new(big.Int).Sub(event.Id, common.Big1),
+		)
+		if err != nil {
+			return fmt.Errorf("failed to check whether L1 chain has been reorged: %w", err)
+		}
+
+		if reorged {
+			log.Info(
+				"Reset L1Current cursor due to L1 reorg",
+				"l1CurrentHeightOld", s.state.GetL1Current().Number,
+				"l1CurrentHashOld", s.state.GetL1Current().Hash(),
+				"l1CurrentHeightNew", l1CurrentToReset.Number,
+				"l1CurrentHashNew", l1CurrentToReset.Hash(),
+				"lastInsertedBlockIDOld", s.lastInsertedBlockID,
+				"lastInsertedBlockIDNew", lastInsertedBlockIDToReset,
+			)
+			s.state.SetL1Current(l1CurrentToReset)
+			s.lastInsertedBlockID = lastInsertedBlockIDToReset
+			s.reorgDetectedFlag = true
+			endIter()
+
+			return nil
+		}
+	}
+
 	// Ignore those already inserted blocks.
-	if event.Id.Cmp(common.Big0) == 0 || (s.lastInsertedBlockID != nil && event.Id.Cmp(s.lastInsertedBlockID) <= 0) {
+	if s.lastInsertedBlockID != nil && event.Id.Cmp(s.lastInsertedBlockID) <= 0 {
 		return nil
 	}
 
@@ -116,11 +156,6 @@ func (s *Syncer) onBlockProposed(
 		"BlockID", event.Id,
 		"Removed", event.Raw.Removed,
 	)
-
-	// handle reorg
-	if event.Raw.Removed {
-		return s.handleReorg(ctx, event)
-	}
 
 	// Fetch the L2 parent block.
 	var (
@@ -184,7 +219,7 @@ func (s *Syncer) onBlockProposed(
 		txListBytes = []byte{}
 	}
 
-	payloadData, rpcError, payloadError := s.insertNewHead(
+	payloadData, err := s.insertNewHead(
 		ctx,
 		event,
 		parent,
@@ -193,16 +228,8 @@ func (s *Syncer) onBlockProposed(
 		l1Origin,
 	)
 
-	// RPC errors are recoverable.
-	if rpcError != nil {
-		return fmt.Errorf("failed to insert new head to L2 execution engine: %w", rpcError)
-	}
-
-	if payloadError != nil {
-		log.Warn(
-			"Ignore invalid block context", "blockID", event.Id, "payloadError", payloadError, "payloadData", payloadData,
-		)
-		return nil
+	if err != nil {
+		return fmt.Errorf("failed to insert new head to L2 execution engine: %w", err)
 	}
 
 	log.Debug("Payload data", "hash", payloadData.BlockHash, "txs", len(payloadData.Transactions))
@@ -340,7 +367,7 @@ func (s *Syncer) insertNewHead(
 	headBlockID *big.Int,
 	txListBytes []byte,
 	l1Origin *rawdb.L1Origin,
-) (*engine.ExecutableData, error, error) {
+) (*engine.ExecutableData, error) {
 	log.Debug(
 		"Try to insert a new L2 head block",
 		"parentNumber", parent.Number,
@@ -353,14 +380,14 @@ func (s *Syncer) insertNewHead(
 	var txList []*types.Transaction
 	if len(txListBytes) != 0 {
 		if err := rlp.DecodeBytes(txListBytes, &txList); err != nil {
-			log.Info("Ignore invalid txList bytes", "blockID", event.Id)
-			return nil, nil, err
+			log.Error("Invalid txList bytes", "blockID", event.Id)
+			return nil, err
 		}
 	}
 
 	parentTimestamp, err := s.rpc.MxcL2.ParentTimestamp(&bind.CallOpts{BlockNumber: parent.Number})
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	// CHANGE(MXC): Get BaseFee from meta
@@ -372,9 +399,9 @@ func (s *Syncer) insertNewHead(
 	//	parent.GasUsed,
 	//)
 	baseFee := event.Meta.BaseFee
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to get L2 baseFee: %w", encoding.TryParsingCustomError(err))
-	}
+	//if err != nil {
+	//	return nil, fmt.Errorf("failed to get L2 baseFee: %w", encoding.TryParsingCustomError(err))
+	//}
 
 	log.Debug(
 		"GetBasefee",
@@ -387,7 +414,7 @@ func (s *Syncer) insertNewHead(
 	// Get withdrawals
 	withdrawals := make(types.Withdrawals, len(event.Meta.DepositsProcessed))
 	for i, d := range event.Meta.DepositsProcessed {
-		withdrawals[i] = &types.Withdrawal{Address: d.Recipient, Amount: d.Amount.Uint64()}
+		withdrawals[i] = &types.Withdrawal{Address: d.Recipient, Amount: d.Amount.Uint64(), Index: d.Id}
 	}
 
 	// Assemble a MxcL2.anchor transaction
@@ -406,11 +433,11 @@ func (s *Syncer) insertNewHead(
 	txList = append([]*types.Transaction{anchorTx}, txList...)
 
 	if txListBytes, err = rlp.EncodeToBytes(txList); err != nil {
-		log.Warn("Encode txList error", "blockID", event.Id, "error", err)
-		return nil, nil, err
+		log.Error("Encode txList error", "blockID", event.Id, "error", err)
+		return nil, err
 	}
 
-	payload, rpcErr, payloadErr := s.createExecutionPayloads(
+	payload, err := s.createExecutionPayloads(
 		ctx,
 		event,
 		parent.Hash(),
@@ -421,8 +448,8 @@ func (s *Syncer) insertNewHead(
 		withdrawals,
 	)
 
-	if rpcErr != nil || payloadErr != nil {
-		return nil, rpcErr, payloadErr
+	if err != nil {
+		return nil, fmt.Errorf("failed to create execution payloads: %w", err)
 	}
 
 	fc := &engine.ForkchoiceStateV1{HeadBlockHash: parent.Hash()}
@@ -431,13 +458,13 @@ func (s *Syncer) insertNewHead(
 	fc.HeadBlockHash = payload.BlockHash
 	fcRes, err := s.rpc.L2Engine.ForkchoiceUpdate(ctx, fc, nil)
 	if err != nil {
-		return nil, err, nil
+		return nil, err
 	}
 	if fcRes.PayloadStatus.Status != engine.VALID {
-		return nil, nil, fmt.Errorf("unexpected ForkchoiceUpdate response status: %s", fcRes.PayloadStatus.Status)
+		return nil, fmt.Errorf("unexpected ForkchoiceUpdate response status: %s", fcRes.PayloadStatus.Status)
 	}
 
-	return payload, nil, nil
+	return payload, nil
 }
 
 // createExecutionPayloads creates a new execution payloads through
@@ -451,7 +478,7 @@ func (s *Syncer) createExecutionPayloads(
 	txListBytes []byte,
 	baseFeee *big.Int,
 	withdrawals types.Withdrawals,
-) (payloadData *engine.ExecutableData, rpcError error, payloadError error) {
+) (payloadData *engine.ExecutableData, err error) {
 	fc := &engine.ForkchoiceStateV1{HeadBlockHash: parentHash}
 	attributes := &engine.PayloadAttributes{
 		Timestamp:             event.Meta.Timestamp,
@@ -476,19 +503,19 @@ func (s *Syncer) createExecutionPayloads(
 	// Step 1, prepare a payload
 	fcRes, err := s.rpc.L2Engine.ForkchoiceUpdate(ctx, fc, attributes)
 	if err != nil {
-		return nil, err, nil
+		return nil, fmt.Errorf("failed to update fork choice: %w", err)
 	}
 	if fcRes.PayloadStatus.Status != engine.VALID {
-		return nil, nil, fmt.Errorf("unexpected ForkchoiceUpdate response status: %s", fcRes.PayloadStatus.Status)
+		return nil, fmt.Errorf("unexpected ForkchoiceUpdate response status: %s", fcRes.PayloadStatus.Status)
 	}
 	if fcRes.PayloadID == nil {
-		return nil, nil, errors.New("empty payload ID")
+		return nil, errors.New("empty payload ID")
 	}
 
 	// Step 2, get the payload
 	payload, err := s.rpc.L2Engine.GetPayload(ctx, fcRes.PayloadID)
 	if err != nil {
-		return nil, err, nil
+		return nil, fmt.Errorf("failed to get payload: %w", err)
 	}
 
 	log.Debug("Payload", "payload", payload)
@@ -496,11 +523,11 @@ func (s *Syncer) createExecutionPayloads(
 	// Step 3, execute the payload
 	execStatus, err := s.rpc.L2Engine.NewPayload(ctx, payload)
 	if err != nil {
-		return nil, err, nil
+		return nil, fmt.Errorf("failed to create a new payload: %w", err)
 	}
 	if execStatus.Status != engine.VALID {
-		return nil, nil, fmt.Errorf("unexpected NewPayload response status: %s", execStatus.Status)
+		return nil, fmt.Errorf("unexpected NewPayload response status: %s", execStatus.Status)
 	}
 
-	return payload, nil, nil
+	return payload, nil
 }

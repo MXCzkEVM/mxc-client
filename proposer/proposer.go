@@ -23,6 +23,7 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/urfave/cli/v2"
+	"golang.org/x/sync/errgroup"
 )
 
 var (
@@ -46,6 +47,7 @@ type Proposer struct {
 	commitSlot                 uint64
 	locals                     []common.Address
 	minBlockGasLimit           *uint64
+	maxProposedTxListsPerEpoch uint64
 
 	// Protocol configurations
 	protocolConfigs *bindings.MxcDataConfig
@@ -78,6 +80,7 @@ func InitFromConfig(ctx context.Context, p *Proposer, cfg *Config) (err error) {
 	p.wg = sync.WaitGroup{}
 	p.locals = cfg.LocalAddresses
 	p.commitSlot = cfg.CommitSlot
+	p.maxProposedTxListsPerEpoch = cfg.MaxProposedTxListsPerEpoch
 	p.ctx = ctx
 
 	// RPC clients
@@ -205,22 +208,53 @@ func (p *Proposer) ProposeOp(ctx context.Context) error {
 		return errNoNewTxs
 	}
 
-	for _, txs := range txLists {
-		txListBytes, err := rlp.EncodeToBytes(txs)
-		if err != nil {
-			return fmt.Errorf("failed to encode transactions: %w", err)
-		}
+	head, err := p.rpc.L1.BlockNumber(ctx)
+	if err != nil {
+		return err
+	}
+	nonce, err := p.rpc.L1.NonceAt(
+		ctx,
+		crypto.PubkeyToAddress(p.l1ProposerPrivKey.PublicKey),
+		new(big.Int).SetUint64(head),
+	)
+	if err != nil {
+		return err
+	}
 
-		if err := p.ProposeTxList(ctx, &encoding.MxcL1BlockMetadataInput{
-			Beneficiary:     p.l2SuggestedFeeRecipient,
-			GasLimit:        uint32(sumTxsGasLimit(txs)),
-			TxListHash:      crypto.Keccak256Hash(txListBytes),
-			TxListByteStart: common.Big0,
-			TxListByteEnd:   new(big.Int).SetUint64(uint64(len(txListBytes))),
-			CacheTxListInfo: 0,
-		}, txListBytes, uint(txs.Len())); err != nil {
-			return fmt.Errorf("failed to propose transactions: %w", err)
-		}
+	log.Info("Proposer account information", "chainHead", head, "nonce", nonce)
+
+	g := new(errgroup.Group)
+	for i, txs := range txLists {
+		func(i int, txs types.Transactions) {
+			g.Go(func() error {
+				if i >= int(p.maxProposedTxListsPerEpoch) {
+					return nil
+				}
+
+				txListBytes, err := rlp.EncodeToBytes(txs)
+				if err != nil {
+					return fmt.Errorf("failed to encode transactions: %w", err)
+				}
+
+				txNonce := nonce + uint64(i)
+				if err := p.ProposeTxList(ctx, &encoding.MxcL1BlockMetadataInput{
+					Beneficiary:     p.l2SuggestedFeeRecipient,
+					GasLimit:        uint32(sumTxsGasLimit(txs)),
+					TxListHash:      crypto.Keccak256Hash(txListBytes),
+					TxListByteStart: common.Big0,
+					TxListByteEnd:   new(big.Int).SetUint64(uint64(len(txListBytes))),
+					CacheTxListInfo: 0,
+				}, txListBytes, uint(txs.Len()), &txNonce); err != nil {
+					return fmt.Errorf("failed to propose transactions: %w", err)
+				}
+
+				return nil
+			})
+		}(i, txs)
+	}
+
+	if err := g.Wait(); err != nil {
+		return fmt.Errorf("failed to propose transactions: %w", err)
 	}
 
 	if p.AfterCommitHook != nil {
@@ -238,6 +272,7 @@ func (p *Proposer) ProposeTxList(
 	meta *encoding.MxcL1BlockMetadataInput,
 	txListBytes []byte,
 	txNum uint,
+	nonce *uint64,
 ) error {
 	if p.minBlockGasLimit != nil && meta.GasLimit < uint32(*p.minBlockGasLimit) {
 		meta.GasLimit = uint32(*p.minBlockGasLimit)
@@ -252,6 +287,9 @@ func (p *Proposer) ProposeTxList(
 	opts, err := getTxOpts(ctx, p.rpc.L1, p.l1ProposerPrivKey, p.rpc.L1ChainID)
 	if err != nil {
 		return err
+	}
+	if nonce != nil {
+		opts.Nonce = new(big.Int).SetUint64(*nonce)
 	}
 
 	proposeTx, err := p.rpc.MxcL1.ProposeBlock(opts, inputs, txListBytes)
@@ -280,7 +318,7 @@ func (p *Proposer) ProposeEmptyBlockOp(ctx context.Context) error {
 		TxListByteStart: common.Big0,
 		TxListByteEnd:   common.Big0,
 		CacheTxListInfo: 0,
-	}, []byte{}, 0)
+	}, []byte{}, 0, nil)
 }
 
 // updateProposingTicker updates the internal proposing timer.

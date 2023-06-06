@@ -48,6 +48,7 @@ func (s *ProofSubmitterTestSuite) SetupTest() {
 		false,
 		false,
 		"test",
+		0,
 	)
 	s.Nil(err)
 
@@ -79,6 +80,7 @@ func (s *ProofSubmitterTestSuite) SetupTest() {
 		L1ProposerPrivKey:       l1ProposerPrivKey,
 		L2SuggestedFeeRecipient: common.HexToAddress(os.Getenv("L2_SUGGESTED_FEE_RECIPIENT")),
 		ProposeInterval:         &proposeInterval, // No need to periodically propose transactions list in unit tests
+		MaxProposedTxListsPerEpoch: 1,
 	})))
 
 	s.proposer = prop

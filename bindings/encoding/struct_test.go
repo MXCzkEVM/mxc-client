@@ -41,16 +41,18 @@ var (
 		CacheTxListInfo: 0,
 	}
 	testMeta = bindings.MxcDataBlockMetadata{
-		Id:              rand.Uint64(),
-		L1Height:        rand.Uint64(),
-		L1Hash:          randomHash(),
-		Beneficiary:     common.BytesToAddress(randomHash().Bytes()),
-		GasLimit:        rand.Uint32(),
-		Timestamp:       uint64(time.Now().Unix()),
-		TxListHash:      randomHash(),
-		MixHash:         randomHash(),
-		TxListByteStart: common.Big0,
-		TxListByteEnd:   common.Big256,
+		Id:                rand.Uint64(),
+		Timestamp:         uint64(time.Now().Unix()),
+		L1Height:          rand.Uint64(),
+		L1Hash:            randomHash(),
+		MixHash:           randomHash(),
+		TxListHash:        randomHash(),
+		TxListByteStart:   common.Big0,
+		TxListByteEnd:     common.Big256,
+		GasLimit:          rand.Uint32(),
+		Beneficiary:       common.BytesToAddress(randomHash().Bytes()),
+		Treasury:          common.BytesToAddress(randomHash().Bytes()),
+		DepositsProcessed: []bindings.TaikoDataEthDeposit{},
 	}
 )
 
@@ -101,8 +103,8 @@ func TestFromToGethHeaderLegacyTx(t *testing.T) {
 	require.Equal(t, testHeader, gethHeader)
 }
 
-func TestToExecutableDataV1(t *testing.T) {
-	data := ToExecutableDataV1(testHeader)
+func TestToExecutableData(t *testing.T) {
+	data := ToExecutableData(testHeader)
 	require.Equal(t, testHeader.ParentHash, data.ParentHash)
 	require.Equal(t, testHeader.Coinbase, data.FeeRecipient)
 	require.Equal(t, testHeader.Root, data.StateRoot)
