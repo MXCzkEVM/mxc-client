@@ -253,7 +253,7 @@ func (p *Prover) eventLoop() {
 			return
 		case proofWithHeader := <-p.proveValidProofCh:
 			// check if current proving block more new too much than the latest block
-			if proofWithHeader.Header.Number.Uint64() > p.latestVerifiedL1Height+500 {
+			if proofWithHeader.Header.Number.Uint64()%10 == 0 {
 				stateVars, err := p.rpc.GetProtocolStateVariables(nil)
 				if err != nil {
 					log.Error("GetProtocolStateVariables Error")
@@ -303,7 +303,7 @@ func (p *Prover) proveOp() error {
 
 		iter, err := eventIterator.NewBlockProposedIterator(p.ctx, &eventIterator.BlockProposedIteratorConfig{
 			Client:               p.rpc.L1,
-			MxcL1:              p.rpc.MxcL1,
+			MxcL1:                p.rpc.MxcL1,
 			StartHeight:          new(big.Int).SetUint64(p.l1Current),
 			OnBlockProposedEvent: p.onBlockProposed,
 		})
