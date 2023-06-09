@@ -15,7 +15,6 @@ import (
 	eventIterator "github.com/MXCzkEVM/mxc-client/pkg/chain_iterator/event_iterator"
 	"github.com/MXCzkEVM/mxc-client/pkg/rpc"
 	txListValidator "github.com/MXCzkEVM/mxc-client/pkg/tx_list_validator"
-	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/beacon/engine"
 	"github.com/ethereum/go-ethereum/common"

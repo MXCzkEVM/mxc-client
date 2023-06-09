@@ -145,7 +145,7 @@ func NeedNewSystemProof(ctx context.Context, cli *Client, id *big.Int, realProof
 		}
 	}
 
-	fc, err := cli.TaikoL1.GetForkChoice(nil, id, parent.Hash(), uint32(parent.GasUsed))
+	fc, err := cli.MxcL1.GetForkChoice(nil, id, parent.Hash(), uint32(parent.GasUsed))
 	if err != nil {
 		if !strings.Contains(encoding.TryParsingCustomError(err).Error(), "L1_FORK_CHOICE_NOT_FOUND") {
 			return false, encoding.TryParsingCustomError(err)

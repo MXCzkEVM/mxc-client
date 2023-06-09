@@ -250,7 +250,7 @@ func (p *Prover) eventLoop() {
 	// If there is no new block verification in `proofCooldownPeriod * 2` seconeds, and the current prover is
 	// a special prover, we will go back to try proving the block whose id is `lastVerifiedBlockId + 1`.
 	verificationCheckTicker := time.NewTicker(
-		time.Duration(p.protocolConfigs.ProofCooldownPeriod.Uint64()*2) * time.Second,
+		time.Duration((p.protocolConfigs.ProofCooldownPeriod.Uint64()+1)*2) * time.Second,
 	)
 	defer verificationCheckTicker.Stop()
 
@@ -269,19 +269,7 @@ func (p *Prover) eventLoop() {
 				log.Error("Check chain verification error", "error", err)
 			}
 		case proofWithHeader := <-p.proofGenerationCh:
-			if proofWithHeader.Header.Number.Uint64()%10 == 0 {
-				stateVars, err := p.rpc.GetProtocolStateVariables(nil)
-				if err != nil {
-					log.Error("GetProtocolStateVariables Error")
-					return
-				}
-				if proofWithHeader.Header.Number.Uint64() > stateVars.LastVerifiedBlockId+500 {
-					log.Error("current proving block too much newer than latest block", "latest verified height", stateVars.LastVerifiedBlockId, "proving", proofWithHeader.Header.Number.Uint64())
-					return
-				}
-			}
 			p.submitProofOp(p.ctx, proofWithHeader)
-
 		case <-p.proveNotify:
 			if err := p.proveOp(); err != nil {
 				log.Error("Prove new blocks error", "error", err)
@@ -511,15 +499,15 @@ func (p *Prover) onBlockVerified(ctx context.Context, event *bindings.MxcL1Clien
 
 	isNormalProof := p.protocolConfigs.RealProofSkipSize == nil ||
 		(p.protocolConfigs.RealProofSkipSize != nil && event.Id.Uint64()%p.protocolConfigs.RealProofSkipSize.Uint64() == 0)
-	if event.Reward > math.MaxInt64 {
+	if event.Reward.Cmp(big.NewInt(math.MaxInt64)) > 0 {
 		metrics.ProverAllProofRewardGauge.Update(math.MaxInt64)
 		if isNormalProof {
 			metrics.ProverNormalProofRewardGauge.Update(math.MaxInt64)
 		}
 	} else {
-		metrics.ProverAllProofRewardGauge.Update(int64(event.Reward))
+		metrics.ProverAllProofRewardGauge.Update(event.Reward.Int64())
 		if isNormalProof {
-			metrics.ProverNormalProofRewardGauge.Update(int64(event.Reward))
+			metrics.ProverNormalProofRewardGauge.Update(event.Reward.Int64())
 		}
 	}
 
@@ -640,7 +628,7 @@ func (p *Prover) checkChainVerification(lastLatestVerifiedL1Height uint64) error
 		"proofCooldownPeriod", p.protocolConfigs.ProofCooldownPeriod,
 	)
 
-	stateVar, err := p.rpc.TaikoL1.GetStateVariables(nil)
+	stateVar, err := p.rpc.MxcL1.GetStateVariables(nil)
 	if err != nil {
 		log.Error("Failed to get protocol state variables", "error", err)
 		return err
