@@ -112,7 +112,8 @@ func sendTxWithBackoff(
 			if err != nil {
 				log.Warn(
 					"Failed to check if the generated proof is needed",
-					"blockID", blockID, "error", err,
+					"blockID", blockID,
+					"error", err,
 				)
 				return err
 			}
@@ -126,7 +127,7 @@ func sendTxWithBackoff(
 
 				targetDelay := stateVar.ProofTimeTarget * 4
 				if stateVar.BlockFee != 0 {
-					targetDelay = expectedReward / stateVar.BlockFee * stateVar.ProofTimeTarget
+					targetDelay = uint64(float64(expectedReward) / float64(stateVar.BlockFee) * float64(stateVar.ProofTimeTarget))
 					if targetDelay < stateVar.ProofTimeTarget/4 {
 						targetDelay = stateVar.ProofTimeTarget / 4
 					} else if targetDelay > stateVar.ProofTimeTarget*4 {
@@ -172,6 +173,12 @@ func sendTxWithBackoff(
 			return nil
 			//return err
 		}
+
+		log.Info(
+			"💰 Your block proof was accepted",
+			"blockID", blockID,
+			"proposedAt", proposedAt,
+		)
 
 		return nil
 	}, backoff.NewExponentialBackOff()); err != nil {

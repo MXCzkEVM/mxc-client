@@ -55,6 +55,10 @@ var (
 		Value:    1,
 		Category: proposerCategory,
 	}
+	ProposeBlockTxGasLimit = &cli.Uint64Flag{
+		Name:     "proposeBlockTxGasLimit",
+		Category: proposerCategory,
+	}
 )
 
 // All proposer flags.
@@ -69,4 +73,5 @@ var ProposerFlags = MergeFlags(CommonFlags, []cli.Flag{
 	ProposeEmptyBlocksInterval,
 	MinBlockGasLimit,
 	MaxProposedTxListsPerEpoch,
+	ProposeBlockTxGasLimit,
 })

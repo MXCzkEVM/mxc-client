@@ -101,7 +101,7 @@ func (s *ProverTestSuite) TestOnBlockProposed() {
 	// Valid block
 	e := testutils.ProposeAndInsertValidBlock(&s.ClientTestSuite, s.proposer, s.d.ChainSyncer().CalldataSyncer())
 	s.Nil(s.p.onBlockProposed(context.Background(), e, func() {}))
-	s.Nil(s.p.validProofSubmitter.SubmitProof(context.Background(), <-s.p.proveValidProofCh))
+	s.Nil(s.p.validProofSubmitter.SubmitProof(context.Background(), <-s.p.proofGenerationCh))
 
 	// Empty blocks
 	for _, e = range testutils.ProposeAndInsertEmptyBlocks(
@@ -110,7 +110,7 @@ func (s *ProverTestSuite) TestOnBlockProposed() {
 		s.d.ChainSyncer().CalldataSyncer(),
 	) {
 		s.Nil(s.p.onBlockProposed(context.Background(), e, func() {}))
-		s.Nil(s.p.validProofSubmitter.SubmitProof(context.Background(), <-s.p.proveValidProofCh))
+		s.Nil(s.p.validProofSubmitter.SubmitProof(context.Background(), <-s.p.proofGenerationCh))
 	}
 }
 
@@ -128,7 +128,7 @@ func (s *ProverTestSuite) TestSubmitProofOp() {
 			Meta:    &bindings.MxcDataBlockMetadata{},
 			Header:  &types.Header{},
 			ZkProof: []byte{},
-		}, true)
+		})
 	})
 	s.NotPanics(func() {
 		s.p.submitProofOp(context.Background(), &producer.ProofWithHeader{
@@ -136,13 +136,20 @@ func (s *ProverTestSuite) TestSubmitProofOp() {
 			Meta:    &bindings.MxcDataBlockMetadata{},
 			Header:  &types.Header{},
 			ZkProof: []byte{},
-		}, false)
+		})
 	})
 }
 
 func (s *ProverTestSuite) TestStartSubscription() {
 	s.NotPanics(s.p.initSubscription)
 	s.NotPanics(s.p.closeSubscription)
+}
+
+func (s *ProverTestSuite) TestCheckChainVerification() {
+	s.Nil(s.p.checkChainVerification(0))
+	s.p.latestVerifiedL1Height = 1024
+	s.p.cfg.SystemProver = true
+	s.Nil(s.p.checkChainVerification(1024))
 }
 
 func (s *ProverTestSuite) TestStartClose() {
