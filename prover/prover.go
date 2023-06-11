@@ -249,8 +249,12 @@ func (p *Prover) eventLoop() {
 
 	// If there is no new block verification in `proofCooldownPeriod * 2` seconeds, and the current prover is
 	// a special prover, we will go back to try proving the block whose id is `lastVerifiedBlockId + 1`.
+	checkTickerSecond := 120 * time.Second
+	if p.protocolConfigs.ProofCooldownPeriod.Uint64() != 0 {
+		checkTickerSecond = time.Duration((p.protocolConfigs.ProofCooldownPeriod.Uint64())*2) * time.Second
+	}
 	verificationCheckTicker := time.NewTicker(
-		time.Duration((p.protocolConfigs.ProofCooldownPeriod.Uint64()+1)*2) * time.Second,
+		checkTickerSecond,
 	)
 	defer verificationCheckTicker.Stop()
 
@@ -262,6 +266,7 @@ func (p *Prover) eventLoop() {
 		case <-p.ctx.Done():
 			return
 		case <-verificationCheckTicker.C:
+			log.Warn("Check chain verification ticker")
 			if err := backoff.Retry(
 				func() error { return p.checkChainVerification(lastLatestVerifiedL1Height) },
 				backoff.NewExponentialBackOff(),
