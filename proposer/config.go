@@ -27,6 +27,7 @@ type Config struct {
 	ProposeEmptyBlocksInterval *time.Duration
 	MinBlockGasLimit           uint64
 	MaxProposedTxListsPerEpoch uint64
+	ProposeBlockTxGasLimit     *uint64
 }
 
 // NewConfigFromCliContext initializes a Config instance from
@@ -73,6 +74,12 @@ func NewConfigFromCliContext(c *cli.Context) (*Config, error) {
 		}
 	}
 
+	var proposeBlockTxGasLimit *uint64
+	if c.IsSet(flags.ProposeBlockTxGasLimit.Name) {
+		gasLimit := c.Uint64(flags.ProposeBlockTxGasLimit.Name)
+		proposeBlockTxGasLimit = &gasLimit
+	}
+
 	return &Config{
 		L1Endpoint:                 c.String(flags.L1WSEndpoint.Name),
 		L1HTTPEndpoint:             c.String(flags.L1HTTPEndpoint.Name),
@@ -87,5 +94,6 @@ func NewConfigFromCliContext(c *cli.Context) (*Config, error) {
 		ProposeEmptyBlocksInterval: proposeEmptyBlocksInterval,
 		MinBlockGasLimit:           c.Uint64(flags.MinBlockGasLimit.Name),
 		MaxProposedTxListsPerEpoch: c.Uint64(flags.MaxProposedTxListsPerEpoch.Name),
+		ProposeBlockTxGasLimit:     proposeBlockTxGasLimit,
 	}, nil
 }

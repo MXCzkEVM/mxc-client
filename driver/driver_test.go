@@ -52,13 +52,13 @@ func (s *DriverTestSuite) SetupTest() {
 
 	proposeInterval := 1024 * time.Hour // No need to periodically propose transactions list in unit tests
 	s.Nil(proposer.InitFromConfig(context.Background(), p, (&proposer.Config{
-		L1Endpoint:              os.Getenv("L1_NODE_WS_ENDPOINT"),
-		L2Endpoint:              os.Getenv("L2_EXECUTION_ENGINE_WS_ENDPOINT"),
-		MxcL1Address:            common.HexToAddress(os.Getenv("MXC_L1_ADDRESS")),
-		MxcL2Address:            common.HexToAddress(os.Getenv("MXC_L2_ADDRESS")),
-		L1ProposerPrivKey:       l1ProposerPrivKey,
-		L2SuggestedFeeRecipient: common.HexToAddress(os.Getenv("L2_SUGGESTED_FEE_RECIPIENT")),
-		ProposeInterval:         &proposeInterval, // No need to periodically propose transactions list in unit tests
+		L1Endpoint:                 os.Getenv("L1_NODE_WS_ENDPOINT"),
+		L2Endpoint:                 os.Getenv("L2_EXECUTION_ENGINE_WS_ENDPOINT"),
+		MxcL1Address:               common.HexToAddress(os.Getenv("MXC_L1_ADDRESS")),
+		MxcL2Address:               common.HexToAddress(os.Getenv("MXC_L2_ADDRESS")),
+		L1ProposerPrivKey:          l1ProposerPrivKey,
+		L2SuggestedFeeRecipient:    common.HexToAddress(os.Getenv("L2_SUGGESTED_FEE_RECIPIENT")),
+		ProposeInterval:            &proposeInterval, // No need to periodically propose transactions list in unit tests
 		MaxProposedTxListsPerEpoch: 1,
 	})))
 	s.p = p

@@ -48,6 +48,7 @@ type Proposer struct {
 	locals                     []common.Address
 	minBlockGasLimit           *uint64
 	maxProposedTxListsPerEpoch uint64
+	proposeBlockTxGasLimit     *uint64
 
 	// Protocol configurations
 	protocolConfigs *bindings.MxcDataConfig
@@ -77,6 +78,7 @@ func InitFromConfig(ctx context.Context, p *Proposer, cfg *Config) (err error) {
 	p.l2SuggestedFeeRecipient = cfg.L2SuggestedFeeRecipient
 	p.proposingInterval = cfg.ProposeInterval
 	p.proposeEmptyBlocksInterval = cfg.ProposeEmptyBlocksInterval
+	p.proposeBlockTxGasLimit = cfg.ProposeBlockTxGasLimit
 	p.wg = sync.WaitGroup{}
 	p.locals = cfg.LocalAddresses
 	p.commitSlot = cfg.CommitSlot
@@ -185,7 +187,7 @@ func (p *Proposer) ProposeOp(ctx context.Context) error {
 	}
 
 	// Wait until L2 execution engine is synced at first.
-	if err := p.rpc.WaitTillL2Synced(ctx); err != nil {
+	if err := p.rpc.WaitTillL2ExecutionEngineSynced(ctx); err != nil {
 		return fmt.Errorf("failed to wait until L2 execution engine synced: %w", err)
 	}
 
@@ -291,6 +293,9 @@ func (p *Proposer) ProposeTxList(
 	if nonce != nil {
 		opts.Nonce = new(big.Int).SetUint64(*nonce)
 	}
+	if p.proposeBlockTxGasLimit != nil {
+		opts.GasLimit = *p.proposeBlockTxGasLimit
+	}
 
 	proposeTx, err := p.rpc.MxcL1.ProposeBlock(opts, inputs, txListBytes)
 	if err != nil {
@@ -331,8 +336,8 @@ func (p *Proposer) updateProposingTicker() {
 	if p.proposingInterval != nil {
 		duration = *p.proposingInterval
 	} else {
-		// Random number between 12 - 60
-		randomSeconds := rand.Intn(60-11) + 12
+		// Random number between 12 - 120
+		randomSeconds := rand.Intn(120-11) + 12
 		duration = time.Duration(randomSeconds) * time.Second
 	}
 
