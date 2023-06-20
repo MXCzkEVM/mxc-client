@@ -26,8 +26,10 @@ type Client struct {
 	// Geth Engine API clients
 	L2Engine *EngineClient
 	// Protocol contracts clients
-	MxcL1 *bindings.MxcL1Client
-	MxcL2 *bindings.MxcL2Client
+	MxcL1    *bindings.MxcL1Client
+	MxcL2    *bindings.MxcL2Client
+	LPWAN    *bindings.LPWANClient
+	MxcToken *bindings.MxcTokenClient
 	// Chain IDs
 	L1ChainID *big.Int
 	L2ChainID *big.Int
@@ -43,6 +45,8 @@ type ClientConfig struct {
 	L2CheckPoint     string
 	MxcL1Address     common.Address
 	MxcL2Address     common.Address
+	LPWANAddress     *common.Address
+	MxcTokenAddress  *common.Address
 	L2EngineEndpoint string
 	JwtSecret        string
 }
@@ -58,8 +62,9 @@ func NewClient(ctx context.Context, cfg *ClientConfig) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
+	var l1HTTPRPC *ethclient.Client
 	if cfg.L1HTTPEndpoint != "" {
-		l1HTTPRPC, err := DialClientWithBackoff(ctx, cfg.L1HTTPEndpoint)
+		l1HTTPRPC, err = DialClientWithBackoff(ctx, cfg.L1HTTPEndpoint)
 		if err != nil {
 			return nil, err
 		}
@@ -78,6 +83,21 @@ func NewClient(ctx context.Context, cfg *ClientConfig) (*Client, error) {
 	mxcL2, err := bindings.NewMxcL2Client(cfg.MxcL2Address, l2RPC)
 	if err != nil {
 		return nil, err
+	}
+	var LPWANClient *bindings.LPWANClient
+	if cfg.LPWANAddress != nil {
+		LPWANClient, err = bindings.NewLPWANClient(*cfg.LPWANAddress, l2RPC)
+	}
+	var MxcTokenClient *bindings.MxcTokenClient
+	if cfg.MxcTokenAddress != nil {
+		MxcTokenClient, err = bindings.NewMxcTokenClient(*cfg.MxcTokenAddress, l1RPC)
+		if l1HTTPRPC != nil {
+			MxcTokenClientTransactor, err := bindings.NewMxcTokenClientTransactor(*cfg.MxcTokenAddress, l1HTTPRPC)
+			if err != nil {
+				return nil, err
+			}
+			MxcTokenClient.MxcTokenClientTransactor = *MxcTokenClientTransactor
+		}
 	}
 
 	l1RawRPC, err := rpc.Dial(cfg.L1Endpoint)
@@ -127,6 +147,8 @@ func NewClient(ctx context.Context, cfg *ClientConfig) (*Client, error) {
 		L2Engine:     l2AuthRPC,
 		MxcL1:        mxcL1,
 		MxcL2:        mxcL2,
+		LPWAN:        LPWANClient,
+		MxcToken:     MxcTokenClient,
 		L1ChainID:    l1ChainID,
 		L2ChainID:    l2ChainID,
 	}
