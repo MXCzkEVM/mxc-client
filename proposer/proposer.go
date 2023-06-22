@@ -268,6 +268,8 @@ func (p *Proposer) ProposeOp(ctx context.Context) error {
 	return nil
 }
 
+const anchorGasCost = 180000
+
 // ProposeTxList proposes the given transactions list to MxcL1 smart contract.
 func (p *Proposer) ProposeTxList(
 	ctx context.Context,
@@ -278,6 +280,14 @@ func (p *Proposer) ProposeTxList(
 ) error {
 	if p.minBlockGasLimit != nil && meta.GasLimit < uint32(*p.minBlockGasLimit) {
 		meta.GasLimit = uint32(*p.minBlockGasLimit)
+	}
+	prevGasUsed, err := p.rpc.L2.HeaderByNumber(p.ctx, nil)
+	if err != nil {
+		return err
+	}
+	meta.GasLimit = uint32(prevGasUsed.GasUsed) - anchorGasCost
+	if meta.GasLimit < 21000 {
+		meta.GasLimit = 21000
 	}
 
 	// Propose the transactions list
