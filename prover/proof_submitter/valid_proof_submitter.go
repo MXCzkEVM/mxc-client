@@ -246,7 +246,6 @@ func (s *ValidProofSubmitter) SubmitProof(
 	if err != nil {
 		return err
 	}
-	txOpts.GasLimit = 3e7
 	sendTx := func() (*types.Transaction, error) {
 		s.mutex.Lock()
 		defer s.mutex.Unlock()

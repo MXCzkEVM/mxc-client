@@ -11,6 +11,7 @@ var (
 	driverCategory   = "DRIVER"
 	proposerCategory = "PROPOSER"
 	proverCategory   = "PROVER"
+	relayerCategory  = "RELAYER"
 )
 
 // Required flags used by all client softwares.

@@ -22,3 +22,6 @@ coverage.out
 
 # Testing
 integration_test/nodes/deployments/mainnet.json
+
+# vendor
+vendor

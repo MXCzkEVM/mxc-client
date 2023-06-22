@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/MXCzkEVM/mxc-client/relayer"
 	"math/rand"
 	"os"
 	"time"
@@ -52,6 +53,13 @@ func main() {
 			Usage:       "Starts the prover software",
 			Description: "Mxc prover software",
 			Action:      utils.SubcommandAction(new(prover.Prover)),
+		},
+		{
+			Name:        "relayer",
+			Flags:       flags.RelayerFlags,
+			Usage:       "Starts the relayer software",
+			Description: "Mxc relayer software",
+			Action:      utils.SubcommandAction(new(relayer.Relayer)),
 		},
 	}
 
