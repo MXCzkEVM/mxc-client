@@ -23,6 +23,18 @@ func TryParsingCustomError(originalError error) error {
 		}
 	}
 
+	for _, lpwanError := range LPWANABI.Errors {
+		if strings.HasPrefix(lpwanError.ID.Hex(), errData) {
+			return errors.New(lpwanError.Name)
+		}
+	}
+
+	for _, mxcTokenError := range MxcTokenABI.Errors {
+		if strings.HasPrefix(mxcTokenError.ID.Hex(), errData) {
+			return errors.New(mxcTokenError.Name)
+		}
+	}
+
 	return originalError
 }
 

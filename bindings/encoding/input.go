@@ -164,8 +164,10 @@ var (
 
 // Contract ABIs.
 var (
-	MxcL1ABI *abi.ABI
-	MxcL2ABI *abi.ABI
+	MxcL1ABI    *abi.ABI
+	MxcL2ABI    *abi.ABI
+	MxcTokenABI *abi.ABI
+	LPWANABI    *abi.ABI
 )
 
 func init() {
@@ -177,6 +179,14 @@ func init() {
 
 	if MxcL2ABI, err = bindings.MxcL2ClientMetaData.GetAbi(); err != nil {
 		log.Crit("Get MxcL2 ABI error", "error", err)
+	}
+
+	if MxcTokenABI, err = bindings.MxcTokenClientMetaData.GetAbi(); err != nil {
+		log.Crit("Get MxcToken ABI error", "error", err)
+	}
+
+	if LPWANABI, err = bindings.LPWANClientMetaData.GetAbi(); err != nil {
+		log.Crit("Get LPWAN ABI error", "error", err)
 	}
 }
 

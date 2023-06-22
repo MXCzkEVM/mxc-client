@@ -33,8 +33,9 @@ type Relayer struct {
 	l1CurrentBlockProposedReward uint64 // Current L1 block sync cursor
 	l1CurrentBlockProvenReward   uint64
 
-	blockProposedRewardCh chan *bindings.LPWANRewardEvent
-	blockProvenRewardCh   chan *bindings.LPWANRewardEvent
+	blockProposedRewardCache []bindings.LPWANRewardEvent
+	blockProvenRewardCache   []bindings.LPWANRewardEvent
+	blockProvenEventHeight   []uint64
 
 	syncNotify chan struct{}
 
@@ -57,8 +58,6 @@ func InitFromConfig(ctx context.Context, r *Relayer, cfg *Config) (err error) {
 	r.wg = sync.WaitGroup{}
 	r.syncNotify = make(chan struct{}, 1)
 	r.relayerPrivKey = cfg.RelayerPrivKey
-	r.blockProposedRewardCh = make(chan *bindings.LPWANRewardEvent, 10)
-	r.blockProvenRewardCh = make(chan *bindings.LPWANRewardEvent, 10)
 	r.ctx = ctx
 
 	if r.rpc, err = rpc.NewClient(r.ctx, &rpc.ClientConfig{
@@ -118,49 +117,6 @@ func (r *Relayer) eventLoop() {
 		select {
 		case <-r.ctx.Done():
 			return
-		case e := <-r.blockProposedRewardCh:
-			batchRewardEvent := []bindings.LPWANRewardEvent{*e}
-			wg := sync.WaitGroup{}
-			wg.Add(1)
-			go func() {
-				for {
-					select {
-					case v := <-r.blockProposedRewardCh:
-						batchRewardEvent = append(batchRewardEvent, *v)
-					default:
-						wg.Done()
-						return
-					}
-				}
-			}()
-			wg.Wait()
-			op := func() error {
-				return r.syncProposedRewardOp(r.ctx, batchRewardEvent)
-			}
-			if err := backoff.Retry(op, backoff.NewConstantBackOff(time.Second)); err != nil {
-				log.Info("syncProposedRewardOp error", "error", err)
-			}
-		case e := <-r.blockProvenRewardCh:
-			batchRewardEvent := []bindings.LPWANRewardEvent{*e}
-			wg := sync.WaitGroup{}
-			wg.Add(1)
-			go func() {
-				for {
-					select {
-					case v := <-r.blockProvenRewardCh:
-						batchRewardEvent = append(batchRewardEvent, *v)
-					default:
-						wg.Done()
-						return
-					}
-				}
-			}()
-			wg.Wait()
-			err := r.syncProvenRewardOp(r.ctx, batchRewardEvent)
-			if err != nil {
-				log.Error("Sync ProposedReward error", "error", err.Error())
-				continue
-			}
 		case <-r.syncNotify:
 			doSyncWithBackoff()
 		case <-syncL2BurnTicker.C:
@@ -195,6 +151,7 @@ func (r *Relayer) doSync() error {
 	if err != nil {
 		return err
 	}
+
 	err = r.ProcessL1BlocksProvenReward(r.ctx, latestBlockNumber)
 	if err != nil {
 		return err
@@ -211,6 +168,12 @@ func (r *Relayer) resetL1Current() error {
 	if err != nil {
 		return err
 	}
+	log.Info(
+		"reset L1 current from SyncStatus",
+		"ProposedRewardEventHeight", syncStatus.ProposedRewardEventHeight.Uint64(),
+		"ProvenRewardEventHeight", syncStatus.ProvenRewardEventHeight.Uint64(),
+	)
+
 	if syncStatus.ProposedRewardEventHeight.Uint64() == 0 {
 		r.l1CurrentBlockProposedReward = stateVars.GenesisHeight
 	} else {
@@ -222,20 +185,16 @@ func (r *Relayer) resetL1Current() error {
 			}
 			return err
 		}
-		r.l1CurrentBlockProposedReward = l1Height.L1BlockHeight.Uint64() + 1
+		r.l1CurrentBlockProposedReward = l1Height.L1BlockHeight.Uint64()
 	}
-	if syncStatus.ProvedRewardEventHeight.Uint64() == 0 {
+	l1Height, err := r.rpc.LPWAN.GetLatestProvenL1Height(nil)
+	if err != nil {
+		return err
+	}
+	if l1Height.Uint64() == 0 {
 		r.l1CurrentBlockProvenReward = stateVars.GenesisHeight
 	} else {
-		l1Height, err := r.rpc.L2.L1OriginByID(r.ctx, syncStatus.ProvedRewardEventHeight)
-		if err != nil {
-			if err.Error() == ethereum.NotFound.Error() {
-				log.Warn("Failed to find provenReward L1Origin for blockID", "blockID", syncStatus.ProvedRewardEventHeight.Uint64())
-				return nil
-			}
-			return err
-		}
-		r.l1CurrentBlockProvenReward = l1Height.L1BlockHeight.Uint64() + 1
+		r.l1CurrentBlockProvenReward = l1Height.Uint64()
 	}
 	return nil
 }
@@ -245,29 +204,29 @@ func (r *Relayer) syncProposedRewardOp(ctx context.Context, input []bindings.LPW
 	opts, err := getTxOpts(ctx, r.rpc.L2, r.rpc.L2ChainID, r.relayerPrivKey)
 	tx, err := r.rpc.LPWAN.SyncProposedRewardEvent(opts, input, false)
 	if err != nil {
-		log.Error("failed to sync proposed", "err", err)
-		return fmt.Errorf("failed to sync proposed %v", err)
+		log.Error("failed to sync proposed reward", "err", err)
+		return fmt.Errorf("failed to sync proposed reward %v", err)
 	}
 	if _, err := rpc.WaitReceipt(ctx, r.rpc.L2, tx); err != nil {
 		return err
 	}
 
-	log.Info("sync reward transactions succeeded", "hash", tx.Hash().String())
+	log.Info("Sync proposed reward transactions succeeded", "hash", tx.Hash().String())
 	return nil
 }
 
-func (r *Relayer) syncProvenRewardOp(ctx context.Context, input []bindings.LPWANRewardEvent) error {
-	log.Info("Start execute LPWAN syncProvenRewardOp")
+func (r *Relayer) syncProvenRewardOp(ctx context.Context, input []bindings.LPWANRewardEvent, latestL1ProvenHeight *big.Int) error {
+	log.Info("Start execute LPWAN syncProvenRewardOp", "latestL1ProvenHeight", latestL1ProvenHeight.Uint64())
 	opts, err := getTxOpts(ctx, r.rpc.L2, r.rpc.L2ChainID, r.relayerPrivKey)
-	tx, err := r.rpc.LPWAN.SyncProvenRewardEvent(opts, input, false)
+	tx, err := r.rpc.LPWAN.SyncProvenRewardEvent(opts, input, false, latestL1ProvenHeight)
 	if err != nil {
-		return fmt.Errorf("failed to sync proposed %v", err)
+		log.Error("failed to sync proven reward", "err", err)
+		return fmt.Errorf("failed to sync proven reward %v", err)
 	}
 	if _, err := rpc.WaitReceipt(ctx, r.rpc.L2, tx); err != nil {
 		return err
 	}
-
-	log.Info("sync reward transactions succeeded", "hash", tx.Hash().String())
+	log.Info("Sync proven reward transactions succeeded", "hash", tx.Hash().String())
 	return nil
 }
 
@@ -297,12 +256,17 @@ func (r *Relayer) syncL2MxcBurn(ctx context.Context) error {
 }
 
 func (r *Relayer) ProcessL1BlocksProposedReward(ctx context.Context, latestBlockNumber uint64) error {
+	log.Info("Start process l1 block proposed reward")
+	endHeight := latestBlockNumber
+	if latestBlockNumber > r.l1CurrentBlockProposedReward+1000 {
+		endHeight = r.l1CurrentBlockProposedReward + 1000
+	}
+	r.blockProposedRewardCache = make([]bindings.LPWANRewardEvent, 0)
 	iter, err := eventIterator.NewBlockProposeRewardIterator(ctx, &eventIterator.BlockProposeRewardIteratorConfig{
 		Client:                    r.rpc.L1,
 		MxcL1:                     r.rpc.MxcL1,
-		StartHeight:               new(big.Int).SetUint64(r.l1CurrentBlockProposedReward),
-		EndHeight:                 new(big.Int).SetUint64(latestBlockNumber),
-		FilterQuery:               nil,
+		StartHeight:               new(big.Int).SetUint64(r.l1CurrentBlockProposedReward + 1),
+		EndHeight:                 new(big.Int).SetUint64(endHeight),
 		OnBlockProposeRewardEvent: r.onBlockProposedReward,
 	})
 	if err != nil {
@@ -311,6 +275,21 @@ func (r *Relayer) ProcessL1BlocksProposedReward(ctx context.Context, latestBlock
 	if err := iter.Iter(); err != nil {
 		return err
 	}
+	batchSize := 10
+	for i := 0; i < len(r.blockProposedRewardCache); i += batchSize {
+		batch := make([]bindings.LPWANRewardEvent, 0, batchSize)
+		for j := i; j < i+batchSize && j < len(r.blockProposedRewardCache); j++ {
+			batch = append(batch, r.blockProposedRewardCache[j])
+		}
+		op := func() error {
+			return r.syncProposedRewardOp(r.ctx, batch)
+		}
+		if err := backoff.Retry(op, backoff.NewConstantBackOff(time.Second)); err != nil {
+			log.Info("syncProposedRewardOp error", "error", err)
+		}
+	}
+
+	r.l1CurrentBlockProposedReward = endHeight
 	return nil
 }
 
@@ -322,36 +301,35 @@ func (r *Relayer) onBlockProposedReward(
 	if event.Id.Cmp(common.Big0) == 0 {
 		return nil
 	}
-	// sort and send to channel
-	tx, pending, err := r.rpc.L1.TransactionByHash(ctx, event.Raw.TxHash)
+	tx, err := r.rpc.L1.TransactionReceipt(ctx, event.Raw.TxHash)
 	if err != nil {
 		return err
 	}
-	if pending {
-		return fmt.Errorf("transaction pending")
-	}
-	rewardEvent := &bindings.LPWANRewardEvent{
+	rewardEvent := bindings.LPWANRewardEvent{
 		RewardHeight: event.Id,
 		Account:      event.Proposer,
 		Amount:       event.Reward,
-		Cost:         tx.Cost(),
+		Cost:         big.NewInt(0).Mul(tx.EffectiveGasPrice, big.NewInt(0).SetUint64(tx.GasUsed)),
 	}
-	r.blockProposedRewardCh <- rewardEvent
+	r.blockProposedRewardCache = append(r.blockProposedRewardCache, rewardEvent)
 	log.Info("New BlockProposedReward Event", "RewardEvent", rewardEvent)
 	r.l1CurrentBlockProposedReward = event.Raw.BlockNumber
-	if len(r.blockProposedRewardCh) == cap(r.blockProposedRewardCh) {
-		endIter()
-	}
 	return nil
 }
 
 func (r *Relayer) ProcessL1BlocksProvenReward(ctx context.Context, latestBlockNumber uint64) error {
+	endHeight := latestBlockNumber
+	if latestBlockNumber > r.l1CurrentBlockProvenReward+1000 {
+		endHeight = r.l1CurrentBlockProvenReward + 1000
+	}
+	log.Info("Start process l1 block proven reward", "From", r.l1CurrentBlockProvenReward+1, "To", endHeight)
+	r.blockProvenRewardCache = make([]bindings.LPWANRewardEvent, 0)
+	r.blockProvenEventHeight = make([]uint64, 0)
 	iter, err := eventIterator.NewBlockProvenRewardIterator(ctx, &eventIterator.BlockProvenRewardIteratorConfig{
 		Client:                   r.rpc.L1,
 		MxcL1:                    r.rpc.MxcL1,
-		StartHeight:              new(big.Int).SetUint64(r.l1CurrentBlockProvenReward),
-		EndHeight:                new(big.Int).SetUint64(latestBlockNumber),
-		FilterQuery:              nil,
+		StartHeight:              new(big.Int).SetUint64(r.l1CurrentBlockProvenReward + 1),
+		EndHeight:                new(big.Int).SetUint64(endHeight),
 		OnBlockProvenRewardEvent: r.onBlockProvenReward,
 	})
 	if err != nil {
@@ -360,6 +338,25 @@ func (r *Relayer) ProcessL1BlocksProvenReward(ctx context.Context, latestBlockNu
 	if err := iter.Iter(); err != nil {
 		return err
 	}
+	batchSize := 10
+	for i := 0; i < len(r.blockProvenRewardCache); i += batchSize {
+		batch := make([]bindings.LPWANRewardEvent, 0, batchSize)
+		j := i
+		for j = i; j < i+batchSize && j < len(r.blockProvenRewardCache); j++ {
+			batch = append(batch, r.blockProvenRewardCache[j])
+		}
+		if j == len(r.blockProvenRewardCache) {
+			j = len(r.blockProvenRewardCache) - 1
+		}
+
+		op := func() error {
+			return r.syncProvenRewardOp(r.ctx, batch, big.NewInt(0).SetUint64(r.blockProvenEventHeight[j]))
+		}
+		if err := backoff.Retry(op, backoff.NewConstantBackOff(time.Second)); err != nil {
+			log.Info("syncProvenRewardOp error", "error", err)
+		}
+	}
+	r.l1CurrentBlockProvenReward = endHeight
 	return nil
 }
 
@@ -372,24 +369,20 @@ func (r *Relayer) onBlockProvenReward(
 		return nil
 	}
 	// sort and send to channel
-	tx, pending, err := r.rpc.L1.TransactionByHash(ctx, event.Raw.TxHash)
+	tx, err := r.rpc.L1.TransactionReceipt(ctx, event.Raw.TxHash)
 	if err != nil {
 		return err
 	}
-	if pending {
-		return fmt.Errorf("transaction pending")
-	}
-	rewardEvent := &bindings.LPWANRewardEvent{
+	rewardEvent := bindings.LPWANRewardEvent{
 		RewardHeight: event.Id,
 		Account:      event.Prover,
 		Amount:       event.Reward,
-		Cost:         tx.Cost(),
+		Cost:         big.NewInt(0).Mul(tx.EffectiveGasPrice, big.NewInt(0).SetUint64(tx.GasUsed)),
 	}
-	r.blockProvenRewardCh <- rewardEvent
+	r.blockProvenRewardCache = append(r.blockProvenRewardCache, rewardEvent)
+	r.blockProvenEventHeight = append(r.blockProvenEventHeight, event.Raw.BlockNumber)
 	r.l1CurrentBlockProvenReward = event.Raw.BlockNumber
-	if len(r.blockProvenRewardCh) == cap(r.blockProvenRewardCh) {
-		endIter()
-	}
+	log.Info("New BlockProvenReward Event", "RewardEvent", rewardEvent, "l1CurrentBlockProvenReward", r.l1CurrentBlockProvenReward)
 	return nil
 }
 
@@ -400,38 +393,45 @@ func (r *Relayer) reportProtocolStatus() {
 		ticker.Stop()
 		r.wg.Done()
 	}()
-	var relaySyncStatus bindings.LPWANRelaySyncStatus
-	var protocolVars *bindings.MxcDataStateVariables
-	if err := backoff.Retry(
-		func() error {
-			var err error
-			protocolVars, err = r.rpc.GetProtocolStateVariables(nil)
-			if err != nil {
-				log.Error("Failed to get protocol state variables", "error", err)
-			}
-			relaySyncStatus, err = r.rpc.LPWAN.GetRelaySyncStatus(nil)
-			if err != nil {
-				return err
-			}
-			return nil
-		},
-		backoff.NewConstantBackOff(RetryDelay),
-	); err != nil {
-		log.Error("Failed to get relay sync status", "error", err)
-		return
-	}
 	for {
 		select {
 		case <-r.ctx.Done():
 			return
 		case <-ticker.C:
+			var relaySyncStatus bindings.LPWANRelaySyncStatus
+			var protocolVars *bindings.MxcDataStateVariables
+			var lastProvenL1Height *big.Int
+			if err := backoff.Retry(
+				func() error {
+					var err error
+					protocolVars, err = r.rpc.GetProtocolStateVariables(nil)
+					if err != nil {
+						log.Error("Failed to get protocol state variables", "error", err)
+					}
+					relaySyncStatus, err = r.rpc.LPWAN.GetRelaySyncStatus(nil)
+					if err != nil {
+						return err
+					}
+					lastProvenL1Height, err = r.rpc.LPWAN.GetLatestProvenL1Height(nil)
+					if err != nil {
+						return err
+					}
+					return nil
+
+				},
+				backoff.NewConstantBackOff(RetryDelay),
+			); err != nil {
+				log.Error("Failed to get relay sync status", "error", err)
+				return
+			}
 			log.Info(
 				"Sync Relayer status",
 				"L2 Height", protocolVars.NumBlocks,
 				"l1CurrentBlockProposedReward", r.l1CurrentBlockProposedReward,
 				"l1CurrentBlockProvenReward", r.l1CurrentBlockProvenReward,
 				"ProposedRewardEventHeight", relaySyncStatus.ProposedRewardEventHeight.Uint64(),
-				"ProvedRewardEventHeight", relaySyncStatus.ProvedRewardEventHeight.Uint64(),
+				"ProvenRewardEventHeight", relaySyncStatus.ProvenRewardEventHeight.Uint64(),
+				"LastProvenL1Height", lastProvenL1Height.Uint64(),
 			)
 		}
 	}

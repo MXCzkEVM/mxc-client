@@ -87,6 +87,9 @@ func NewClient(ctx context.Context, cfg *ClientConfig) (*Client, error) {
 	var LPWANClient *bindings.LPWANClient
 	if cfg.LPWANAddress != nil {
 		LPWANClient, err = bindings.NewLPWANClient(*cfg.LPWANAddress, l2RPC)
+		if err != nil {
+			return nil, err
+		}
 	}
 	var MxcTokenClient *bindings.MxcTokenClient
 	if cfg.MxcTokenAddress != nil {
