@@ -287,6 +287,8 @@ func (p *Proposer) ProposeTxList(
 	}
 	if prevGasUsed.GasUsed > anchorGasCost {
 		meta.GasLimit = uint32(prevGasUsed.GasUsed - anchorGasCost)
+	} else {
+		meta.GasLimit = 21000
 	}
 	if meta.GasLimit < 21000 {
 		meta.GasLimit = 21000
