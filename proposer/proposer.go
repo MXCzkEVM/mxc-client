@@ -285,7 +285,9 @@ func (p *Proposer) ProposeTxList(
 	if err != nil {
 		return err
 	}
-	meta.GasLimit = uint32(prevGasUsed.GasUsed) - anchorGasCost
+	if prevGasUsed.GasUsed > anchorGasCost {
+		meta.GasLimit = uint32(prevGasUsed.GasUsed - anchorGasCost)
+	}
 	if meta.GasLimit < 21000 {
 		meta.GasLimit = 21000
 	}
