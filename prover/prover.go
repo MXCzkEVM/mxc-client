@@ -623,7 +623,7 @@ func (p *Prover) closeSubscription() {
 // checkChainVerification checks if there is no new block verification in protocol, if so,
 // it will let current sepecial prover to go back to try proving the block whose id is `lastVerifiedBlockId + 1`.
 func (p *Prover) checkChainVerification(lastLatestVerifiedL1Height uint64) error {
-	if (!p.cfg.SystemProver && !p.cfg.OracleProver) || lastLatestVerifiedL1Height != p.latestVerifiedL1Height {
+	if !p.cfg.SystemProver && !p.cfg.OracleProver {
 		return nil
 	}
 
