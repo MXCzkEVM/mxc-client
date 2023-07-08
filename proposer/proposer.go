@@ -43,7 +43,7 @@ type Proposer struct {
 	// Proposing configurations
 	proposingInterval          *time.Duration
 	proposeEmptyBlocksInterval *time.Duration
-	proposingTimer             *time.Ticker
+	proposingTimer             *time.Timer
 	commitSlot                 uint64
 	locals                     []common.Address
 	minBlockGasLimit           *uint64
@@ -133,8 +133,8 @@ func (p *Proposer) eventLoop() {
 		p.wg.Done()
 	}()
 	var lastNonEmptyBlockProposedAt = time.Now()
-	p.updateProposingTicker()
 	for {
+		p.updateProposingTicker()
 		select {
 		case <-p.ctx.Done():
 			return
@@ -355,7 +355,7 @@ func (p *Proposer) updateProposingTicker() {
 		duration = time.Duration(randomSeconds) * time.Second
 	}
 
-	p.proposingTimer = time.NewTicker(duration)
+	p.proposingTimer = time.NewTimer(duration)
 }
 
 // Name returns the application name.
