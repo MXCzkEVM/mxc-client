@@ -176,7 +176,7 @@ func NeedNewProof(
 	proverAddress common.Address,
 	realProofSkipSize *big.Int,
 ) (bool, error) {
-	if realProofSkipSize != nil && id.Uint64()%realProofSkipSize.Uint64() != 0 {
+	if realProofSkipSize != nil && realProofSkipSize.Uint64() != 0 && id.Uint64()%realProofSkipSize.Uint64() != 0 {
 		log.Info(
 			"Skipping valid block proof",
 			"blockID", id.Uint64(),
