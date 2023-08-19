@@ -25,7 +25,7 @@ var (
 	errSyncing = errors.New("syncing")
 	// syncProgressRecheckDelay is the time delay of rechecking the L2 execution engine's sync progress again,
 	// if the previous check failed.
-	syncProgressRecheckDelay = time.Second
+	syncProgressRecheckDelay    = time.Second
 	waitL1OriginPollingInterval = 3 * time.Second
 	defaultWaitL1OriginTimeout  = 3 * time.Minute
 	minTxGasLimit               = 21000
@@ -216,10 +216,15 @@ func (c *Client) GetPoolContent(
 	blockMaxGasLimit uint64,
 	maxBytesPerTxList uint64,
 	locals []common.Address,
+	blockedAddresses []common.Address,
 ) ([]types.Transactions, error) {
 	var localsArg []string
 	for _, local := range locals {
 		localsArg = append(localsArg, local.Hex())
+	}
+	var blockedAddressesArg []string
+	for _, blockedAddress := range blockedAddresses {
+		blockedAddressesArg = append(blockedAddressesArg, blockedAddress.Hex())
 	}
 
 	var result []types.Transactions
@@ -232,6 +237,7 @@ func (c *Client) GetPoolContent(
 		maxBytesPerTxList,
 		minTxGasLimit,
 		localsArg,
+		blockedAddressesArg,
 	)
 
 	return result, err

@@ -40,6 +40,11 @@ var (
 		Usage:    "Comma separated accounts to treat as locals (priority inclusion)",
 		Category: proposerCategory,
 	}
+	BlockedAddresses = &cli.StringFlag{
+		Name:     "blockedAddresses",
+		Usage:    "Comma separated accounts to block from inclusion",
+		Category: proposerCategory,
+	}
 	ProposeEmptyBlocksInterval = &cli.StringFlag{
 		Name:     "proposeEmptyBlockInterval",
 		Usage:    "Time interval to propose empty blocks",
