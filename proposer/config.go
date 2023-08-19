@@ -28,6 +28,7 @@ type Config struct {
 	MinBlockGasLimit           uint64
 	MaxProposedTxListsPerEpoch uint64
 	ProposeBlockTxGasLimit     *uint64
+	BlockedAddresses           []common.Address
 }
 
 // NewConfigFromCliContext initializes a Config instance from
@@ -74,6 +75,17 @@ func NewConfigFromCliContext(c *cli.Context) (*Config, error) {
 		}
 	}
 
+	blockedAddresses := []common.Address{}
+	if c.IsSet(flags.BlockedAddresses.Name) {
+		for _, account := range strings.Split(c.String(flags.BlockedAddresses.Name), ",") {
+			if trimmed := strings.TrimSpace(account); !common.IsHexAddress(trimmed) {
+				return nil, fmt.Errorf("invalid account in --blocked.addresses: %s", trimmed)
+			} else {
+				blockedAddresses = append(blockedAddresses, common.HexToAddress(account))
+			}
+		}
+	}
+
 	var proposeBlockTxGasLimit *uint64
 	if c.IsSet(flags.ProposeBlockTxGasLimit.Name) {
 		gasLimit := c.Uint64(flags.ProposeBlockTxGasLimit.Name)
@@ -95,5 +107,6 @@ func NewConfigFromCliContext(c *cli.Context) (*Config, error) {
 		MinBlockGasLimit:           c.Uint64(flags.MinBlockGasLimit.Name),
 		MaxProposedTxListsPerEpoch: c.Uint64(flags.MaxProposedTxListsPerEpoch.Name),
 		ProposeBlockTxGasLimit:     proposeBlockTxGasLimit,
+		BlockedAddresses:           blockedAddresses,
 	}, nil
 }

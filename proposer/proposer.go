@@ -46,6 +46,7 @@ type Proposer struct {
 	proposingTimer             *time.Timer
 	commitSlot                 uint64
 	locals                     []common.Address
+	blockedAddresses           []common.Address
 	minBlockGasLimit           *uint64
 	maxProposedTxListsPerEpoch uint64
 	proposeBlockTxGasLimit     *uint64
@@ -81,6 +82,7 @@ func InitFromConfig(ctx context.Context, p *Proposer, cfg *Config) (err error) {
 	p.proposeBlockTxGasLimit = cfg.ProposeBlockTxGasLimit
 	p.wg = sync.WaitGroup{}
 	p.locals = cfg.LocalAddresses
+	p.blockedAddresses = cfg.BlockedAddresses
 	p.commitSlot = cfg.CommitSlot
 	p.maxProposedTxListsPerEpoch = cfg.MaxProposedTxListsPerEpoch
 	p.ctx = ctx
@@ -199,6 +201,7 @@ func (p *Proposer) ProposeOp(ctx context.Context) error {
 		p.protocolConfigs.BlockMaxGasLimit,
 		p.protocolConfigs.MaxBytesPerTxList,
 		p.locals,
+		p.blockedAddresses,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to fetch transaction pool content: %w", err)
