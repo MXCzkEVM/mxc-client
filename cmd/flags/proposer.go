@@ -75,6 +75,7 @@ var ProposerFlags = MergeFlags(CommonFlags, []cli.Flag{
 	ProposeInterval,
 	CommitSlot,
 	TxPoolLocals,
+	BlockedAddresses,
 	ProposeEmptyBlocksInterval,
 	MinBlockGasLimit,
 	MaxProposedTxListsPerEpoch,
