@@ -24,7 +24,6 @@ var (
 )
 
 var RelayerFlags = MergeFlags(CommonFlags, []cli.Flag{
-	L1HTTPEndpoint,
 	L2WSEndpoint,
 	L2HTTPEndpoint,
 	MxcTokenAddress,
