@@ -68,7 +68,6 @@ var (
 
 // All proposer flags.
 var ProposerFlags = MergeFlags(CommonFlags, []cli.Flag{
-	L1HTTPEndpoint,
 	L2HTTPEndpoint,
 	L1ProposerPrivKey,
 	L2SuggestedFeeRecipient,
