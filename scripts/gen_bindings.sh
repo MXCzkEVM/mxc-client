@@ -40,7 +40,7 @@ cat ${MXC_MONO_DIR}/packages/protocol/out/MxcToken.sol/MxcToken.json |
   jq .abi |
   ${ABIGEN_BIN} --abi - --type MxcTokenClient --pkg bindings --out $DIR/../bindings/gen_mxc_token.go
 
-cat ${MXC_CORE_DIR}/artifacts/contracts/token/LPWAN.sol/LPWAN.json |
+cat ${MXC_CORE_DIR}/artifacts/contracts/LPWAN.sol/LPWAN.json |
 	jq .abi |
 	${ABIGEN_BIN} --abi - --type LPWANClient --pkg bindings --out $DIR/../bindings/gen_lpwan.go
 
