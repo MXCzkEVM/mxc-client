@@ -5,6 +5,7 @@ import (
 	"crypto/ecdsa"
 	"errors"
 	"fmt"
+	"github.com/ethereum/go-ethereum"
 	"math"
 	"math/big"
 	"math/rand"
@@ -35,6 +36,7 @@ type Proposer struct {
 	// RPC clients
 	rpc *rpc.Client
 
+	mxcL1Address common.Address
 	// Private keys and account addresses
 	l1ProposerPrivKey       *ecdsa.PrivateKey
 	l1ProposerAddress       common.Address
@@ -86,6 +88,7 @@ func InitFromConfig(ctx context.Context, p *Proposer, cfg *Config) (err error) {
 	p.commitSlot = cfg.CommitSlot
 	p.maxProposedTxListsPerEpoch = cfg.MaxProposedTxListsPerEpoch
 	p.ctx = ctx
+	p.mxcL1Address = cfg.MxcL1Address
 
 	// RPC clients
 	if p.rpc, err = rpc.NewClient(p.ctx, &rpc.ClientConfig{
@@ -314,7 +317,21 @@ func (p *Proposer) ProposeTxList(
 		opts.GasLimit = *p.proposeBlockTxGasLimit
 	}
 
-	proposeTx, err := p.rpc.MxcL1.ProposeBlock(opts, inputs, txListBytes)
+	// estimate gas
+	estimateGasInput, err := encoding.MxcL1ABI.Pack("proposeBlock", inputs, txListBytes, big.NewInt(1e6))
+	if err != nil {
+		return fmt.Errorf("estimateGas input err %v", err)
+	}
+	estimateGas, err := p.rpc.L1.EstimateGas(ctx, ethereum.CallMsg{
+		From: opts.From,
+		To:   &p.mxcL1Address,
+		Data: estimateGasInput,
+	})
+	if err != nil {
+		return fmt.Errorf("estimateGas err %v", err)
+	}
+	log.Info("gas", "gas", estimateGas)
+	proposeTx, err := p.rpc.MxcL1.ProposeBlock(opts, inputs, txListBytes, big.NewInt(0).SetUint64(estimateGas))
 	if err != nil {
 		return encoding.TryParsingCustomError(err)
 	}

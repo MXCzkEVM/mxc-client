@@ -29,31 +29,9 @@ var (
 	_ = abi.ConvertType
 )
 
-// LPWANRelaySyncStatus is an auto generated low-level Go binding around an user-defined struct.
-type LPWANRelaySyncStatus struct {
-	ProposedRewardEventHeight *big.Int
-	ProvenRewardEventHeight   *big.Int
-}
-
-// LPWANRewardData is an auto generated low-level Go binding around an user-defined struct.
-type LPWANRewardData struct {
-	ProposedReward     *big.Int
-	ProvenReward       *big.Int
-	ProposedCostReward *big.Int
-	ProvenCostReward   *big.Int
-}
-
-// LPWANRewardEvent is an auto generated low-level Go binding around an user-defined struct.
-type LPWANRewardEvent struct {
-	RewardHeight *big.Int
-	Account      common.Address
-	Amount       *big.Int
-	Cost         *big.Int
-}
-
 // LPWANClientMetaData contains all meta data concerning the LPWANClient contract.
 var LPWANClientMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[],\"name\":\"RELAY_INVALID_COST\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"RELAY_INVALID_HEIGHT\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"BurnExcessToken\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"bool\",\"name\":\"burn\",\"type\":\"bool\"},{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"rewardType\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"ClaimReward\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"controller\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bool\",\"name\":\"enabled\",\"type\":\"bool\"}],\"name\":\"ControllerChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint8\",\"name\":\"version\",\"type\":\"uint8\"}],\"name\":\"Initialized\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"__Controllable_init\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"burnExcessToken\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bool\",\"name\":\"burn\",\"type\":\"bool\"}],\"name\":\"claimAllReward\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bool\",\"name\":\"burn\",\"type\":\"bool\"}],\"name\":\"claimProposedCostReward\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bool\",\"name\":\"burn\",\"type\":\"bool\"}],\"name\":\"claimProposedReward\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bool\",\"name\":\"burn\",\"type\":\"bool\"}],\"name\":\"claimProvenCostReward\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bool\",\"name\":\"burn\",\"type\":\"bool\"}],\"name\":\"claimProvenReward\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"controllers\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getLatestProvenL1Height\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getMEP1004Addr\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getMaxCostMxc\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getRelaySyncStatus\",\"outputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"ProposedRewardEventHeight\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"ProvenRewardEventHeight\",\"type\":\"uint256\"}],\"internalType\":\"structLPWAN.RelaySyncStatus\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"getRewardData\",\"outputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"proposedReward\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"provenReward\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"proposedCostReward\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"provenCostReward\",\"type\":\"uint256\"}],\"internalType\":\"structLPWAN.RewardData\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getTotalCostEth\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getTotalRewardData\",\"outputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"proposedReward\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"provenReward\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"proposedCostReward\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"provenCostReward\",\"type\":\"uint256\"}],\"internalType\":\"structLPWAN.RewardData\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"MEP1004Address_\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"ethPriceOracle_\",\"type\":\"address\"}],\"name\":\"initialize\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_to\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"_SNCode\",\"type\":\"string\"}],\"name\":\"mintMEP1004Stations\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"controller\",\"type\":\"address\"},{\"internalType\":\"bool\",\"name\":\"enabled\",\"type\":\"bool\"}],\"name\":\"setController\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"ethPriceOracle_\",\"type\":\"address\"}],\"name\":\"setEthOracle\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"MEP1004Address\",\"type\":\"address\"}],\"name\":\"setMEP1004Addr\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"maxCostMxc_\",\"type\":\"uint256\"}],\"name\":\"setMaxCostMxc\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"proposedRewardHeight\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"provenRewardHeight\",\"type\":\"uint256\"}],\"name\":\"setRelaySyncStatus\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_MEP1002TokenId\",\"type\":\"uint256\"},{\"internalType\":\"uint256[]\",\"name\":\"_MEP1004TokenIds\",\"type\":\"uint256[]\"},{\"internalType\":\"string\",\"name\":\"_item\",\"type\":\"string\"}],\"name\":\"submitLocationProofs\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"rewardHeight\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cost\",\"type\":\"uint256\"}],\"internalType\":\"structLPWAN.RewardEvent[]\",\"name\":\"rewardEvents\",\"type\":\"tuple[]\"},{\"internalType\":\"bool\",\"name\":\"setting\",\"type\":\"bool\"}],\"name\":\"syncProposedRewardEvent\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"rewardHeight\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"cost\",\"type\":\"uint256\"}],\"internalType\":\"structLPWAN.RewardEvent[]\",\"name\":\"rewardEvents\",\"type\":\"tuple[]\"},{\"internalType\":\"bool\",\"name\":\"setting\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"latestProvenL1Height\",\"type\":\"uint256\"}],\"name\":\"syncProvenRewardEvent\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
+	ABI: "[{\"inputs\":[],\"name\":\"INVALID_REWARD\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"INVALID_SIGNATURE\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"BurnExcessToken\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"ClaimReward\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"controller\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bool\",\"name\":\"enabled\",\"type\":\"bool\"}],\"name\":\"ControllerChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint8\",\"name\":\"version\",\"type\":\"uint8\"}],\"name\":\"Initialized\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"DOMAIN_SEPARATOR\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"PERMIT_TYPEHASH\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"PERMIT_TYPEHASH2\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"__Controllable_init\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"token\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"approveToken\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"burnExcessToken\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"totalReward\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"burn\",\"type\":\"bool\"},{\"internalType\":\"address\",\"name\":\"_signer\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"_signature\",\"type\":\"bytes\"}],\"name\":\"claimSupernodeReward\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"controllers\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getMEP1004Addr\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"MEP1004Address_\",\"type\":\"address\"}],\"name\":\"initialize\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_to\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"_SNCode\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"_H3Index\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"_regionID\",\"type\":\"string\"}],\"name\":\"mintMEP1004Stations\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"_H3Index\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"_SNCode\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"regionID\",\"type\":\"string\"},{\"internalType\":\"address\",\"name\":\"_signer\",\"type\":\"address\"},{\"internalType\":\"bytes\",\"name\":\"_signature\",\"type\":\"bytes\"}],\"name\":\"mintMEP1004StationsBySignature\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"controller\",\"type\":\"address\"},{\"internalType\":\"bool\",\"name\":\"enabled\",\"type\":\"bool\"}],\"name\":\"setController\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"MEP1004Address\",\"type\":\"address\"}],\"name\":\"setMEP1004Addr\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_MEP1002TokenId\",\"type\":\"uint256\"},{\"internalType\":\"uint256[]\",\"name\":\"_MEP1004TokenIds\",\"type\":\"uint256[]\"},{\"internalType\":\"string\",\"name\":\"_item\",\"type\":\"string\"}],\"name\":\"submitLocationProofs\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"withdrawal\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
 }
 
 // LPWANClientABI is the input ABI used to generate the binding from.
@@ -202,6 +180,99 @@ func (_LPWANClient *LPWANClientTransactorRaw) Transact(opts *bind.TransactOpts, 
 	return _LPWANClient.Contract.contract.Transact(opts, method, params...)
 }
 
+// DOMAINSEPARATOR is a free data retrieval call binding the contract method 0x3644e515.
+//
+// Solidity: function DOMAIN_SEPARATOR() view returns(bytes32)
+func (_LPWANClient *LPWANClientCaller) DOMAINSEPARATOR(opts *bind.CallOpts) ([32]byte, error) {
+	var out []interface{}
+	err := _LPWANClient.contract.Call(opts, &out, "DOMAIN_SEPARATOR")
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
+}
+
+// DOMAINSEPARATOR is a free data retrieval call binding the contract method 0x3644e515.
+//
+// Solidity: function DOMAIN_SEPARATOR() view returns(bytes32)
+func (_LPWANClient *LPWANClientSession) DOMAINSEPARATOR() ([32]byte, error) {
+	return _LPWANClient.Contract.DOMAINSEPARATOR(&_LPWANClient.CallOpts)
+}
+
+// DOMAINSEPARATOR is a free data retrieval call binding the contract method 0x3644e515.
+//
+// Solidity: function DOMAIN_SEPARATOR() view returns(bytes32)
+func (_LPWANClient *LPWANClientCallerSession) DOMAINSEPARATOR() ([32]byte, error) {
+	return _LPWANClient.Contract.DOMAINSEPARATOR(&_LPWANClient.CallOpts)
+}
+
+// PERMITTYPEHASH is a free data retrieval call binding the contract method 0x30adf81f.
+//
+// Solidity: function PERMIT_TYPEHASH() view returns(bytes32)
+func (_LPWANClient *LPWANClientCaller) PERMITTYPEHASH(opts *bind.CallOpts) ([32]byte, error) {
+	var out []interface{}
+	err := _LPWANClient.contract.Call(opts, &out, "PERMIT_TYPEHASH")
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
+}
+
+// PERMITTYPEHASH is a free data retrieval call binding the contract method 0x30adf81f.
+//
+// Solidity: function PERMIT_TYPEHASH() view returns(bytes32)
+func (_LPWANClient *LPWANClientSession) PERMITTYPEHASH() ([32]byte, error) {
+	return _LPWANClient.Contract.PERMITTYPEHASH(&_LPWANClient.CallOpts)
+}
+
+// PERMITTYPEHASH is a free data retrieval call binding the contract method 0x30adf81f.
+//
+// Solidity: function PERMIT_TYPEHASH() view returns(bytes32)
+func (_LPWANClient *LPWANClientCallerSession) PERMITTYPEHASH() ([32]byte, error) {
+	return _LPWANClient.Contract.PERMITTYPEHASH(&_LPWANClient.CallOpts)
+}
+
+// PERMITTYPEHASH2 is a free data retrieval call binding the contract method 0x2b371f35.
+//
+// Solidity: function PERMIT_TYPEHASH2() view returns(bytes32)
+func (_LPWANClient *LPWANClientCaller) PERMITTYPEHASH2(opts *bind.CallOpts) ([32]byte, error) {
+	var out []interface{}
+	err := _LPWANClient.contract.Call(opts, &out, "PERMIT_TYPEHASH2")
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
+}
+
+// PERMITTYPEHASH2 is a free data retrieval call binding the contract method 0x2b371f35.
+//
+// Solidity: function PERMIT_TYPEHASH2() view returns(bytes32)
+func (_LPWANClient *LPWANClientSession) PERMITTYPEHASH2() ([32]byte, error) {
+	return _LPWANClient.Contract.PERMITTYPEHASH2(&_LPWANClient.CallOpts)
+}
+
+// PERMITTYPEHASH2 is a free data retrieval call binding the contract method 0x2b371f35.
+//
+// Solidity: function PERMIT_TYPEHASH2() view returns(bytes32)
+func (_LPWANClient *LPWANClientCallerSession) PERMITTYPEHASH2() ([32]byte, error) {
+	return _LPWANClient.Contract.PERMITTYPEHASH2(&_LPWANClient.CallOpts)
+}
+
 // Controllers is a free data retrieval call binding the contract method 0xda8c229e.
 //
 // Solidity: function controllers(address ) view returns(bool)
@@ -233,37 +304,6 @@ func (_LPWANClient *LPWANClientCallerSession) Controllers(arg0 common.Address) (
 	return _LPWANClient.Contract.Controllers(&_LPWANClient.CallOpts, arg0)
 }
 
-// GetLatestProvenL1Height is a free data retrieval call binding the contract method 0xe9fd96aa.
-//
-// Solidity: function getLatestProvenL1Height() view returns(uint256)
-func (_LPWANClient *LPWANClientCaller) GetLatestProvenL1Height(opts *bind.CallOpts) (*big.Int, error) {
-	var out []interface{}
-	err := _LPWANClient.contract.Call(opts, &out, "getLatestProvenL1Height")
-
-	if err != nil {
-		return *new(*big.Int), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
-
-	return out0, err
-
-}
-
-// GetLatestProvenL1Height is a free data retrieval call binding the contract method 0xe9fd96aa.
-//
-// Solidity: function getLatestProvenL1Height() view returns(uint256)
-func (_LPWANClient *LPWANClientSession) GetLatestProvenL1Height() (*big.Int, error) {
-	return _LPWANClient.Contract.GetLatestProvenL1Height(&_LPWANClient.CallOpts)
-}
-
-// GetLatestProvenL1Height is a free data retrieval call binding the contract method 0xe9fd96aa.
-//
-// Solidity: function getLatestProvenL1Height() view returns(uint256)
-func (_LPWANClient *LPWANClientCallerSession) GetLatestProvenL1Height() (*big.Int, error) {
-	return _LPWANClient.Contract.GetLatestProvenL1Height(&_LPWANClient.CallOpts)
-}
-
 // GetMEP1004Addr is a free data retrieval call binding the contract method 0x90ce65e7.
 //
 // Solidity: function getMEP1004Addr() view returns(address)
@@ -293,161 +333,6 @@ func (_LPWANClient *LPWANClientSession) GetMEP1004Addr() (common.Address, error)
 // Solidity: function getMEP1004Addr() view returns(address)
 func (_LPWANClient *LPWANClientCallerSession) GetMEP1004Addr() (common.Address, error) {
 	return _LPWANClient.Contract.GetMEP1004Addr(&_LPWANClient.CallOpts)
-}
-
-// GetMaxCostMxc is a free data retrieval call binding the contract method 0x02614f92.
-//
-// Solidity: function getMaxCostMxc() view returns(uint256)
-func (_LPWANClient *LPWANClientCaller) GetMaxCostMxc(opts *bind.CallOpts) (*big.Int, error) {
-	var out []interface{}
-	err := _LPWANClient.contract.Call(opts, &out, "getMaxCostMxc")
-
-	if err != nil {
-		return *new(*big.Int), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
-
-	return out0, err
-
-}
-
-// GetMaxCostMxc is a free data retrieval call binding the contract method 0x02614f92.
-//
-// Solidity: function getMaxCostMxc() view returns(uint256)
-func (_LPWANClient *LPWANClientSession) GetMaxCostMxc() (*big.Int, error) {
-	return _LPWANClient.Contract.GetMaxCostMxc(&_LPWANClient.CallOpts)
-}
-
-// GetMaxCostMxc is a free data retrieval call binding the contract method 0x02614f92.
-//
-// Solidity: function getMaxCostMxc() view returns(uint256)
-func (_LPWANClient *LPWANClientCallerSession) GetMaxCostMxc() (*big.Int, error) {
-	return _LPWANClient.Contract.GetMaxCostMxc(&_LPWANClient.CallOpts)
-}
-
-// GetRelaySyncStatus is a free data retrieval call binding the contract method 0xe3fb4590.
-//
-// Solidity: function getRelaySyncStatus() view returns((uint256,uint256))
-func (_LPWANClient *LPWANClientCaller) GetRelaySyncStatus(opts *bind.CallOpts) (LPWANRelaySyncStatus, error) {
-	var out []interface{}
-	err := _LPWANClient.contract.Call(opts, &out, "getRelaySyncStatus")
-
-	if err != nil {
-		return *new(LPWANRelaySyncStatus), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(LPWANRelaySyncStatus)).(*LPWANRelaySyncStatus)
-
-	return out0, err
-
-}
-
-// GetRelaySyncStatus is a free data retrieval call binding the contract method 0xe3fb4590.
-//
-// Solidity: function getRelaySyncStatus() view returns((uint256,uint256))
-func (_LPWANClient *LPWANClientSession) GetRelaySyncStatus() (LPWANRelaySyncStatus, error) {
-	return _LPWANClient.Contract.GetRelaySyncStatus(&_LPWANClient.CallOpts)
-}
-
-// GetRelaySyncStatus is a free data retrieval call binding the contract method 0xe3fb4590.
-//
-// Solidity: function getRelaySyncStatus() view returns((uint256,uint256))
-func (_LPWANClient *LPWANClientCallerSession) GetRelaySyncStatus() (LPWANRelaySyncStatus, error) {
-	return _LPWANClient.Contract.GetRelaySyncStatus(&_LPWANClient.CallOpts)
-}
-
-// GetRewardData is a free data retrieval call binding the contract method 0x451831e4.
-//
-// Solidity: function getRewardData(address account) view returns((uint256,uint256,uint256,uint256))
-func (_LPWANClient *LPWANClientCaller) GetRewardData(opts *bind.CallOpts, account common.Address) (LPWANRewardData, error) {
-	var out []interface{}
-	err := _LPWANClient.contract.Call(opts, &out, "getRewardData", account)
-
-	if err != nil {
-		return *new(LPWANRewardData), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(LPWANRewardData)).(*LPWANRewardData)
-
-	return out0, err
-
-}
-
-// GetRewardData is a free data retrieval call binding the contract method 0x451831e4.
-//
-// Solidity: function getRewardData(address account) view returns((uint256,uint256,uint256,uint256))
-func (_LPWANClient *LPWANClientSession) GetRewardData(account common.Address) (LPWANRewardData, error) {
-	return _LPWANClient.Contract.GetRewardData(&_LPWANClient.CallOpts, account)
-}
-
-// GetRewardData is a free data retrieval call binding the contract method 0x451831e4.
-//
-// Solidity: function getRewardData(address account) view returns((uint256,uint256,uint256,uint256))
-func (_LPWANClient *LPWANClientCallerSession) GetRewardData(account common.Address) (LPWANRewardData, error) {
-	return _LPWANClient.Contract.GetRewardData(&_LPWANClient.CallOpts, account)
-}
-
-// GetTotalCostEth is a free data retrieval call binding the contract method 0x8c0be20d.
-//
-// Solidity: function getTotalCostEth() view returns(uint256)
-func (_LPWANClient *LPWANClientCaller) GetTotalCostEth(opts *bind.CallOpts) (*big.Int, error) {
-	var out []interface{}
-	err := _LPWANClient.contract.Call(opts, &out, "getTotalCostEth")
-
-	if err != nil {
-		return *new(*big.Int), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
-
-	return out0, err
-
-}
-
-// GetTotalCostEth is a free data retrieval call binding the contract method 0x8c0be20d.
-//
-// Solidity: function getTotalCostEth() view returns(uint256)
-func (_LPWANClient *LPWANClientSession) GetTotalCostEth() (*big.Int, error) {
-	return _LPWANClient.Contract.GetTotalCostEth(&_LPWANClient.CallOpts)
-}
-
-// GetTotalCostEth is a free data retrieval call binding the contract method 0x8c0be20d.
-//
-// Solidity: function getTotalCostEth() view returns(uint256)
-func (_LPWANClient *LPWANClientCallerSession) GetTotalCostEth() (*big.Int, error) {
-	return _LPWANClient.Contract.GetTotalCostEth(&_LPWANClient.CallOpts)
-}
-
-// GetTotalRewardData is a free data retrieval call binding the contract method 0x6fa4e42d.
-//
-// Solidity: function getTotalRewardData() view returns((uint256,uint256,uint256,uint256))
-func (_LPWANClient *LPWANClientCaller) GetTotalRewardData(opts *bind.CallOpts) (LPWANRewardData, error) {
-	var out []interface{}
-	err := _LPWANClient.contract.Call(opts, &out, "getTotalRewardData")
-
-	if err != nil {
-		return *new(LPWANRewardData), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(LPWANRewardData)).(*LPWANRewardData)
-
-	return out0, err
-
-}
-
-// GetTotalRewardData is a free data retrieval call binding the contract method 0x6fa4e42d.
-//
-// Solidity: function getTotalRewardData() view returns((uint256,uint256,uint256,uint256))
-func (_LPWANClient *LPWANClientSession) GetTotalRewardData() (LPWANRewardData, error) {
-	return _LPWANClient.Contract.GetTotalRewardData(&_LPWANClient.CallOpts)
-}
-
-// GetTotalRewardData is a free data retrieval call binding the contract method 0x6fa4e42d.
-//
-// Solidity: function getTotalRewardData() view returns((uint256,uint256,uint256,uint256))
-func (_LPWANClient *LPWANClientCallerSession) GetTotalRewardData() (LPWANRewardData, error) {
-	return _LPWANClient.Contract.GetTotalRewardData(&_LPWANClient.CallOpts)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
@@ -502,6 +387,27 @@ func (_LPWANClient *LPWANClientTransactorSession) ControllableInit() (*types.Tra
 	return _LPWANClient.Contract.ControllableInit(&_LPWANClient.TransactOpts)
 }
 
+// ApproveToken is a paid mutator transaction binding the contract method 0xda3e3397.
+//
+// Solidity: function approveToken(address token, address spender, uint256 amount) returns(bool)
+func (_LPWANClient *LPWANClientTransactor) ApproveToken(opts *bind.TransactOpts, token common.Address, spender common.Address, amount *big.Int) (*types.Transaction, error) {
+	return _LPWANClient.contract.Transact(opts, "approveToken", token, spender, amount)
+}
+
+// ApproveToken is a paid mutator transaction binding the contract method 0xda3e3397.
+//
+// Solidity: function approveToken(address token, address spender, uint256 amount) returns(bool)
+func (_LPWANClient *LPWANClientSession) ApproveToken(token common.Address, spender common.Address, amount *big.Int) (*types.Transaction, error) {
+	return _LPWANClient.Contract.ApproveToken(&_LPWANClient.TransactOpts, token, spender, amount)
+}
+
+// ApproveToken is a paid mutator transaction binding the contract method 0xda3e3397.
+//
+// Solidity: function approveToken(address token, address spender, uint256 amount) returns(bool)
+func (_LPWANClient *LPWANClientTransactorSession) ApproveToken(token common.Address, spender common.Address, amount *big.Int) (*types.Transaction, error) {
+	return _LPWANClient.Contract.ApproveToken(&_LPWANClient.TransactOpts, token, spender, amount)
+}
+
 // BurnExcessToken is a paid mutator transaction binding the contract method 0xf4a6842a.
 //
 // Solidity: function burnExcessToken(uint256 amount) returns()
@@ -523,151 +429,88 @@ func (_LPWANClient *LPWANClientTransactorSession) BurnExcessToken(amount *big.In
 	return _LPWANClient.Contract.BurnExcessToken(&_LPWANClient.TransactOpts, amount)
 }
 
-// ClaimAllReward is a paid mutator transaction binding the contract method 0x41ddcee4.
+// ClaimSupernodeReward is a paid mutator transaction binding the contract method 0x9234e6e3.
 //
-// Solidity: function claimAllReward(bool burn) returns()
-func (_LPWANClient *LPWANClientTransactor) ClaimAllReward(opts *bind.TransactOpts, burn bool) (*types.Transaction, error) {
-	return _LPWANClient.contract.Transact(opts, "claimAllReward", burn)
+// Solidity: function claimSupernodeReward(address to, uint256 totalReward, bool burn, address _signer, bytes _signature) returns()
+func (_LPWANClient *LPWANClientTransactor) ClaimSupernodeReward(opts *bind.TransactOpts, to common.Address, totalReward *big.Int, burn bool, _signer common.Address, _signature []byte) (*types.Transaction, error) {
+	return _LPWANClient.contract.Transact(opts, "claimSupernodeReward", to, totalReward, burn, _signer, _signature)
 }
 
-// ClaimAllReward is a paid mutator transaction binding the contract method 0x41ddcee4.
+// ClaimSupernodeReward is a paid mutator transaction binding the contract method 0x9234e6e3.
 //
-// Solidity: function claimAllReward(bool burn) returns()
-func (_LPWANClient *LPWANClientSession) ClaimAllReward(burn bool) (*types.Transaction, error) {
-	return _LPWANClient.Contract.ClaimAllReward(&_LPWANClient.TransactOpts, burn)
+// Solidity: function claimSupernodeReward(address to, uint256 totalReward, bool burn, address _signer, bytes _signature) returns()
+func (_LPWANClient *LPWANClientSession) ClaimSupernodeReward(to common.Address, totalReward *big.Int, burn bool, _signer common.Address, _signature []byte) (*types.Transaction, error) {
+	return _LPWANClient.Contract.ClaimSupernodeReward(&_LPWANClient.TransactOpts, to, totalReward, burn, _signer, _signature)
 }
 
-// ClaimAllReward is a paid mutator transaction binding the contract method 0x41ddcee4.
+// ClaimSupernodeReward is a paid mutator transaction binding the contract method 0x9234e6e3.
 //
-// Solidity: function claimAllReward(bool burn) returns()
-func (_LPWANClient *LPWANClientTransactorSession) ClaimAllReward(burn bool) (*types.Transaction, error) {
-	return _LPWANClient.Contract.ClaimAllReward(&_LPWANClient.TransactOpts, burn)
+// Solidity: function claimSupernodeReward(address to, uint256 totalReward, bool burn, address _signer, bytes _signature) returns()
+func (_LPWANClient *LPWANClientTransactorSession) ClaimSupernodeReward(to common.Address, totalReward *big.Int, burn bool, _signer common.Address, _signature []byte) (*types.Transaction, error) {
+	return _LPWANClient.Contract.ClaimSupernodeReward(&_LPWANClient.TransactOpts, to, totalReward, burn, _signer, _signature)
 }
 
-// ClaimProposedCostReward is a paid mutator transaction binding the contract method 0x1368243a.
+// Initialize is a paid mutator transaction binding the contract method 0xc4d66de8.
 //
-// Solidity: function claimProposedCostReward(bool burn) returns()
-func (_LPWANClient *LPWANClientTransactor) ClaimProposedCostReward(opts *bind.TransactOpts, burn bool) (*types.Transaction, error) {
-	return _LPWANClient.contract.Transact(opts, "claimProposedCostReward", burn)
+// Solidity: function initialize(address MEP1004Address_) returns()
+func (_LPWANClient *LPWANClientTransactor) Initialize(opts *bind.TransactOpts, MEP1004Address_ common.Address) (*types.Transaction, error) {
+	return _LPWANClient.contract.Transact(opts, "initialize", MEP1004Address_)
 }
 
-// ClaimProposedCostReward is a paid mutator transaction binding the contract method 0x1368243a.
+// Initialize is a paid mutator transaction binding the contract method 0xc4d66de8.
 //
-// Solidity: function claimProposedCostReward(bool burn) returns()
-func (_LPWANClient *LPWANClientSession) ClaimProposedCostReward(burn bool) (*types.Transaction, error) {
-	return _LPWANClient.Contract.ClaimProposedCostReward(&_LPWANClient.TransactOpts, burn)
+// Solidity: function initialize(address MEP1004Address_) returns()
+func (_LPWANClient *LPWANClientSession) Initialize(MEP1004Address_ common.Address) (*types.Transaction, error) {
+	return _LPWANClient.Contract.Initialize(&_LPWANClient.TransactOpts, MEP1004Address_)
 }
 
-// ClaimProposedCostReward is a paid mutator transaction binding the contract method 0x1368243a.
+// Initialize is a paid mutator transaction binding the contract method 0xc4d66de8.
 //
-// Solidity: function claimProposedCostReward(bool burn) returns()
-func (_LPWANClient *LPWANClientTransactorSession) ClaimProposedCostReward(burn bool) (*types.Transaction, error) {
-	return _LPWANClient.Contract.ClaimProposedCostReward(&_LPWANClient.TransactOpts, burn)
+// Solidity: function initialize(address MEP1004Address_) returns()
+func (_LPWANClient *LPWANClientTransactorSession) Initialize(MEP1004Address_ common.Address) (*types.Transaction, error) {
+	return _LPWANClient.Contract.Initialize(&_LPWANClient.TransactOpts, MEP1004Address_)
 }
 
-// ClaimProposedReward is a paid mutator transaction binding the contract method 0x5abf3150.
+// MintMEP1004Stations is a paid mutator transaction binding the contract method 0x772dc071.
 //
-// Solidity: function claimProposedReward(bool burn) returns()
-func (_LPWANClient *LPWANClientTransactor) ClaimProposedReward(opts *bind.TransactOpts, burn bool) (*types.Transaction, error) {
-	return _LPWANClient.contract.Transact(opts, "claimProposedReward", burn)
+// Solidity: function mintMEP1004Stations(address _to, string _SNCode, uint256 _H3Index, string _regionID) returns()
+func (_LPWANClient *LPWANClientTransactor) MintMEP1004Stations(opts *bind.TransactOpts, _to common.Address, _SNCode string, _H3Index *big.Int, _regionID string) (*types.Transaction, error) {
+	return _LPWANClient.contract.Transact(opts, "mintMEP1004Stations", _to, _SNCode, _H3Index, _regionID)
 }
 
-// ClaimProposedReward is a paid mutator transaction binding the contract method 0x5abf3150.
+// MintMEP1004Stations is a paid mutator transaction binding the contract method 0x772dc071.
 //
-// Solidity: function claimProposedReward(bool burn) returns()
-func (_LPWANClient *LPWANClientSession) ClaimProposedReward(burn bool) (*types.Transaction, error) {
-	return _LPWANClient.Contract.ClaimProposedReward(&_LPWANClient.TransactOpts, burn)
+// Solidity: function mintMEP1004Stations(address _to, string _SNCode, uint256 _H3Index, string _regionID) returns()
+func (_LPWANClient *LPWANClientSession) MintMEP1004Stations(_to common.Address, _SNCode string, _H3Index *big.Int, _regionID string) (*types.Transaction, error) {
+	return _LPWANClient.Contract.MintMEP1004Stations(&_LPWANClient.TransactOpts, _to, _SNCode, _H3Index, _regionID)
 }
 
-// ClaimProposedReward is a paid mutator transaction binding the contract method 0x5abf3150.
+// MintMEP1004Stations is a paid mutator transaction binding the contract method 0x772dc071.
 //
-// Solidity: function claimProposedReward(bool burn) returns()
-func (_LPWANClient *LPWANClientTransactorSession) ClaimProposedReward(burn bool) (*types.Transaction, error) {
-	return _LPWANClient.Contract.ClaimProposedReward(&_LPWANClient.TransactOpts, burn)
+// Solidity: function mintMEP1004Stations(address _to, string _SNCode, uint256 _H3Index, string _regionID) returns()
+func (_LPWANClient *LPWANClientTransactorSession) MintMEP1004Stations(_to common.Address, _SNCode string, _H3Index *big.Int, _regionID string) (*types.Transaction, error) {
+	return _LPWANClient.Contract.MintMEP1004Stations(&_LPWANClient.TransactOpts, _to, _SNCode, _H3Index, _regionID)
 }
 
-// ClaimProvenCostReward is a paid mutator transaction binding the contract method 0x694a61f1.
+// MintMEP1004StationsBySignature is a paid mutator transaction binding the contract method 0xe4340081.
 //
-// Solidity: function claimProvenCostReward(bool burn) returns()
-func (_LPWANClient *LPWANClientTransactor) ClaimProvenCostReward(opts *bind.TransactOpts, burn bool) (*types.Transaction, error) {
-	return _LPWANClient.contract.Transact(opts, "claimProvenCostReward", burn)
+// Solidity: function mintMEP1004StationsBySignature(address _to, uint256 _H3Index, string _SNCode, string regionID, address _signer, bytes _signature) returns()
+func (_LPWANClient *LPWANClientTransactor) MintMEP1004StationsBySignature(opts *bind.TransactOpts, _to common.Address, _H3Index *big.Int, _SNCode string, regionID string, _signer common.Address, _signature []byte) (*types.Transaction, error) {
+	return _LPWANClient.contract.Transact(opts, "mintMEP1004StationsBySignature", _to, _H3Index, _SNCode, regionID, _signer, _signature)
 }
 
-// ClaimProvenCostReward is a paid mutator transaction binding the contract method 0x694a61f1.
+// MintMEP1004StationsBySignature is a paid mutator transaction binding the contract method 0xe4340081.
 //
-// Solidity: function claimProvenCostReward(bool burn) returns()
-func (_LPWANClient *LPWANClientSession) ClaimProvenCostReward(burn bool) (*types.Transaction, error) {
-	return _LPWANClient.Contract.ClaimProvenCostReward(&_LPWANClient.TransactOpts, burn)
+// Solidity: function mintMEP1004StationsBySignature(address _to, uint256 _H3Index, string _SNCode, string regionID, address _signer, bytes _signature) returns()
+func (_LPWANClient *LPWANClientSession) MintMEP1004StationsBySignature(_to common.Address, _H3Index *big.Int, _SNCode string, regionID string, _signer common.Address, _signature []byte) (*types.Transaction, error) {
+	return _LPWANClient.Contract.MintMEP1004StationsBySignature(&_LPWANClient.TransactOpts, _to, _H3Index, _SNCode, regionID, _signer, _signature)
 }
 
-// ClaimProvenCostReward is a paid mutator transaction binding the contract method 0x694a61f1.
+// MintMEP1004StationsBySignature is a paid mutator transaction binding the contract method 0xe4340081.
 //
-// Solidity: function claimProvenCostReward(bool burn) returns()
-func (_LPWANClient *LPWANClientTransactorSession) ClaimProvenCostReward(burn bool) (*types.Transaction, error) {
-	return _LPWANClient.Contract.ClaimProvenCostReward(&_LPWANClient.TransactOpts, burn)
-}
-
-// ClaimProvenReward is a paid mutator transaction binding the contract method 0xf5a0545e.
-//
-// Solidity: function claimProvenReward(bool burn) returns()
-func (_LPWANClient *LPWANClientTransactor) ClaimProvenReward(opts *bind.TransactOpts, burn bool) (*types.Transaction, error) {
-	return _LPWANClient.contract.Transact(opts, "claimProvenReward", burn)
-}
-
-// ClaimProvenReward is a paid mutator transaction binding the contract method 0xf5a0545e.
-//
-// Solidity: function claimProvenReward(bool burn) returns()
-func (_LPWANClient *LPWANClientSession) ClaimProvenReward(burn bool) (*types.Transaction, error) {
-	return _LPWANClient.Contract.ClaimProvenReward(&_LPWANClient.TransactOpts, burn)
-}
-
-// ClaimProvenReward is a paid mutator transaction binding the contract method 0xf5a0545e.
-//
-// Solidity: function claimProvenReward(bool burn) returns()
-func (_LPWANClient *LPWANClientTransactorSession) ClaimProvenReward(burn bool) (*types.Transaction, error) {
-	return _LPWANClient.Contract.ClaimProvenReward(&_LPWANClient.TransactOpts, burn)
-}
-
-// Initialize is a paid mutator transaction binding the contract method 0x485cc955.
-//
-// Solidity: function initialize(address MEP1004Address_, address ethPriceOracle_) returns()
-func (_LPWANClient *LPWANClientTransactor) Initialize(opts *bind.TransactOpts, MEP1004Address_ common.Address, ethPriceOracle_ common.Address) (*types.Transaction, error) {
-	return _LPWANClient.contract.Transact(opts, "initialize", MEP1004Address_, ethPriceOracle_)
-}
-
-// Initialize is a paid mutator transaction binding the contract method 0x485cc955.
-//
-// Solidity: function initialize(address MEP1004Address_, address ethPriceOracle_) returns()
-func (_LPWANClient *LPWANClientSession) Initialize(MEP1004Address_ common.Address, ethPriceOracle_ common.Address) (*types.Transaction, error) {
-	return _LPWANClient.Contract.Initialize(&_LPWANClient.TransactOpts, MEP1004Address_, ethPriceOracle_)
-}
-
-// Initialize is a paid mutator transaction binding the contract method 0x485cc955.
-//
-// Solidity: function initialize(address MEP1004Address_, address ethPriceOracle_) returns()
-func (_LPWANClient *LPWANClientTransactorSession) Initialize(MEP1004Address_ common.Address, ethPriceOracle_ common.Address) (*types.Transaction, error) {
-	return _LPWANClient.Contract.Initialize(&_LPWANClient.TransactOpts, MEP1004Address_, ethPriceOracle_)
-}
-
-// MintMEP1004Stations is a paid mutator transaction binding the contract method 0xf2b9ec40.
-//
-// Solidity: function mintMEP1004Stations(address _to, string _SNCode) returns()
-func (_LPWANClient *LPWANClientTransactor) MintMEP1004Stations(opts *bind.TransactOpts, _to common.Address, _SNCode string) (*types.Transaction, error) {
-	return _LPWANClient.contract.Transact(opts, "mintMEP1004Stations", _to, _SNCode)
-}
-
-// MintMEP1004Stations is a paid mutator transaction binding the contract method 0xf2b9ec40.
-//
-// Solidity: function mintMEP1004Stations(address _to, string _SNCode) returns()
-func (_LPWANClient *LPWANClientSession) MintMEP1004Stations(_to common.Address, _SNCode string) (*types.Transaction, error) {
-	return _LPWANClient.Contract.MintMEP1004Stations(&_LPWANClient.TransactOpts, _to, _SNCode)
-}
-
-// MintMEP1004Stations is a paid mutator transaction binding the contract method 0xf2b9ec40.
-//
-// Solidity: function mintMEP1004Stations(address _to, string _SNCode) returns()
-func (_LPWANClient *LPWANClientTransactorSession) MintMEP1004Stations(_to common.Address, _SNCode string) (*types.Transaction, error) {
-	return _LPWANClient.Contract.MintMEP1004Stations(&_LPWANClient.TransactOpts, _to, _SNCode)
+// Solidity: function mintMEP1004StationsBySignature(address _to, uint256 _H3Index, string _SNCode, string regionID, address _signer, bytes _signature) returns()
+func (_LPWANClient *LPWANClientTransactorSession) MintMEP1004StationsBySignature(_to common.Address, _H3Index *big.Int, _SNCode string, regionID string, _signer common.Address, _signature []byte) (*types.Transaction, error) {
+	return _LPWANClient.Contract.MintMEP1004StationsBySignature(&_LPWANClient.TransactOpts, _to, _H3Index, _SNCode, regionID, _signer, _signature)
 }
 
 // RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
@@ -712,27 +555,6 @@ func (_LPWANClient *LPWANClientTransactorSession) SetController(controller commo
 	return _LPWANClient.Contract.SetController(&_LPWANClient.TransactOpts, controller, enabled)
 }
 
-// SetEthOracle is a paid mutator transaction binding the contract method 0xa6cd75dc.
-//
-// Solidity: function setEthOracle(address ethPriceOracle_) returns()
-func (_LPWANClient *LPWANClientTransactor) SetEthOracle(opts *bind.TransactOpts, ethPriceOracle_ common.Address) (*types.Transaction, error) {
-	return _LPWANClient.contract.Transact(opts, "setEthOracle", ethPriceOracle_)
-}
-
-// SetEthOracle is a paid mutator transaction binding the contract method 0xa6cd75dc.
-//
-// Solidity: function setEthOracle(address ethPriceOracle_) returns()
-func (_LPWANClient *LPWANClientSession) SetEthOracle(ethPriceOracle_ common.Address) (*types.Transaction, error) {
-	return _LPWANClient.Contract.SetEthOracle(&_LPWANClient.TransactOpts, ethPriceOracle_)
-}
-
-// SetEthOracle is a paid mutator transaction binding the contract method 0xa6cd75dc.
-//
-// Solidity: function setEthOracle(address ethPriceOracle_) returns()
-func (_LPWANClient *LPWANClientTransactorSession) SetEthOracle(ethPriceOracle_ common.Address) (*types.Transaction, error) {
-	return _LPWANClient.Contract.SetEthOracle(&_LPWANClient.TransactOpts, ethPriceOracle_)
-}
-
 // SetMEP1004Addr is a paid mutator transaction binding the contract method 0x157b4378.
 //
 // Solidity: function setMEP1004Addr(address MEP1004Address) returns(address)
@@ -752,48 +574,6 @@ func (_LPWANClient *LPWANClientSession) SetMEP1004Addr(MEP1004Address common.Add
 // Solidity: function setMEP1004Addr(address MEP1004Address) returns(address)
 func (_LPWANClient *LPWANClientTransactorSession) SetMEP1004Addr(MEP1004Address common.Address) (*types.Transaction, error) {
 	return _LPWANClient.Contract.SetMEP1004Addr(&_LPWANClient.TransactOpts, MEP1004Address)
-}
-
-// SetMaxCostMxc is a paid mutator transaction binding the contract method 0xea66254a.
-//
-// Solidity: function setMaxCostMxc(uint256 maxCostMxc_) returns()
-func (_LPWANClient *LPWANClientTransactor) SetMaxCostMxc(opts *bind.TransactOpts, maxCostMxc_ *big.Int) (*types.Transaction, error) {
-	return _LPWANClient.contract.Transact(opts, "setMaxCostMxc", maxCostMxc_)
-}
-
-// SetMaxCostMxc is a paid mutator transaction binding the contract method 0xea66254a.
-//
-// Solidity: function setMaxCostMxc(uint256 maxCostMxc_) returns()
-func (_LPWANClient *LPWANClientSession) SetMaxCostMxc(maxCostMxc_ *big.Int) (*types.Transaction, error) {
-	return _LPWANClient.Contract.SetMaxCostMxc(&_LPWANClient.TransactOpts, maxCostMxc_)
-}
-
-// SetMaxCostMxc is a paid mutator transaction binding the contract method 0xea66254a.
-//
-// Solidity: function setMaxCostMxc(uint256 maxCostMxc_) returns()
-func (_LPWANClient *LPWANClientTransactorSession) SetMaxCostMxc(maxCostMxc_ *big.Int) (*types.Transaction, error) {
-	return _LPWANClient.Contract.SetMaxCostMxc(&_LPWANClient.TransactOpts, maxCostMxc_)
-}
-
-// SetRelaySyncStatus is a paid mutator transaction binding the contract method 0xac3c4f2b.
-//
-// Solidity: function setRelaySyncStatus(uint256 proposedRewardHeight, uint256 provenRewardHeight) returns()
-func (_LPWANClient *LPWANClientTransactor) SetRelaySyncStatus(opts *bind.TransactOpts, proposedRewardHeight *big.Int, provenRewardHeight *big.Int) (*types.Transaction, error) {
-	return _LPWANClient.contract.Transact(opts, "setRelaySyncStatus", proposedRewardHeight, provenRewardHeight)
-}
-
-// SetRelaySyncStatus is a paid mutator transaction binding the contract method 0xac3c4f2b.
-//
-// Solidity: function setRelaySyncStatus(uint256 proposedRewardHeight, uint256 provenRewardHeight) returns()
-func (_LPWANClient *LPWANClientSession) SetRelaySyncStatus(proposedRewardHeight *big.Int, provenRewardHeight *big.Int) (*types.Transaction, error) {
-	return _LPWANClient.Contract.SetRelaySyncStatus(&_LPWANClient.TransactOpts, proposedRewardHeight, provenRewardHeight)
-}
-
-// SetRelaySyncStatus is a paid mutator transaction binding the contract method 0xac3c4f2b.
-//
-// Solidity: function setRelaySyncStatus(uint256 proposedRewardHeight, uint256 provenRewardHeight) returns()
-func (_LPWANClient *LPWANClientTransactorSession) SetRelaySyncStatus(proposedRewardHeight *big.Int, provenRewardHeight *big.Int) (*types.Transaction, error) {
-	return _LPWANClient.Contract.SetRelaySyncStatus(&_LPWANClient.TransactOpts, proposedRewardHeight, provenRewardHeight)
 }
 
 // SubmitLocationProofs is a paid mutator transaction binding the contract method 0xcdceeba0.
@@ -817,48 +597,6 @@ func (_LPWANClient *LPWANClientTransactorSession) SubmitLocationProofs(_MEP1002T
 	return _LPWANClient.Contract.SubmitLocationProofs(&_LPWANClient.TransactOpts, _MEP1002TokenId, _MEP1004TokenIds, _item)
 }
 
-// SyncProposedRewardEvent is a paid mutator transaction binding the contract method 0x23196cf2.
-//
-// Solidity: function syncProposedRewardEvent((uint256,address,uint256,uint256)[] rewardEvents, bool setting) returns()
-func (_LPWANClient *LPWANClientTransactor) SyncProposedRewardEvent(opts *bind.TransactOpts, rewardEvents []LPWANRewardEvent, setting bool) (*types.Transaction, error) {
-	return _LPWANClient.contract.Transact(opts, "syncProposedRewardEvent", rewardEvents, setting)
-}
-
-// SyncProposedRewardEvent is a paid mutator transaction binding the contract method 0x23196cf2.
-//
-// Solidity: function syncProposedRewardEvent((uint256,address,uint256,uint256)[] rewardEvents, bool setting) returns()
-func (_LPWANClient *LPWANClientSession) SyncProposedRewardEvent(rewardEvents []LPWANRewardEvent, setting bool) (*types.Transaction, error) {
-	return _LPWANClient.Contract.SyncProposedRewardEvent(&_LPWANClient.TransactOpts, rewardEvents, setting)
-}
-
-// SyncProposedRewardEvent is a paid mutator transaction binding the contract method 0x23196cf2.
-//
-// Solidity: function syncProposedRewardEvent((uint256,address,uint256,uint256)[] rewardEvents, bool setting) returns()
-func (_LPWANClient *LPWANClientTransactorSession) SyncProposedRewardEvent(rewardEvents []LPWANRewardEvent, setting bool) (*types.Transaction, error) {
-	return _LPWANClient.Contract.SyncProposedRewardEvent(&_LPWANClient.TransactOpts, rewardEvents, setting)
-}
-
-// SyncProvenRewardEvent is a paid mutator transaction binding the contract method 0xc4adca8d.
-//
-// Solidity: function syncProvenRewardEvent((uint256,address,uint256,uint256)[] rewardEvents, bool setting, uint256 latestProvenL1Height) returns()
-func (_LPWANClient *LPWANClientTransactor) SyncProvenRewardEvent(opts *bind.TransactOpts, rewardEvents []LPWANRewardEvent, setting bool, latestProvenL1Height *big.Int) (*types.Transaction, error) {
-	return _LPWANClient.contract.Transact(opts, "syncProvenRewardEvent", rewardEvents, setting, latestProvenL1Height)
-}
-
-// SyncProvenRewardEvent is a paid mutator transaction binding the contract method 0xc4adca8d.
-//
-// Solidity: function syncProvenRewardEvent((uint256,address,uint256,uint256)[] rewardEvents, bool setting, uint256 latestProvenL1Height) returns()
-func (_LPWANClient *LPWANClientSession) SyncProvenRewardEvent(rewardEvents []LPWANRewardEvent, setting bool, latestProvenL1Height *big.Int) (*types.Transaction, error) {
-	return _LPWANClient.Contract.SyncProvenRewardEvent(&_LPWANClient.TransactOpts, rewardEvents, setting, latestProvenL1Height)
-}
-
-// SyncProvenRewardEvent is a paid mutator transaction binding the contract method 0xc4adca8d.
-//
-// Solidity: function syncProvenRewardEvent((uint256,address,uint256,uint256)[] rewardEvents, bool setting, uint256 latestProvenL1Height) returns()
-func (_LPWANClient *LPWANClientTransactorSession) SyncProvenRewardEvent(rewardEvents []LPWANRewardEvent, setting bool, latestProvenL1Height *big.Int) (*types.Transaction, error) {
-	return _LPWANClient.Contract.SyncProvenRewardEvent(&_LPWANClient.TransactOpts, rewardEvents, setting, latestProvenL1Height)
-}
-
 // TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
 //
 // Solidity: function transferOwnership(address newOwner) returns()
@@ -878,6 +616,27 @@ func (_LPWANClient *LPWANClientSession) TransferOwnership(newOwner common.Addres
 // Solidity: function transferOwnership(address newOwner) returns()
 func (_LPWANClient *LPWANClientTransactorSession) TransferOwnership(newOwner common.Address) (*types.Transaction, error) {
 	return _LPWANClient.Contract.TransferOwnership(&_LPWANClient.TransactOpts, newOwner)
+}
+
+// Withdrawal is a paid mutator transaction binding the contract method 0x5a6b26ba.
+//
+// Solidity: function withdrawal(address to, uint256 amount) returns()
+func (_LPWANClient *LPWANClientTransactor) Withdrawal(opts *bind.TransactOpts, to common.Address, amount *big.Int) (*types.Transaction, error) {
+	return _LPWANClient.contract.Transact(opts, "withdrawal", to, amount)
+}
+
+// Withdrawal is a paid mutator transaction binding the contract method 0x5a6b26ba.
+//
+// Solidity: function withdrawal(address to, uint256 amount) returns()
+func (_LPWANClient *LPWANClientSession) Withdrawal(to common.Address, amount *big.Int) (*types.Transaction, error) {
+	return _LPWANClient.Contract.Withdrawal(&_LPWANClient.TransactOpts, to, amount)
+}
+
+// Withdrawal is a paid mutator transaction binding the contract method 0x5a6b26ba.
+//
+// Solidity: function withdrawal(address to, uint256 amount) returns()
+func (_LPWANClient *LPWANClientTransactorSession) Withdrawal(to common.Address, amount *big.Int) (*types.Transaction, error) {
+	return _LPWANClient.Contract.Withdrawal(&_LPWANClient.TransactOpts, to, amount)
 }
 
 // LPWANClientBurnExcessTokenIterator is returned from FilterBurnExcessToken and is used to iterate over the raw logs and unpacked data for BurnExcessToken events raised by the LPWANClient contract.
@@ -956,19 +715,15 @@ type LPWANClientBurnExcessToken struct {
 
 // FilterBurnExcessToken is a free log retrieval operation binding the contract event 0x50b7fb3383de2508212f88c1dd0d32ddf0ca63749f5ff5d6c06538f9f872ae4e.
 //
-// Solidity: event BurnExcessToken(uint256 indexed id, uint256 indexed amount)
-func (_LPWANClient *LPWANClientFilterer) FilterBurnExcessToken(opts *bind.FilterOpts, id []*big.Int, amount []*big.Int) (*LPWANClientBurnExcessTokenIterator, error) {
+// Solidity: event BurnExcessToken(uint256 indexed id, uint256 amount)
+func (_LPWANClient *LPWANClientFilterer) FilterBurnExcessToken(opts *bind.FilterOpts, id []*big.Int) (*LPWANClientBurnExcessTokenIterator, error) {
 
 	var idRule []interface{}
 	for _, idItem := range id {
 		idRule = append(idRule, idItem)
 	}
-	var amountRule []interface{}
-	for _, amountItem := range amount {
-		amountRule = append(amountRule, amountItem)
-	}
 
-	logs, sub, err := _LPWANClient.contract.FilterLogs(opts, "BurnExcessToken", idRule, amountRule)
+	logs, sub, err := _LPWANClient.contract.FilterLogs(opts, "BurnExcessToken", idRule)
 	if err != nil {
 		return nil, err
 	}
@@ -977,19 +732,15 @@ func (_LPWANClient *LPWANClientFilterer) FilterBurnExcessToken(opts *bind.Filter
 
 // WatchBurnExcessToken is a free log subscription operation binding the contract event 0x50b7fb3383de2508212f88c1dd0d32ddf0ca63749f5ff5d6c06538f9f872ae4e.
 //
-// Solidity: event BurnExcessToken(uint256 indexed id, uint256 indexed amount)
-func (_LPWANClient *LPWANClientFilterer) WatchBurnExcessToken(opts *bind.WatchOpts, sink chan<- *LPWANClientBurnExcessToken, id []*big.Int, amount []*big.Int) (event.Subscription, error) {
+// Solidity: event BurnExcessToken(uint256 indexed id, uint256 amount)
+func (_LPWANClient *LPWANClientFilterer) WatchBurnExcessToken(opts *bind.WatchOpts, sink chan<- *LPWANClientBurnExcessToken, id []*big.Int) (event.Subscription, error) {
 
 	var idRule []interface{}
 	for _, idItem := range id {
 		idRule = append(idRule, idItem)
 	}
-	var amountRule []interface{}
-	for _, amountItem := range amount {
-		amountRule = append(amountRule, amountItem)
-	}
 
-	logs, sub, err := _LPWANClient.contract.WatchLogs(opts, "BurnExcessToken", idRule, amountRule)
+	logs, sub, err := _LPWANClient.contract.WatchLogs(opts, "BurnExcessToken", idRule)
 	if err != nil {
 		return nil, err
 	}
@@ -1023,7 +774,7 @@ func (_LPWANClient *LPWANClientFilterer) WatchBurnExcessToken(opts *bind.WatchOp
 
 // ParseBurnExcessToken is a log parse operation binding the contract event 0x50b7fb3383de2508212f88c1dd0d32ddf0ca63749f5ff5d6c06538f9f872ae4e.
 //
-// Solidity: event BurnExcessToken(uint256 indexed id, uint256 indexed amount)
+// Solidity: event BurnExcessToken(uint256 indexed id, uint256 amount)
 func (_LPWANClient *LPWANClientFilterer) ParseBurnExcessToken(log types.Log) (*LPWANClientBurnExcessToken, error) {
 	event := new(LPWANClientBurnExcessToken)
 	if err := _LPWANClient.contract.UnpackLog(event, "BurnExcessToken", log); err != nil {
@@ -1102,57 +853,48 @@ func (it *LPWANClientClaimRewardIterator) Close() error {
 
 // LPWANClientClaimReward represents a ClaimReward event raised by the LPWANClient contract.
 type LPWANClientClaimReward struct {
-	Account    common.Address
-	Burn       bool
-	RewardType *big.Int
-	Amount     *big.Int
-	Raw        types.Log // Blockchain specific contextual infos
+	Account common.Address
+	To      common.Address
+	Amount  *big.Int
+	Raw     types.Log // Blockchain specific contextual infos
 }
 
-// FilterClaimReward is a free log retrieval operation binding the contract event 0x1428870caf6bc74a66b702732942aaeff425bc9bb621cabdadbc35fb4a5804d0.
+// FilterClaimReward is a free log retrieval operation binding the contract event 0x7e77f685b38c861064cb08f2776eb5dfd3c82f652ed9f21221b8c53b75628e51.
 //
-// Solidity: event ClaimReward(address indexed account, bool indexed burn, uint256 indexed rewardType, uint256 amount)
-func (_LPWANClient *LPWANClientFilterer) FilterClaimReward(opts *bind.FilterOpts, account []common.Address, burn []bool, rewardType []*big.Int) (*LPWANClientClaimRewardIterator, error) {
+// Solidity: event ClaimReward(address indexed account, address indexed to, uint256 amount)
+func (_LPWANClient *LPWANClientFilterer) FilterClaimReward(opts *bind.FilterOpts, account []common.Address, to []common.Address) (*LPWANClientClaimRewardIterator, error) {
 
 	var accountRule []interface{}
 	for _, accountItem := range account {
 		accountRule = append(accountRule, accountItem)
 	}
-	var burnRule []interface{}
-	for _, burnItem := range burn {
-		burnRule = append(burnRule, burnItem)
-	}
-	var rewardTypeRule []interface{}
-	for _, rewardTypeItem := range rewardType {
-		rewardTypeRule = append(rewardTypeRule, rewardTypeItem)
+	var toRule []interface{}
+	for _, toItem := range to {
+		toRule = append(toRule, toItem)
 	}
 
-	logs, sub, err := _LPWANClient.contract.FilterLogs(opts, "ClaimReward", accountRule, burnRule, rewardTypeRule)
+	logs, sub, err := _LPWANClient.contract.FilterLogs(opts, "ClaimReward", accountRule, toRule)
 	if err != nil {
 		return nil, err
 	}
 	return &LPWANClientClaimRewardIterator{contract: _LPWANClient.contract, event: "ClaimReward", logs: logs, sub: sub}, nil
 }
 
-// WatchClaimReward is a free log subscription operation binding the contract event 0x1428870caf6bc74a66b702732942aaeff425bc9bb621cabdadbc35fb4a5804d0.
+// WatchClaimReward is a free log subscription operation binding the contract event 0x7e77f685b38c861064cb08f2776eb5dfd3c82f652ed9f21221b8c53b75628e51.
 //
-// Solidity: event ClaimReward(address indexed account, bool indexed burn, uint256 indexed rewardType, uint256 amount)
-func (_LPWANClient *LPWANClientFilterer) WatchClaimReward(opts *bind.WatchOpts, sink chan<- *LPWANClientClaimReward, account []common.Address, burn []bool, rewardType []*big.Int) (event.Subscription, error) {
+// Solidity: event ClaimReward(address indexed account, address indexed to, uint256 amount)
+func (_LPWANClient *LPWANClientFilterer) WatchClaimReward(opts *bind.WatchOpts, sink chan<- *LPWANClientClaimReward, account []common.Address, to []common.Address) (event.Subscription, error) {
 
 	var accountRule []interface{}
 	for _, accountItem := range account {
 		accountRule = append(accountRule, accountItem)
 	}
-	var burnRule []interface{}
-	for _, burnItem := range burn {
-		burnRule = append(burnRule, burnItem)
-	}
-	var rewardTypeRule []interface{}
-	for _, rewardTypeItem := range rewardType {
-		rewardTypeRule = append(rewardTypeRule, rewardTypeItem)
+	var toRule []interface{}
+	for _, toItem := range to {
+		toRule = append(toRule, toItem)
 	}
 
-	logs, sub, err := _LPWANClient.contract.WatchLogs(opts, "ClaimReward", accountRule, burnRule, rewardTypeRule)
+	logs, sub, err := _LPWANClient.contract.WatchLogs(opts, "ClaimReward", accountRule, toRule)
 	if err != nil {
 		return nil, err
 	}
@@ -1184,9 +926,9 @@ func (_LPWANClient *LPWANClientFilterer) WatchClaimReward(opts *bind.WatchOpts, 
 	}), nil
 }
 
-// ParseClaimReward is a log parse operation binding the contract event 0x1428870caf6bc74a66b702732942aaeff425bc9bb621cabdadbc35fb4a5804d0.
+// ParseClaimReward is a log parse operation binding the contract event 0x7e77f685b38c861064cb08f2776eb5dfd3c82f652ed9f21221b8c53b75628e51.
 //
-// Solidity: event ClaimReward(address indexed account, bool indexed burn, uint256 indexed rewardType, uint256 amount)
+// Solidity: event ClaimReward(address indexed account, address indexed to, uint256 amount)
 func (_LPWANClient *LPWANClientFilterer) ParseClaimReward(log types.Log) (*LPWANClientClaimReward, error) {
 	event := new(LPWANClientClaimReward)
 	if err := _LPWANClient.contract.UnpackLog(event, "ClaimReward", log); err != nil {
