@@ -333,17 +333,22 @@ func UnpackTxListBytes(txData []byte, ipfsGateways ...string) ([]byte, error) {
 		for _, gateway := range ipfsGateways {
 			inputs = (func() []byte {
 				resp, err := http.NewRequest("GET", fmt.Sprintf("%s%s", gateway, string(inputs)), nil)
+				log.Info("req", "url", fmt.Sprintf("%s%s", gateway, string(inputs)))
 				if err != nil {
 					lastErr = fmt.Errorf("failed to download ipfs blob, cid: %v, gateway: %v, err: %v", string(inputs), gateway, err)
 					return nil
 				}
+				log.Info("body close before")
 				defer resp.Body.Close()
+				log.Info("body close after")
 
 				data, err := io.ReadAll(resp.Body)
+				log.Info("resp data", "data", string(data))
 				if err != nil {
 					lastErr = fmt.Errorf("failed to parse downloaded ipfs blob, gateway: %v, err: %v", gateway, err)
 					return nil
 				}
+				log.Info("resp data hex", "data", string(common.FromHex(string(data))))
 				return common.FromHex(string(data))
 			})()
 		}
