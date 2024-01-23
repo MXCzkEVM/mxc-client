@@ -351,6 +351,9 @@ func UnpackTxListBytes(txData []byte, ipfsGateways ...string) ([]byte, error) {
 				log.Info("resp data hex", "data", string(common.FromHex(string(data))))
 				return common.FromHex(string(data))
 			})()
+			if inputs == nil {
+				continue
+			}
 		}
 
 		if lastErr != nil {
