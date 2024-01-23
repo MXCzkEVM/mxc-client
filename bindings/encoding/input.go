@@ -332,10 +332,13 @@ func UnpackTxListBytes(txData []byte, ipfsGateways ...string) ([]byte, error) {
 		var lastErr error
 		for _, gateway := range ipfsGateways {
 			inputs = (func() []byte {
-				resp, err := http.NewRequest("GET", fmt.Sprintf("%s%s", gateway, string(inputs)), nil)
-				log.Info("req", "url", fmt.Sprintf("%s%s", gateway, string(inputs)))
+				resp, err := http.Get(fmt.Sprintf("%s%s", gateway, string(inputs)))
 				if err != nil {
 					lastErr = fmt.Errorf("failed to download ipfs blob, cid: %v, gateway: %v, err: %v", string(inputs), gateway, err)
+					return nil
+				}
+				if resp.StatusCode != http.StatusOK {
+					lastErr = fmt.Errorf("failed to download ipfs blob, cid: %v, gateway: %v, err: %v", string(inputs), gateway, errors.New("status code"))
 					return nil
 				}
 				log.Info("body close before")
