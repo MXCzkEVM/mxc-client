@@ -363,7 +363,6 @@ func UnpackTxListBytes(txData []byte, ipfsGateways ...string) ([]byte, error) {
 			return nil, lastErr
 		}
 
-		return nil, errors.New("all IPFS gateways failed")
 	}
 
 	return inputs, nil
