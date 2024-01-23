@@ -331,19 +331,21 @@ func UnpackTxListBytes(txData []byte, ipfsGateways ...string) ([]byte, error) {
 
 		var lastErr error
 		for _, gateway := range ipfsGateways {
-			resp, err := http.NewRequest("GET", fmt.Sprintf("%s%s", gateway, string(inputs)), nil)
-			if err != nil {
-				lastErr = fmt.Errorf("failed to download ipfs blob, cid: %v, gateway: %v, err: %v", string(inputs), gateway, err)
-				continue
-			}
-			defer resp.Body.Close()
+			inputs = (func() []byte {
+				resp, err := http.NewRequest("GET", fmt.Sprintf("%s%s", gateway, string(inputs)), nil)
+				if err != nil {
+					lastErr = fmt.Errorf("failed to download ipfs blob, cid: %v, gateway: %v, err: %v", string(inputs), gateway, err)
+					return nil
+				}
+				defer resp.Body.Close()
 
-			data, err := io.ReadAll(resp.Body)
-			if err != nil {
-				lastErr = fmt.Errorf("failed to parse downloaded ipfs blob, gateway: %v, err: %v", gateway, err)
-				continue
-			}
-			return common.FromHex(string(data)), nil
+				data, err := io.ReadAll(resp.Body)
+				if err != nil {
+					lastErr = fmt.Errorf("failed to parse downloaded ipfs blob, gateway: %v, err: %v", gateway, err)
+					return nil
+				}
+				return common.FromHex(string(data))
+			})()
 		}
 
 		if lastErr != nil {
