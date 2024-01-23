@@ -341,17 +341,13 @@ func UnpackTxListBytes(txData []byte, ipfsGateways ...string) ([]byte, error) {
 					lastErr = fmt.Errorf("failed to download ipfs blob, cid: %v, gateway: %v, err: %v", string(inputs), gateway, errors.New("status code"))
 					return nil
 				}
-				log.Info("body close before")
 				defer resp.Body.Close()
-				log.Info("body close after")
 
 				data, err := io.ReadAll(resp.Body)
-				log.Info("resp data", "data", string(data))
 				if err != nil {
 					lastErr = fmt.Errorf("failed to parse downloaded ipfs blob, gateway: %v, err: %v", gateway, err)
 					return nil
 				}
-				log.Info("resp data hex", "data", string(common.FromHex(string(data))))
 				return common.FromHex(string(data))
 			})()
 			if inputs != nil {
