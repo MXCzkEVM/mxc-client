@@ -1,14 +1,18 @@
 package proposer
 
 import (
+	"bytes"
 	"context"
 	"crypto/ecdsa"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/ethereum/go-ethereum"
+	"io"
 	"math"
 	"math/big"
 	"math/rand"
+	"net/http"
 	"sync"
 	"time"
 
@@ -52,6 +56,7 @@ type Proposer struct {
 	minBlockGasLimit           *uint64
 	maxProposedTxListsPerEpoch uint64
 	proposeBlockTxGasLimit     *uint64
+	mxcDaService               string
 
 	// Protocol configurations
 	protocolConfigs *bindings.MxcDataConfig
@@ -89,6 +94,7 @@ func InitFromConfig(ctx context.Context, p *Proposer, cfg *Config) (err error) {
 	p.maxProposedTxListsPerEpoch = cfg.MaxProposedTxListsPerEpoch
 	p.ctx = ctx
 	p.mxcL1Address = cfg.MxcL1Address
+	p.mxcDaService = cfg.MxcDaServiceURL
 
 	// RPC clients
 	if p.rpc, err = rpc.NewClient(p.ctx, &rpc.ClientConfig{
@@ -276,6 +282,19 @@ func (p *Proposer) ProposeOp(ctx context.Context) error {
 
 const anchorGasCost = 180000
 
+type MXCDaServiceRequest struct {
+	InputBytes  string `json:"inputBytes"`
+	TxListBytes string `json:"txListBytes"`
+	Proposer    string `json:"proposer"`
+}
+
+type MXCDaServiceResponse struct {
+	Success   int    `json:"success"`
+	Msg       string `json:"msg"`
+	CID       string `json:"cid"`
+	Signature string `json:"signature"`
+}
+
 // ProposeTxList proposes the given transactions list to MxcL1 smart contract.
 func (p *Proposer) ProposeTxList(
 	ctx context.Context,
@@ -316,9 +335,36 @@ func (p *Proposer) ProposeTxList(
 	if p.proposeBlockTxGasLimit != nil {
 		opts.GasLimit = *p.proposeBlockTxGasLimit
 	}
+	// TODO: upload txListBytes to ipfs and get signature
+	daReq := &MXCDaServiceRequest{
+		InputBytes:  common.Bytes2Hex(inputs),
+		TxListBytes: common.Bytes2Hex(txListBytes),
+		Proposer:    p.l1ProposerAddress.String(),
+	}
+	reqJson, err := json.Marshal(daReq)
+	if err != nil {
+		return fmt.Errorf("marshall MXCDaServiceRequest failed, data: %v,err: %v", daReq, err)
+	}
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/api/validate", p.mxcDaService), bytes.NewBuffer(reqJson))
+	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	client := &http.Client{}
+	response, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("upload txListBytes to ipfs failed, err: %v", err)
+	}
+	defer response.Body.Close()
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		return fmt.Errorf("failed to get upload txListBytes response, err: %v", err)
+	}
+	signatureData := &MXCDaServiceResponse{}
+	err = json.Unmarshal(body, signatureData)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal upload txListBytes reponse, err: %v", err)
+	}
 
 	// estimate gas
-	estimateGasInput, err := encoding.MxcL1ABI.Pack("proposeBlock", inputs, txListBytes, big.NewInt(1e6))
+	estimateGasInput, err := encoding.MxcL1ABIV3.Pack("proposeBlock", inputs, []byte(signatureData.CID), common.FromHex(signatureData.Signature), big.NewInt(int64(len(txListBytes))), big.NewInt(1e6))
 	if err != nil {
 		return fmt.Errorf("estimateGas input err %v", err)
 	}
@@ -328,13 +374,10 @@ func (p *Proposer) ProposeTxList(
 		Data: estimateGasInput,
 	})
 	if err != nil {
-		return fmt.Errorf("estimateGas err %v", err)
+		return fmt.Errorf("estimateGas err %v", encoding.TryParsingCustomError(err))
 	}
-	log.Info("gas", "gas", estimateGas)
-	proposeTx, err := p.rpc.MxcL1.ProposeBlock(opts, inputs, txListBytes, big.NewInt(0).SetUint64(estimateGas))
-	if err != nil {
-		return encoding.TryParsingCustomError(err)
-	}
+
+	proposeTx, err := p.rpc.MxcL1.ProposeBlock(opts, inputs, []byte(signatureData.CID), common.FromHex(signatureData.Signature), big.NewInt(int64(len(txListBytes))), big.NewInt(0).SetUint64(estimateGas))
 
 	if _, err := rpc.WaitReceipt(ctx, p.rpc.L1, proposeTx); err != nil {
 		return err

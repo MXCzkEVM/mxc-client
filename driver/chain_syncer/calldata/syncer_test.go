@@ -37,6 +37,7 @@ func (s *CalldataSyncerTestSuite) SetupTest() {
 		state,
 		beaconsync.NewSyncProgressTracker(s.RpcClient.L2, 1*time.Hour),
 		common.HexToAddress(os.Getenv("L1_SIGNAL_SERVICE_CONTRACT_ADDRESS")),
+		[]string{},
 	)
 	s.Nil(err)
 	s.s = syncer
@@ -48,8 +49,8 @@ func (s *CalldataSyncerTestSuite) SetupTest() {
 	s.Nil(proposer.InitFromConfig(context.Background(), prop, (&proposer.Config{
 		L1Endpoint:                 os.Getenv("L1_NODE_WS_ENDPOINT"),
 		L2Endpoint:                 os.Getenv("L2_EXECUTION_ENGINE_WS_ENDPOINT"),
-		MxcL1Address:             common.HexToAddress(os.Getenv("MXC_L1_ADDRESS")),
-		MxcL2Address:             common.HexToAddress(os.Getenv("MXC_L2_ADDRESS")),
+		MxcL1Address:               common.HexToAddress(os.Getenv("MXC_L1_ADDRESS")),
+		MxcL2Address:               common.HexToAddress(os.Getenv("MXC_L2_ADDRESS")),
 		L1ProposerPrivKey:          l1ProposerPrivKey,
 		L2SuggestedFeeRecipient:    common.HexToAddress(os.Getenv("L2_SUGGESTED_FEE_RECIPIENT")),
 		ProposeInterval:            &proposeInterval,

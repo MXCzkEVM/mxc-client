@@ -3,6 +3,7 @@ package driver
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/MXCzkEVM/mxc-client/cmd/flags"
@@ -22,6 +23,7 @@ type Config struct {
 	JwtSecret             string
 	P2PSyncVerifiedBlocks bool
 	P2PSyncTimeout        time.Duration
+	IPFSGateways          []string
 }
 
 // NewConfigFromCliContext creates a new config instance from
@@ -51,5 +53,6 @@ func NewConfigFromCliContext(c *cli.Context) (*Config, error) {
 		JwtSecret:             string(jwtSecret),
 		P2PSyncVerifiedBlocks: p2pSyncVerifiedBlocks,
 		P2PSyncTimeout:        time.Duration(int64(time.Second) * int64(c.Uint(flags.P2PSyncTimeout.Name))),
+		IPFSGateways:          strings.Split(c.String(flags.IPFSGateways.Name), ","),
 	}, nil
 }

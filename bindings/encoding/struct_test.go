@@ -52,7 +52,7 @@ var (
 		GasLimit:          rand.Uint32(),
 		Beneficiary:       common.BytesToAddress(randomHash().Bytes()),
 		Treasury:          common.BytesToAddress(randomHash().Bytes()),
-		DepositsProcessed: []bindings.TaikoDataEthDeposit{},
+		DepositsProcessed: []bindings.MxcDataEthDeposit{},
 	}
 )
 

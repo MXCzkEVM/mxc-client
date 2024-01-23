@@ -29,6 +29,8 @@ type Config struct {
 	MaxProposedTxListsPerEpoch uint64
 	ProposeBlockTxGasLimit     *uint64
 	BlockedAddresses           []common.Address
+	MxcDaServiceURL            string
+	IPFSGateways               []string
 }
 
 // NewConfigFromCliContext initializes a Config instance from
@@ -108,5 +110,7 @@ func NewConfigFromCliContext(c *cli.Context) (*Config, error) {
 		MaxProposedTxListsPerEpoch: c.Uint64(flags.MaxProposedTxListsPerEpoch.Name),
 		ProposeBlockTxGasLimit:     proposeBlockTxGasLimit,
 		BlockedAddresses:           blockedAddresses,
+		MxcDaServiceURL:            c.String(flags.MXCDaServiceURL.Name),
+		IPFSGateways:               strings.Split(flags.IPFSGateways.Name, ","),
 	}, nil
 }

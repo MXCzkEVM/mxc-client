@@ -64,6 +64,11 @@ var (
 		Name:     "proposeBlockTxGasLimit",
 		Category: proposerCategory,
 	}
+	MXCDaServiceURL = &cli.StringFlag{
+		Name:     "mxcDaService",
+		Category: proposerCategory,
+		Value:    "https://mxc-da-wannsee.vercel.app",
+	}
 )
 
 // All proposer flags.
@@ -79,4 +84,5 @@ var ProposerFlags = MergeFlags(CommonFlags, []cli.Flag{
 	MinBlockGasLimit,
 	MaxProposedTxListsPerEpoch,
 	ProposeBlockTxGasLimit,
+	MXCDaServiceURL,
 })

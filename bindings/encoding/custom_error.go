@@ -11,7 +11,7 @@ import (
 func TryParsingCustomError(originalError error) error {
 	errData := getErrorData(originalError)
 
-	for _, l1CustomError := range MxcL1ABI.Errors {
+	for _, l1CustomError := range MxcL1ABIV3.Errors {
 		if strings.HasPrefix(l1CustomError.ID.Hex(), errData) {
 			return errors.New(l1CustomError.Name)
 		}
