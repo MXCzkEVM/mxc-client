@@ -36,6 +36,7 @@ type Syncer struct {
 	// Used by BlockInserter
 	lastInsertedBlockID *big.Int
 	reorgDetectedFlag   bool
+	ipfsGateways        []string
 }
 
 // NewSyncer creates a new syncer instance.
@@ -45,6 +46,7 @@ func NewSyncer(
 	state *state.State,
 	progressTracker *beaconsync.SyncProgressTracker,
 	signalServiceAddress common.Address,
+	ipfsGateways []string,
 ) (*Syncer, error) {
 	configs, err := rpc.MxcL1.GetConfig(nil)
 	if err != nil {
@@ -67,7 +69,9 @@ func NewSyncer(
 			configs.MaxTransactionsPerBlock,
 			configs.MaxBytesPerTxList,
 			rpc.L2ChainID,
+			ipfsGateways,
 		),
+		ipfsGateways: ipfsGateways,
 	}, nil
 }
 

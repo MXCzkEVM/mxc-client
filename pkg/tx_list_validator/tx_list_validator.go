@@ -23,6 +23,7 @@ type TxListValidator struct {
 	maxTransactionsPerBlock uint64
 	maxBytesPerTxList       uint64
 	chainID                 *big.Int
+	ipfsGateways            []string
 }
 
 // NewTxListValidator creates a new TxListValidator instance based on giving configurations.
@@ -31,12 +32,14 @@ func NewTxListValidator(
 	maxTransactionsPerBlock uint64,
 	maxBytesPerTxList uint64,
 	chainID *big.Int,
+	ipfsGateways []string,
 ) *TxListValidator {
 	return &TxListValidator{
 		blockMaxGasLimit:        blockMaxGasLimit,
 		maxTransactionsPerBlock: maxTransactionsPerBlock,
 		maxBytesPerTxList:       maxBytesPerTxList,
 		chainID:                 chainID,
+		ipfsGateways:            ipfsGateways,
 	}
 }
 
@@ -46,7 +49,7 @@ func (v *TxListValidator) ValidateTxList(
 	blockID *big.Int,
 	proposeBlockTxInput []byte,
 ) (txListBytes []byte, hint InvalidTxListReason, txIdx int, err error) {
-	if txListBytes, err = encoding.UnpackTxListBytes(proposeBlockTxInput); err != nil {
+	if txListBytes, err = encoding.UnpackTxListBytes(proposeBlockTxInput, v.ipfsGateways...); err != nil {
 		return nil, HintNone, 0, err
 	}
 

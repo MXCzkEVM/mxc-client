@@ -119,6 +119,7 @@ func InitFromConfig(ctx context.Context, p *Prover, cfg *Config) (err error) {
 		p.protocolConfigs.MaxTransactionsPerBlock,
 		p.protocolConfigs.MaxBytesPerTxList,
 		p.rpc.L2ChainID,
+		p.cfg.IPFSGateways,
 	)
 	p.proverAddress = crypto.PubkeyToAddress(p.cfg.L1ProverPrivKey.PublicKey)
 

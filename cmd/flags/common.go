@@ -84,6 +84,11 @@ var (
 		Category: metricsCategory,
 		Value:    6060,
 	}
+	IPFSGateways = &cli.StringFlag{
+		Name:     "ipfsGateways",
+		Category: proposerCategory,
+		Value:    "https://w3s.link/ipfs/,https://mxc-da-wannsee.vercel.app/api/ipfs/",
+	}
 )
 
 // All common flags.
@@ -99,6 +104,7 @@ var CommonFlags = []cli.Flag{
 	MetricsEnabled,
 	MetricsAddr,
 	MetricsPort,
+	IPFSGateways,
 }
 
 // MergeFlags merges the given flag slices.

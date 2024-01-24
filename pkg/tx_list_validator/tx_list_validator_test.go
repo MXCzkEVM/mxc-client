@@ -36,6 +36,7 @@ func TestValidateTxList(t *testing.T) {
 		maxBlockNumTxs,
 		maxTxlistBytes,
 		chainID,
+		[]string{},
 	)
 
 	// Binary is not unpackable
@@ -50,6 +51,7 @@ func TestIsTxListValid(t *testing.T) {
 		maxBlockNumTxs,
 		maxTxlistBytes,
 		chainID,
+		[]string{},
 	)
 	tests := []struct {
 		name        string

@@ -35,6 +35,7 @@ type Config struct {
 	RandomDummyProofDelayLowerBound *time.Duration
 	RandomDummyProofDelayUpperBound *time.Duration
 	ExpectedReward                  uint64
+	IPFSGateways                    []string
 }
 
 // NewConfigFromCliContext creates a new config instance from command line flags.
@@ -136,5 +137,6 @@ func NewConfigFromCliContext(c *cli.Context) (*Config, error) {
 		RandomDummyProofDelayLowerBound: randomDummyProofDelayLowerBound,
 		RandomDummyProofDelayUpperBound: randomDummyProofDelayUpperBound,
 		ExpectedReward:                  c.Uint64(flags.ExpectedReward.Name),
+		IPFSGateways:                    strings.Split(c.String(flags.IPFSGateways.Name), ","),
 	}, nil
 }
