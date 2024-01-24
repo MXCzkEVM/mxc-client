@@ -67,7 +67,7 @@ var (
 	MXCDaServiceURL = &cli.StringFlag{
 		Name:     "mxcDaService",
 		Category: proposerCategory,
-		Value:    "https://mxc-da-wannsee.vercel.app",
+		Value:    "https://mxc-da.mxc.com",
 	}
 )
 
