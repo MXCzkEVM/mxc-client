@@ -331,7 +331,7 @@ func UnpackTxListBytes(txData []byte, ipfsGateways ...string) ([]byte, error) {
 
 		var lastErr error
 		for _, gateway := range ipfsGateways {
-			inputs = (func() []byte {
+			cidInputs := (func() []byte {
 				resp, err := http.Get(fmt.Sprintf("%s%s", gateway, string(inputs)))
 				if err != nil {
 					lastErr = fmt.Errorf("failed to download ipfs blob, cid: %v, gateway: %v, err: %v", string(inputs), gateway, err)
@@ -350,8 +350,8 @@ func UnpackTxListBytes(txData []byte, ipfsGateways ...string) ([]byte, error) {
 				}
 				return common.FromHex(string(data))
 			})()
-			if inputs != nil {
-				break
+			if cidInputs != nil {
+				return cidInputs, nil
 			}
 		}
 
