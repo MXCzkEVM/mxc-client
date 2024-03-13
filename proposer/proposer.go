@@ -378,7 +378,9 @@ func (p *Proposer) ProposeTxList(
 	}
 
 	proposeTx, err := p.rpc.MxcL1.ProposeBlock(opts, inputs, []byte(signatureData.CID), common.FromHex(signatureData.Signature), big.NewInt(int64(len(txListBytes))), big.NewInt(0).SetUint64(estimateGas))
-
+	if err != nil {
+		return fmt.Errorf("proposerBlock err %v", encoding.TryParsingCustomError(err))
+	}
 	if _, err := rpc.WaitReceipt(ctx, p.rpc.L1, proposeTx); err != nil {
 		return err
 	}
