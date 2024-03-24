@@ -87,7 +87,7 @@ var (
 	IPFSGateways = &cli.StringFlag{
 		Name:     "ipfsGateways",
 		Category: proposerCategory,
-		Value:    "https://w3s.link/ipfs/,https://mxc-da-wannsee.vercel.app/api/ipfs/",
+		Value:    "https://w3s.link/ipfs/,https://mxc-da-geneva.vercel.app/api/ipfs/",
 	}
 )
 

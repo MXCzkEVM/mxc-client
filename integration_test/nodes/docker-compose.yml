@@ -14,7 +14,7 @@ services:
       - "0.0.0.0"
 
   l2_execution_engine:
-    image: gcr.io/mxczkevm/mxc-geth:mxc-wannsee-alpha3
+    image: gcr.io/mxczkevm/mxc-geth:mxc-geneva-alpha3
     restart: unless-stopped
     pull_policy: always
     volumes:
