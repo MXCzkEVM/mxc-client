@@ -3,7 +3,7 @@
 [![CI](https://github.com/MXCzkEVM/mxc-client/actions/workflows/test.yml/badge.svg)](https://github.com/MXCzkEVM/mxc-client/actions/workflows/test.yml)
 [![Codecov](https://img.shields.io/codecov/c/github/MXCzkEVM/mxc-client?logo=codecov&token=OH6BJMVP6O)](https://codecov.io/gh/MXCzkEVM/mxc-client)
 
-Mxc protocol's client software implementation in Go. Learn more about Mxc nodes with [the docs](https://wannsee.mxc.com/docs/Designs/Supernode).
+Mxc protocol's client software implementation in Go. Learn more about Mxc nodes with [the docs](https://geneva.mxc.com/docs/Designs/Supernode).
 
 ## Project structure
 
