@@ -81,4 +81,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/ethereum/go-ethereum v1.11.5 => github.com/MXCzkEVM/mxc-geth v0.0.0-20230711175054-737a56499de2
+replace github.com/ethereum/go-ethereum v1.11.5 => github.com/MXCzkEVM/mxc-geth v0.0.0-20240321023600-b8fb45279895
