@@ -2,7 +2,7 @@ name: "Push docker image to GCR"
 
 on:
   push:
-    branches: [main,mxc-wannsee-alpha3,mxc_geneva_alpha3]
+    branches: [main,mxc-wannsee-alpha3,mxc-geneva-alpha3]
     tags:
       - "v*"
 
