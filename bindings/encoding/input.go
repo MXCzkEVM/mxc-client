@@ -302,9 +302,7 @@ func UnpackTxListBytes(txData []byte, ipfsGateways ...string) ([]byte, error) {
 			if err != nil {
 				return nil, err
 			}
-			return nil, err
 		}
-		return nil, err
 	}
 
 	// Only check for safety.
