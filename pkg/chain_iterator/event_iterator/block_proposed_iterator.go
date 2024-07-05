@@ -3,15 +3,13 @@ package eventiterator
 import (
 	"context"
 	"errors"
-	"github.com/cenkalti/backoff/v4"
-	"math/big"
-	"time"
-
 	"github.com/MXCzkEVM/mxc-client/bindings"
 	chainIterator "github.com/MXCzkEVM/mxc-client/pkg/chain_iterator"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"math/big"
+	"time"
 )
 
 // EndBlockProposedEventIterFunc ends the current iteration.
@@ -109,50 +107,54 @@ func assembleBlockProposedIteratorCallback(
 		updateCurrentFunc chainIterator.UpdateCurrentFunc,
 		endFunc chainIterator.EndIterFunc,
 	) error {
+		var iter *bindings.MxcL1ClientBlockProposedIterator
+		var err error
 		endHeight := end.Number.Uint64()
-		iter, err := mxcL1Client.FilterBlockProposed(
-			&bind.FilterOpts{Start: start.Number.Uint64(), End: &endHeight, Context: ctx},
-			filterQuery,
-		)
-		if err != nil {
-			return err
-		}
-		defer iter.Close()
-
-		const maxRetries = 3
-		const timeout = 10 * time.Second
-
-		bo := backoff.NewExponentialBackOff()
-		bo.MaxElapsedTime = timeout
-		bo.MaxInterval = timeout * maxRetries
-
-		return backoff.Retry(func() error {
-			select {
-			case <-ctx.Done():
-				return ctx.Err()
-			default:
-				for iter.Next() {
-					event := iter.Event
-
-					if err := callback(ctx, event, eventIter.end); err != nil {
-						return err
-					}
-
-					if eventIter.isEnd {
-						endFunc()
-						return nil
-					}
-
-					current, err := client.HeaderByHash(ctx, event.Raw.BlockHash)
-					if err != nil {
-						return err
-					}
-
-					updateCurrentFunc(current)
+		for {
+			ctxWithTimeout, cancel := context.WithTimeout(ctx, time.Second*10)
+			go func() {
+				iter, err = mxcL1Client.FilterBlockProposed(
+					&bind.FilterOpts{Start: start.Number.Uint64(), End: &endHeight, Context: ctx},
+					filterQuery,
+				)
+				if err != nil {
+					return
 				}
+				defer cancel()
+				defer iter.Close()
+			}()
+			select {
+			case <-ctxWithTimeout.Done():
+				switch err := ctxWithTimeout.Err(); {
+				case errors.Is(err, context.Canceled):
+					break
+				case errors.Is(err, context.DeadlineExceeded):
+					continue
+				}
+			}
+			break
+		}
 
+		for iter.Next() {
+			event := iter.Event
+
+			if err := callback(ctx, event, eventIter.end); err != nil {
+				return err
+			}
+
+			if eventIter.isEnd {
+				endFunc()
 				return nil
 			}
-		}, bo)
+
+			current, err := client.HeaderByHash(ctx, event.Raw.BlockHash)
+			if err != nil {
+				return err
+			}
+
+			updateCurrentFunc(current)
+		}
+
+		return nil
 	}
 }
