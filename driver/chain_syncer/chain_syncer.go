@@ -132,13 +132,13 @@ func (s *L2ChainSyncer) Sync(l1End *types.Header) error {
 			if err != nil {
 				return err
 			}
-			log.Warn("calldataSyncer timeout for 10s", "l1End.Number", l1End.Number)
+			log.Warn("calldataSyncer timeout for 10s", "HeightBlock", l1State.NumBlocks-1, "l2Head", s.state.GetL2Head().Number)
 			// syncing
-			if l1State.NumBlocks >= s.state.GetL1Current().Number.Uint64()+10 {
+			if l1State.NumBlocks >= s.state.GetL2Head().Number.Uint64()+10 {
 				return processErr
 			}
 		}
-		log.Warn("retry calldataSync", "l1End.Number", l1End.Number)
+		log.Warn("retry calldataSync")
 	}
 }
 
