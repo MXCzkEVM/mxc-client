@@ -129,7 +129,7 @@ func assembleBlockProposedIteratorCallback(
 				if err != nil {
 					return err
 				}
-				if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+				if errors.Is(ctxWithTimeout.Err(), context.DeadlineExceeded) {
 					log.Warn("FilterBlockProposed filterLog deadline exceeded")
 					continue
 				}
