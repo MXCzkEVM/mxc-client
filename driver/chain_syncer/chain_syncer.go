@@ -117,7 +117,29 @@ func (s *L2ChainSyncer) Sync(l1End *types.Header) error {
 	}
 
 	// Insert the proposed block one by one.
-	return s.calldataSyncer.ProcessL1Blocks(s.ctx, l1End)
+	for {
+		done := make(chan bool, 1)
+		var processErr error
+		go func() {
+			processErr = s.calldataSyncer.ProcessL1Blocks(s.ctx, l1End)
+			<-done
+		}()
+		select {
+		case <-done:
+			return processErr
+		case <-time.After(time.Second * 10):
+			l1State, err := s.rpc.MxcL1.State(nil)
+			if err != nil {
+				return err
+			}
+			log.Warn("calldataSyncer timeout for 10s", "l1End.Number", l1End.Number)
+			// syncing
+			if l1State.NumBlocks >= s.state.GetL1Current().Number.Uint64()+10 {
+				return processErr
+			}
+		}
+		log.Warn("retry calldataSync", "l1End.Number", l1End.Number)
+	}
 }
 
 // AheadOfProtocolVerifiedHead checks whether the L2 chain is ahead of verified head in protocol.
