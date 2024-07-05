@@ -110,13 +110,14 @@ func assembleBlockProposedIteratorCallback(
 	) error {
 		var iter *bindings.MxcL1ClientBlockProposedIterator
 		var err error
+		startHeight := start.Number.Uint64()
 		endHeight := end.Number.Uint64()
 		for {
 			ctxWithTimeout, cancel := context.WithTimeout(ctx, time.Second*10)
 			go func() {
 				defer cancel()
 				iter, err = mxcL1Client.FilterBlockProposed(
-					&bind.FilterOpts{Start: start.Number.Uint64(), End: &endHeight, Context: ctxWithTimeout},
+					&bind.FilterOpts{Start: startHeight, End: &endHeight, Context: ctxWithTimeout},
 					filterQuery,
 				)
 				if err != nil {
@@ -127,6 +128,7 @@ func assembleBlockProposedIteratorCallback(
 			select {
 			case <-ctxWithTimeout.Done():
 				if err != nil {
+					log.Error("FilterBlockProposed filterLog", "error", err)
 					return err
 				}
 				if errors.Is(ctxWithTimeout.Err(), context.DeadlineExceeded) {
