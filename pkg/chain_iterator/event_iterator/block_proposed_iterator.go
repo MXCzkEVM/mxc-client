@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/ethereum/go-ethereum/log"
 	"math/big"
 	"time"
 )
@@ -114,7 +115,7 @@ func assembleBlockProposedIteratorCallback(
 			ctxWithTimeout, cancel := context.WithTimeout(ctx, time.Second*10)
 			go func() {
 				iter, err = mxcL1Client.FilterBlockProposed(
-					&bind.FilterOpts{Start: start.Number.Uint64(), End: &endHeight, Context: ctx},
+					&bind.FilterOpts{Start: start.Number.Uint64(), End: &endHeight, Context: ctxWithTimeout},
 					filterQuery,
 				)
 				if err != nil {
@@ -125,12 +126,14 @@ func assembleBlockProposedIteratorCallback(
 			}()
 			select {
 			case <-ctxWithTimeout.Done():
-				switch err := ctxWithTimeout.Err(); {
-				case errors.Is(err, context.Canceled):
-					break
-				case errors.Is(err, context.DeadlineExceeded):
+				if err != nil {
+					return err
+				}
+				if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+					log.Warn("FilterBlockProposed filterLog deadline exceeded")
 					continue
 				}
+				break
 			}
 			break
 		}
