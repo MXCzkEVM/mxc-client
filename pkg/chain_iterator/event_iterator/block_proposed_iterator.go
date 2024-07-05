@@ -117,7 +117,7 @@ func assembleBlockProposedIteratorCallback(
 			go func() {
 				defer cancel()
 				iter, err = mxcL1Client.FilterBlockProposed(
-					&bind.FilterOpts{Start: startHeight, End: &endHeight, Context: ctxWithTimeout},
+					&bind.FilterOpts{Start: startHeight, End: &endHeight, Context: ctx},
 					filterQuery,
 				)
 				if err != nil {
@@ -128,7 +128,6 @@ func assembleBlockProposedIteratorCallback(
 			}()
 			select {
 			case <-ctxWithTimeout.Done():
-				log.Info("ctxWithTimeout Done")
 				if err != nil {
 					log.Error("FilterBlockProposed filterLog", "error", err)
 					return err
@@ -140,7 +139,7 @@ func assembleBlockProposedIteratorCallback(
 			}
 			break
 		}
-		log.Info("FilterBlockProposed success")
+		log.Info("FilterBlockProposed success", "start", startHeight, "end", endHeight)
 
 		for iter.Next() {
 			event := iter.Event
