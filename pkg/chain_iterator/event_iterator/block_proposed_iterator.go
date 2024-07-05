@@ -3,7 +3,9 @@ package eventiterator
 import (
 	"context"
 	"errors"
+	"github.com/cenkalti/backoff/v4"
 	"math/big"
+	"time"
 
 	"github.com/MXCzkEVM/mxc-client/bindings"
 	chainIterator "github.com/MXCzkEVM/mxc-client/pkg/chain_iterator"
@@ -117,26 +119,40 @@ func assembleBlockProposedIteratorCallback(
 		}
 		defer iter.Close()
 
-		for iter.Next() {
-			event := iter.Event
+		const maxRetries = 3
+		const timeout = 10 * time.Second
 
-			if err := callback(ctx, event, eventIter.end); err != nil {
-				return err
-			}
+		bo := backoff.NewExponentialBackOff()
+		bo.MaxElapsedTime = timeout
+		bo.MaxInterval = timeout * maxRetries
 
-			if eventIter.isEnd {
-				endFunc()
+		return backoff.Retry(func() error {
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			default:
+				for iter.Next() {
+					event := iter.Event
+
+					if err := callback(ctx, event, eventIter.end); err != nil {
+						return err
+					}
+
+					if eventIter.isEnd {
+						endFunc()
+						return nil
+					}
+
+					current, err := client.HeaderByHash(ctx, event.Raw.BlockHash)
+					if err != nil {
+						return err
+					}
+
+					updateCurrentFunc(current)
+				}
+
 				return nil
 			}
-
-			current, err := client.HeaderByHash(ctx, event.Raw.BlockHash)
-			if err != nil {
-				return err
-			}
-
-			updateCurrentFunc(current)
-		}
-
-		return nil
+		}, bo)
 	}
 }
