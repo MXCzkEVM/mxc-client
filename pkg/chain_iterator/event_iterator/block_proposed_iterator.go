@@ -114,6 +114,7 @@ func assembleBlockProposedIteratorCallback(
 		for {
 			ctxWithTimeout, cancel := context.WithTimeout(ctx, time.Second*10)
 			go func() {
+				defer cancel()
 				iter, err = mxcL1Client.FilterBlockProposed(
 					&bind.FilterOpts{Start: start.Number.Uint64(), End: &endHeight, Context: ctxWithTimeout},
 					filterQuery,
@@ -121,7 +122,6 @@ func assembleBlockProposedIteratorCallback(
 				if err != nil {
 					return
 				}
-				defer cancel()
 				defer iter.Close()
 			}()
 			select {
