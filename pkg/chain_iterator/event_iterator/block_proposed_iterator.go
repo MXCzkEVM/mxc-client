@@ -112,9 +112,11 @@ func assembleBlockProposedIteratorCallback(
 		var err error
 		startHeight := start.Number.Uint64()
 		endHeight := end.Number.Uint64()
+		log.Info("create iteratorCallback", "startHeight", startHeight, "end", endHeight)
 		for {
 			ctxWithTimeout, cancel := context.WithTimeout(ctx, time.Second*10)
 			go func() {
+				log.Info("FilterBlockProposed", "startHeight", startHeight, "end", endHeight)
 				defer cancel()
 				iter, err = mxcL1Client.FilterBlockProposed(
 					&bind.FilterOpts{Start: startHeight, End: &endHeight, Context: ctxWithTimeout},
