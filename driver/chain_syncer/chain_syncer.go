@@ -122,7 +122,7 @@ func (s *L2ChainSyncer) Sync(l1End *types.Header) error {
 		var processErr error
 		go func() {
 			processErr = s.calldataSyncer.ProcessL1Blocks(s.ctx, l1End)
-			<-done
+			done <- true
 		}()
 		select {
 		case <-done:
