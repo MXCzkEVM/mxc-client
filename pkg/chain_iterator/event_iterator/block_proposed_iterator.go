@@ -3,14 +3,14 @@ package eventiterator
 import (
 	"context"
 	"errors"
+	"math/big"
+	"time"
+
 	"github.com/MXCzkEVM/mxc-client/bindings"
 	chainIterator "github.com/MXCzkEVM/mxc-client/pkg/chain_iterator"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/ethereum/go-ethereum/log"
-	"math/big"
-	"time"
 )
 
 // EndBlockProposedEventIterFunc ends the current iteration.
@@ -108,38 +108,17 @@ func assembleBlockProposedIteratorCallback(
 		updateCurrentFunc chainIterator.UpdateCurrentFunc,
 		endFunc chainIterator.EndIterFunc,
 	) error {
-		startHeight := start.Number.Uint64()
 		endHeight := end.Number.Uint64()
-		var iter *bindings.MxcL1ClientBlockProposedIterator
-		for {
-			var err error
-			done := make(chan bool, 1)
-			go func() {
-				defer func() { done <- true }()
-				iter, err = mxcL1Client.FilterBlockProposed(
-					&bind.FilterOpts{Start: startHeight, End: &endHeight, Context: ctx},
-					filterQuery,
-				)
-				if err != nil {
-					log.Error("failed to FilterBlockProposed", "error", err)
-					return
-				}
-				defer iter.Close()
-			}()
-			select {
-			case <-done:
-				if err != nil {
-					log.Error("FilterBlockProposed filterLog", "error", err)
-					return err
-				}
-				break
-			case <-time.After(time.Second * 10):
-				log.Warn("FilterBlockProposed filterLog deadline exceeded")
-				continue
-			}
-			break
+		ctxWithTimeout, cancel := context.WithTimeout(ctx, time.Second*10)
+		iter, err := mxcL1Client.FilterBlockProposed(
+			&bind.FilterOpts{Start: start.Number.Uint64(), End: &endHeight, Context: ctxWithTimeout},
+			filterQuery,
+		)
+		defer cancel()
+		if err != nil {
+			return err
 		}
-		log.Info("FilterBlockProposed success", "start", startHeight, "end", endHeight)
+		defer iter.Close()
 
 		for iter.Next() {
 			event := iter.Event
@@ -159,6 +138,9 @@ func assembleBlockProposedIteratorCallback(
 			}
 
 			updateCurrentFunc(current)
+		}
+		if err := iter.Error(); err != nil {
+			return err
 		}
 
 		return nil
