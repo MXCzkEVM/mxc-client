@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"math/big"
+	"time"
 
 	"github.com/MXCzkEVM/mxc-client/bindings"
 	chainIterator "github.com/MXCzkEVM/mxc-client/pkg/chain_iterator"
@@ -108,10 +109,12 @@ func assembleBlockProposedIteratorCallback(
 		endFunc chainIterator.EndIterFunc,
 	) error {
 		endHeight := end.Number.Uint64()
+		ctxWithTimeout, cancel := context.WithTimeout(ctx, time.Second*10)
 		iter, err := mxcL1Client.FilterBlockProposed(
-			&bind.FilterOpts{Start: start.Number.Uint64(), End: &endHeight, Context: ctx},
+			&bind.FilterOpts{Start: start.Number.Uint64(), End: &endHeight, Context: ctxWithTimeout},
 			filterQuery,
 		)
+		defer cancel()
 		if err != nil {
 			return err
 		}
@@ -135,6 +138,9 @@ func assembleBlockProposedIteratorCallback(
 			}
 
 			updateCurrentFunc(current)
+		}
+		if err := iter.Error(); err != nil {
+			return err
 		}
 
 		return nil
